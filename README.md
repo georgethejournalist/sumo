@@ -2,6 +2,7 @@
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/github/eclipse/sumo?svg=true)](https://ci.appveyor.com/project/eclipsewebmaster/sumo)
 ![Repo Size](https://img.shields.io/github/repo-size/eclipse/sumo.svg)
 
+My fork of the Eclipse's SUMO project with some fixes needed for our projects. For the official SUMO repo, see https://github.com/eclipse/sumo
 
 Eclipse SUMO - Simulation of Urban MObility 
 ===========================================
