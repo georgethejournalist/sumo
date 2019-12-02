@@ -288,7 +288,8 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
     myStreetName(streetName),
     mySignalOffset(UNSPECIFIED_SIGNAL_OFFSET),
     mySignalNode(nullptr),
-    myIndex(-1) {
+    myIndex(-1),
+	m_IsInRoundabout(false){
     init(nolanes, false, "");
 }
 
@@ -318,7 +319,8 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
     myStreetName(streetName),
     mySignalOffset(UNSPECIFIED_SIGNAL_OFFSET),
     mySignalNode(nullptr),
-    myIndex(-1) {
+    myIndex(-1),
+	m_IsInRoundabout(false) {
     init(nolanes, tryIgnoreNodePositions, origID);
 }
 
@@ -344,7 +346,8 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to, const NBEdge* tp
     myAmMacroscopicConnector(false),
     myStreetName(tpl->getStreetName()),
     mySignalOffset(to == tpl->myTo ? tpl->mySignalOffset : UNSPECIFIED_SIGNAL_OFFSET),
-    mySignalNode(to == tpl->myTo ? tpl->mySignalNode : nullptr) {
+    mySignalNode(to == tpl->myTo ? tpl->mySignalNode : nullptr),
+	m_IsInRoundabout(false) {
     init(numLanes > 0 ? numLanes : tpl->getNumLanes(), myGeom.size() > 0, "");
     for (int i = 0; i < getNumLanes(); i++) {
         const int tplIndex = MIN2(i, tpl->getNumLanes() - 1);
@@ -774,9 +777,9 @@ NBEdge::cutAtIntersection(const PositionVector& old) const {
 
 
 void
-NBEdge::computeEdgeShape(double smoothElevationThreshold) {
+NBEdge::computeEdgeShape(double smoothElevationThreshold, const bool isInRoundabout) {
     if (smoothElevationThreshold > 0 && myGeom.hasElevation()) {
-        PositionVector cut = cutAtIntersection(myGeom);
+        PositionVector cut = isInRoundabout ? myGeom : cutAtIntersection(myGeom);
         // cutting and patching z-coordinate may cause steep grades which should be smoothed
         if (!myFrom->geometryLike()) {
             cut[0].setz(myFrom->getPosition().z());
@@ -802,7 +805,8 @@ NBEdge::computeEdgeShape(double smoothElevationThreshold) {
         }
     }
     for (int i = 0; i < (int)myLanes.size(); i++) {
-        myLanes[i].shape = cutAtIntersection(myLanes[i].shape);
+		// do not cut shapes when part of roundabout
+        myLanes[i].shape = isInRoundabout ? myLanes[i].shape : cutAtIntersection(myLanes[i].shape);
     }
     // recompute edge's length as the average of lane lengths
     double avgLength = 0;

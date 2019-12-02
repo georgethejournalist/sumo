@@ -875,7 +875,8 @@ NBEdgeCont::appendRailwayTurnarounds(const NBPTStopCont& sc) {
 void
 NBEdgeCont::computeEdgeShapes(double smoothElevationThreshold) {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
-        (*i).second->computeEdgeShape(smoothElevationThreshold);
+		const auto isInRoundabout = i->second->GetIsInRoundabout();
+        (*i).second->computeEdgeShape(smoothElevationThreshold, isInRoundabout);
     }
     // equalize length of opposite edges
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
@@ -1304,6 +1305,11 @@ NBEdgeCont::guessRoundabouts() {
             if (formFactor(loopEdges) > 0.6) {
                 // collected edges are marked in markRoundabouts
                 myGuessedRoundabouts.insert(EdgeSet(loopEdges.begin(), loopEdges.end()));
+
+				for each (auto edge in loopEdges)
+				{
+					edge->SetIsInRoundabout(true);
+				}
             }
         }
     }
@@ -1375,6 +1381,7 @@ NBEdgeCont::markRoundabouts() {
             edge->setJunctionPriority(node, NBEdge::ROUNDABOUT);
             edge->setJunctionPriority(edge->getFromNode(), NBEdge::ROUNDABOUT);
             node->setRoundabout();
+			/*(*j)->SetIsInRoundabout();*/
         }
     }
 }

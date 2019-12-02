@@ -166,7 +166,7 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
         NBNodesEdgesSorter::sortNodesEdges(myNodeCont);
         myEdgeCont.computeLaneShapes();
         myNodeCont.computeNodeShapes();
-        myEdgeCont.computeEdgeShapes();
+        
         if (oc.getBool("roundabouts.guess")) {
             myEdgeCont.guessRoundabouts();
         }
@@ -180,6 +180,8 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
             myNodeCont.addJoinExclusion(nodeIDs);
         }
         NBNodeTypeComputer::validateRailCrossings(myNodeCont, myTLLCont);
+		// compute edges after guessing roundabouts etc.
+		myEdgeCont.computeEdgeShapes();
     }
     // join junctions (may create new "geometry"-nodes so it needs to come before removing these
     if (mayAddOrRemove && oc.exists("junctions.join-exclude") && oc.isSet("junctions.join-exclude")) {

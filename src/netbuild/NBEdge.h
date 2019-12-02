@@ -753,9 +753,11 @@ public:
      * length when writing the network.
      * @note All lanes of an edge in a sumo net must have the same nominal length
      *  but may differ in actual geomtric length.
+     *  Note: This caused roundabouts edges to be simplified into a straight edge with no shape, even though other edges
+     *  did get their shapes accordingly...
      * @note Depends on previous call to NBNodeCont::computeNodeShapes
      */
-    void computeEdgeShape(double smoothElevationThreshold = -1);
+    void computeEdgeShape(double smoothElevationThreshold = -1, const bool isInRoundabout = false);
 
     /** @brief Returns the shape of the nth lane
      * @return The shape of the lane given by its index (counter from right)
@@ -1026,6 +1028,16 @@ public:
      */
     bool isMacroscopicConnector() const {
         return myAmMacroscopicConnector;
+    }
+
+	void SetIsInRoundabout(bool value)
+    {
+		m_IsInRoundabout = value;
+    }
+
+	bool GetIsInRoundabout() const
+    {
+		return m_IsInRoundabout;
     }
 
     /// @brief Marks this edge being within an intersection
@@ -1610,6 +1622,9 @@ private:
 
     /// @brief Information whether this is lies within a joined tls
     bool myAmInTLS;
+
+	/// @brief Is this edge part of a roundabout (either defined or guessed)
+	bool m_IsInRoundabout;
 
     /// @brief Information whether this edge is a (macroscopic) connector
     bool myAmMacroscopicConnector;
