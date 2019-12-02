@@ -487,10 +487,6 @@ GNEViewNetHelper::MoveSingleElementValues::moveSingleElement() {
     if (myViewNet->myNetworkViewOptions.menuCheckMoveElevation->shown() && myViewNet->myNetworkViewOptions.menuCheckMoveElevation->getCheck() == TRUE) {
         // reset offset X and Y and use Y for Z
         offsetMovement = Position(0, 0, offsetMovement.y());
-    } else {
-        // leave z empty (because in this case offset only actuates over X-Y)
-        offsetMovement.setz(0);
-    }
     // check what element will be moved
     if (myPolyToMove) {
         // move shape's geometry without commiting changes depending if polygon is blocked
@@ -601,48 +597,57 @@ GNEViewNetHelper::MoveSingleElementValues::calculatePolyValues() {
             // poly values wasn't calculated, then return false
             return false;
         }
-    } else {
-        // save original shape (needed for commit change)
-        myViewNet->myMoveSingleElementValues.originalShapeBeforeMoving = myPolyToMove->getShape();
-        // save clicked position as moving original position
-        myViewNet->myMoveSingleElementValues.originalPositionInView = myViewNet->getPositionInformation();
-        // obtain index of vertex to move if shape isn't blocked
-        if ((myPolyToMove->isPolygonBlocked() == false) && (myPolyToMove->isMovementBlocked() == false)) {
-            // check if we want to remove a Geometry Point
-            if (myViewNet->myKeyPressed.shiftKeyPressed()) {
-                // check if we're clicked over a Geometry Point
-                myViewNet->myMoveSingleElementValues.movingIndexShape = myPolyToMove->getVertexIndex(myViewNet->myMoveSingleElementValues.originalPositionInView, false, false);
-                if (myViewNet->myMoveSingleElementValues.movingIndexShape != -1) {
-                    myPolyToMove->deleteGeometryPoint(myViewNet->myMoveSingleElementValues.originalPositionInView);
-                    // after removing Geomtery Point, reset PolyToMove
-                    myPolyToMove = nullptr;
-                    // poly values wasn't calculated, then return false
-                    return false;
-                }
-                // poly values sucesfully calculated, then return true
-                return true;
-            } else {
-                // obtain index of vertex to move and moving reference
-                myViewNet->myMoveSingleElementValues.movingIndexShape = myPolyToMove->getVertexIndex(myViewNet->myMoveSingleElementValues.originalPositionInView, false, false);
-                // check if a new Vertex must be created
-                if ((myViewNet->myMoveSingleElementValues.movingIndexShape == -1) && 
-                    (myPolyToMove->getShape().distance2D(myViewNet->myMoveSingleElementValues.originalPositionInView) <= 0.8)) {
-                    // create new geometry point
-                    myViewNet->myMoveSingleElementValues.movingIndexShape = myPolyToMove->getVertexIndex(myViewNet->myMoveSingleElementValues.originalPositionInView, true, true);
-                } else {
-                    return false;
-                }
-                // set Z value
-                myViewNet->myMoveSingleElementValues.originalPositionInView.setz(myPolyToMove->getShape()[myViewNet->myMoveSingleElementValues.movingIndexShape].z());
-                // poly values sucesfully calculated, then return true
-                return true;
-            }
-        } else {
-            myViewNet->myMoveSingleElementValues.movingIndexShape = -1;
-            // check if polygon has the entire movement blocked, or only the shape blocked
-            return (myPolyToMove->isMovementBlocked() == false);
-        }
     }
+	else {
+		// save original shape (needed for commit change)
+		myViewNet->myMoveSingleElementValues.originalShapeBeforeMoving = myPolyToMove->getShape();
+		int indexOfPoint = myPolyToMove->getVertexIndex(myViewNet->getPositionInformation(), false, false);
+		// hotfix - polygon point elevation (z) was reset when moving a poly point, because of the way this ... code
+		// was getting a screen position and saving it instead of using the existing poly point data (with elevation)
+		auto pointCount = myPolyToMove->getShape().size();
+		if (indexOfPoint != -1 && indexOfPoint < pointCount)
+		{
+			myViewNet->myMoveSingleElementValues.originalPositionInView = myPolyToMove->getShape()[indexOfPoint];
+		}
+		else
+		{
+			// save clicked position as moving original position
+			myViewNet->myMoveSingleElementValues.originalPositionInView = myViewNet->getPositionInformation();
+		}
+		
+		// obtain index of vertex to move if shape isn't blocked
+		if ((myPolyToMove->isPolygonBlocked() == false) && (myPolyToMove->isMovementBlocked() == false)) {
+			// check if we want to remove a Geometry Point
+			if (myViewNet->myKeyPressed.shiftKeyPressed()) {
+				// check if we're clicked over a Geometry Point
+				myViewNet->myMoveSingleElementValues.movingIndexShape = myPolyToMove->getVertexIndex(myViewNet->myMoveSingleElementValues.originalPositionInView, false, false);
+				if (myViewNet->myMoveSingleElementValues.movingIndexShape != -1) {
+					myPolyToMove->deleteGeometryPoint(myViewNet->myMoveSingleElementValues.originalPositionInView);
+					// after removing Geomtery Point, reset PolyToMove
+					myPolyToMove = nullptr;
+					// poly values wasn't calculated, then return false
+					return false;
+				}
+				// poly values sucesfully calculated, then return true
+				return true;
+			}
+			else {
+				// obtain index of vertex to move and moving reference
+				myViewNet->myMoveSingleElementValues.movingIndexShape = myPolyToMove->getVertexIndex(myViewNet->myMoveSingleElementValues.originalPositionInView, false, false);
+				if (myViewNet->myMoveSingleElementValues.movingIndexShape == -1) {
+					// create new geometry point
+					myViewNet->myMoveSingleElementValues.movingIndexShape = myPolyToMove->getVertexIndex(myViewNet->myMoveSingleElementValues.originalPositionInView, true, true);
+				}
+				// poly values sucesfully calculated, then return true
+				return true;
+			}
+		}
+		else {
+			myViewNet->myMoveSingleElementValues.movingIndexShape = -1;
+			// check if polygon has the entire movement blocked, or only the shape blocked
+			return (myPolyToMove->isMovementBlocked() == false);
+		}
+	}
 }
 
 
