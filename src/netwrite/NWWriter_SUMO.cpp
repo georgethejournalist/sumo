@@ -121,9 +121,11 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     // write tls logics
     writeTrafficLights(device, nb.getTLLogicCont());
 
+	auto useAlternativeJunctionNames = oc.getBool("use-alternative-junction-names");
+
     // write the nodes (junctions)
     for (std::map<std::string, NBNode*>::const_iterator i = nc.begin(); i != nc.end(); ++i) {
-        writeJunction(device, *(*i).second);
+        writeJunction(device, *(*i).second, useAlternativeJunctionNames);
     }
     device.lf();
     const bool includeInternal = !oc.getBool("no-internal-links");
@@ -529,11 +531,58 @@ NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& lID,
     into.closeTag();
 }
 
+std::string NWWriter_SUMO::GenerateNameFromEdgesFeedingIntoNode(const NBNode& n)
+{
+	std::string name;
+	auto allEdges = n.getEdges();
+	std::vector<int> intIds;
+	std::map<int, std::string> intIdToStringId;
+	for (int index = 0; index < allEdges.size(); index++)
+	{
+		auto edge = allEdges[index];
+		auto strId = edge->getID();
+		int intId;
+		try
+		{
+			intId = StringUtils::toInt(strId);
+		}
+		catch (const std::exception&)
+		{
+			WRITE_ERROR("Could not convert the id of an edge " + strId + " feeding into junction " + n.getID() + " to an integer value. Aborting. Either fix the name of the edge or set useAlternativeJunctionNames to false");
+		}
+
+		intIdToStringId.emplace(intId, strId);
+	}
+
+	std::map<int, std::string>::iterator it;
+	for (it = intIdToStringId.begin(); it != intIdToStringId.end(); it++)
+	{
+		auto intId = it->first;
+		auto stringId = it->second;
+		name.append(stringId);
+
+		// checking the current element is the last one - done by getting the last element and doing a comparison
+		auto last = std::prev(intIdToStringId.end(), 1);
+		if (it != last)
+		{
+			name.append("|");
+		}
+	}
+
+	return name;
+}
 
 void
-NWWriter_SUMO::writeJunction(OutputDevice& into, const NBNode& n) {
-    // write the attributes
-    into.openTag(SUMO_TAG_JUNCTION).writeAttr(SUMO_ATTR_ID, n.getID());
+NWWriter_SUMO::writeJunction(OutputDevice& into, const NBNode& n, const bool useAlternativeName) {
+    
+	auto name = n.getID();
+	if (useAlternativeName)
+	{
+		name = GenerateNameFromEdgesFeedingIntoNode(n);
+	}
+	
+	// write the attributes
+    into.openTag(SUMO_TAG_JUNCTION).writeAttr(SUMO_ATTR_ID, name);
     into.writeAttr(SUMO_ATTR_TYPE, n.getType());
     NWFrame::writePositionLong(n.getPosition(), into);
     // write the incoming lanes

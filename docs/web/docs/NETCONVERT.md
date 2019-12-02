@@ -367,6 +367,7 @@ Files](Basics/Using_the_Command_Line_Applications.md#configuration_files).
 | **--rectangular-lane-cut** {{DT_BOOL}}                          | Forces rectangular cuts between lanes and intersections; *default: **false***            |
 | **--check-lane-foes.roundabout** {{DT_BOOL}}                    | Allow driving onto a multi-lane road if there are foes on other lanes (at roundabouts); *default: **true***   |
 | **--check-lane-foes.all** {{DT_BOOL}}                           | Allow driving onto a multi-lane road if there are foes on other lanes (everywhere); *default: **false***     |
+| **--use-alternative-junction-names** {{DT_BOOL}}                | Generates junction names from the names of the edges that create the junction, separated by the bar ('|') character.; *default: **false***     |
 
 ### Pedestrian
 

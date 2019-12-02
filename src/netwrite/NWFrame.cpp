@@ -119,6 +119,10 @@ NWFrame::fillOptions(bool forNetgen) {
     // register opendrive options
     oc.doRegister("opendrive-output.straight-threshold", new Option_Float(0.00000001)); // matching the angular output precision in NWWriter_OpenDrive
     oc.addDescription("opendrive-output.straight-threshold", "Output", "Builds parameterized curves whenever the angular change  between straight segments exceeds FLOAT degrees");
+
+	// register alternative naming for junctions option - generates junction ids from the ids of edges that create the junction
+	oc.doRegister("use-alternative-junction-names", new Option_Bool(false));
+	oc.addDescription("use-alternative-junction-names", "Output", "Should the junction ids be generated from the edges feeding into them on output file generation?");
 }
 
 

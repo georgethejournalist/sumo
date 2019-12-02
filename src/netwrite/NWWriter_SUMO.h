@@ -141,12 +141,16 @@ private:
                           bool accelRamp = false,
                           bool customShape = false);
 
+	/** @brief Generates name for the junction from the names of the edges feeding the junction, separated by bar ('|') character.
+	* @param[in] n The junction/node the name is generated for
+	*/
+	static std::string GenerateNameFromEdgesFeedingIntoNode(const NBNode& n);
 
     /** @brief Writes a junction (<junction ...)
      * @param[in] into The device to write the edge into
      * @param[in] n The junction/node to write
      */
-    static void writeJunction(OutputDevice& into, const NBNode& n);
+    static void writeJunction(OutputDevice& into, const NBNode& n, const bool useAlternativeName);
 
 
     /** @brief Writes internal junctions (<junction with id[0]==':' ...) of the given node
