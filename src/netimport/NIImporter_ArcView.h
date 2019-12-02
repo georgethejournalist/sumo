@@ -95,6 +95,8 @@ private:
      */
     double getSpeed(OGRFeature& f, const std::string& edgeid);
 
+	// gets the width of the edge from the imported file - the width is in a shapefile attribute
+	double getWidth(OGRFeature& f, const std::string& edgeid);
 
     /** @brief Parses the number of lanes of the edge currently processed
      * @param[in] f The entry to read the lane number from
@@ -118,7 +120,7 @@ private:
      *
      * @param[in] e The edge to check
      */
-    void checkSpread(NBEdge* e);
+    void checkSpread(NBEdge* e, const std::string &spread_type = "", SVCPermissions allow = SVCAll);
 
 
     /** @brief Sets the value from the named field into "into"

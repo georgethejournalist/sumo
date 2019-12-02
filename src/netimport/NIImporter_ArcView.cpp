@@ -117,6 +117,13 @@ NIImporter_ArcView::NIImporter_ArcView(const OptionsCont& oc,
 
 NIImporter_ArcView::~NIImporter_ArcView() {}
 
+static SVCPermissions GetAllowedMask(std::string text)
+{
+	if (text.empty())
+		return SVCAll;
+
+	return parseVehicleClasses(text);
+}
 
 void
 NIImporter_ArcView::load() {
@@ -200,6 +207,14 @@ NIImporter_ArcView::load() {
             to_node = toString(myRunningNodeID++);
         }
 
+        std::string spread_type = poFeature->GetFieldAsString("spreadType");
+        auto allow = GetAllowedMask(poFeature->GetFieldAsString("allow"));
+
+		auto disallow = GetAllowedMask(poFeature->GetFieldAsString("disallow"));
+
+		if (disallow != SVCAll)
+			allow &= ~disallow;
+
         std::string type;
         if (myOptions.isSet("shapefile.type-id") && poFeature->GetFieldIndex(myOptions.getString("shapefile.type-id").c_str()) >= 0) {
             type = poFeature->GetFieldAsString(myOptions.getString("shapefile.type-id").c_str());
@@ -209,7 +224,8 @@ NIImporter_ArcView::load() {
         if ((type != "" || myOptions.isSet("shapefile.type-id")) && !myTypeCont.knows(type)) {
             WRITE_WARNING("Unknown type '" + type + "' for edge '" + id + "'");
         }
-        double width = myTypeCont.getWidth(type);
+		auto widthFromShape = getWidth(*poFeature, id);
+		double width = widthFromShape <= 0 ? myTypeCont.getWidth(type) : widthFromShape;
         bool oneway = myTypeCont.knows(type) ? myTypeCont.getIsOneWay(type) : false;
         double speed = getSpeed(*poFeature, id);
         int nolanes = getLaneNo(*poFeature, id, speed);
@@ -324,7 +340,7 @@ NIImporter_ArcView::load() {
                 NBEdge* edge = new NBEdge(id, from, to, type, speed, nolanes, priority, width, NBEdge::UNSPECIFIED_OFFSET, shape, name, origID, spread);
                 edge->setPermissions(myTypeCont.getPermissions(type));
                 myEdgeCont.insert(edge);
-                checkSpread(edge);
+                checkSpread(edge, spread_type, allow);
                 addParams(edge, poFeature, params);
             } else {
                 WRITE_ERROR("Could not create edge '" + id + "'. An edge with the same id already exists");
@@ -337,7 +353,7 @@ NIImporter_ArcView::load() {
                 NBEdge* edge = new NBEdge("-" + id, to, from, type, speed, nolanes, priority, width, NBEdge::UNSPECIFIED_OFFSET, shape.reverse(), name, origID, spread);
                 edge->setPermissions(myTypeCont.getPermissions(type));
                 myEdgeCont.insert(edge);
-                checkSpread(edge);
+                checkSpread(edge, spread_type, allow);
                 addParams(edge, poFeature, params);
             } else {
                 WRITE_ERROR("Could not create edge '-" + id + "'. An edge with the same id already exists");
@@ -367,7 +383,7 @@ NIImporter_ArcView::getSpeed(OGRFeature& poFeature, const std::string& edgeid) {
             const double speed = poFeature.GetFieldAsDouble(index);
             if (speed <= 0) {
                 WRITE_WARNING("invalid value for field: '"
-                              + myOptions.getString("shapefile.laneNumber")
+                              + myOptions.getString("shapefile.speed")
                               + "': '" + std::string(poFeature.GetFieldAsString(index)) + "'");
             } else {
                 return speed;
@@ -396,6 +412,24 @@ NIImporter_ArcView::getSpeed(OGRFeature& poFeature, const std::string& edgeid) {
     return -1;
 }
 
+double
+NIImporter_ArcView::getWidth(OGRFeature& poFeature, const std::string& edgeid) {
+	// try to get definitions as to be found in SUMO-XML-definitions
+	//  idea by John Michael Calandrino
+	int index = poFeature.GetDefnRef()->GetFieldIndex("width");
+	if (index >= 0 && poFeature.IsFieldSet(index)) 
+	{
+		auto asDouble = poFeature.GetFieldAsDouble(index);
+		auto asInt = poFeature.GetFieldAsInteger(index);
+		auto asString = poFeature.GetFieldAsString(index);
+		//return (double)poFeature.GetFieldAsDouble(index);
+	}
+	index = poFeature.GetDefnRef()->GetFieldIndex("WIDTH");
+	if (index >= 0 && poFeature.IsFieldSet(index)) {
+		return (double)poFeature.GetFieldAsDouble(index);
+	}
+	return -1;
+}
 
 int
 NIImporter_ArcView::getLaneNo(OGRFeature& poFeature, const std::string& edgeid,
@@ -463,12 +497,20 @@ NIImporter_ArcView::getPriority(OGRFeature& poFeature, const std::string& /*edge
 }
 
 void
-NIImporter_ArcView::checkSpread(NBEdge* e) {
+NIImporter_ArcView::checkSpread(NBEdge* e, const std::string &spread_type, SVCPermissions allow) {
     NBEdge* ret = e->getToNode()->getConnectionTo(e->getFromNode());
     if (ret != 0) {
         e->setLaneSpreadFunction(LANESPREAD_RIGHT);
         ret->setLaneSpreadFunction(LANESPREAD_RIGHT);
     }
+
+	if (allow != SVCAll)
+		e->setPermissions(allow);
+
+	if (spread_type == "center")
+		e->setLaneSpreadFunction(LANESPREAD_CENTER);
+	else if (spread_type == "right")
+		e->setLaneSpreadFunction(LANESPREAD_RIGHT);
 }
 
 bool
