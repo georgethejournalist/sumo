@@ -10,7 +10,6 @@
 /// @file    Vehicle.cpp
 /// @author  Jakob Erdmann
 /// @date    15.03.2017
-/// @version $Id$
 ///
 // C++ Vehicle API
 /****************************************************************************/
@@ -21,6 +20,7 @@
 #include <config.h>
 
 #include <utils/geom/GeomHelper.h>
+#include <utils/common/MsgHandler.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/StringUtils.h>
 #include <utils/gui/globjects/GUIGlObjectTypes.h>
@@ -492,23 +492,7 @@ double
 Vehicle::getDistance(const std::string& vehicleID) {
     MSVehicle* veh = Helper::getVehicle(vehicleID);
     if (veh->isOnRoad()) {
-        double distance;
-        if (veh->getLane()->isInternal()) {
-            // route edge still points to the edge before the intersection
-            const double normalEnd = (*veh->getCurrentRouteEdge())->getLength();
-            distance = (veh->getRoute().getDistanceBetween(veh->getDepartPos(), normalEnd,
-                        veh->getRoute().begin(), veh->getCurrentRouteEdge())
-                        + veh->getRoute().getDistanceBetween(normalEnd, veh->getPositionOnLane(),
-                                *veh->getCurrentRouteEdge(), &veh->getLane()->getEdge()));
-        } else {
-            distance = veh->getRoute().getDistanceBetween(veh->getDepartPos(), veh->getPositionOnLane(),
-                       veh->getRoute().begin(), veh->getCurrentRouteEdge());
-        }
-        if (distance == std::numeric_limits<double>::max()) {
-            return INVALID_DOUBLE_VALUE;
-        } else {
-            return distance;
-        }
+        return veh->getOdometer();
     } else {
         return INVALID_DOUBLE_VALUE;
     }
@@ -1289,6 +1273,11 @@ Vehicle::setRouteID(const std::string& vehicleID, const std::string& routeID) {
 }
 
 void
+Vehicle::setRoute(const std::string& vehicleID, const std::string& edgeID) {
+    setRoute(vehicleID, std::vector<std::string>({edgeID}));
+}
+
+void
 Vehicle::setRoute(const std::string& vehicleID, const std::vector<std::string>& edgeIDs) {
     MSVehicle* veh = Helper::getVehicle(vehicleID);
     ConstMSEdgeVector edges;
@@ -1737,9 +1726,150 @@ LIBSUMO_SUBSCRIPTION_IMPLEMENTATION(Vehicle, VEHICLE)
 
 
 void
-Vehicle::subscribeLeader(const std::string& vehicleID, double /* dist */, double beginTime, double endTime) {
-    // TODO handle dist correctly
+Vehicle::subscribeLeader(const std::string& vehicleID, double dist, double beginTime, double endTime) {
     Vehicle::subscribe(vehicleID, std::vector<int>({libsumo::VAR_LEADER}), beginTime, endTime);
+    Helper::addSubscriptionParam(dist);
+}
+
+
+void
+Vehicle::addSubscriptionFilterLanes(const std::vector<int>& lanes, bool noOpposite, double downstreamDist, double upstreamDist) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_LANES);
+    if (s != nullptr) {
+        s->filterLanes = lanes;
+    }
+    if (noOpposite) {
+        addSubscriptionFilterNoOpposite();
+    }
+    if (downstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterDownstreamDistance(downstreamDist);
+    }
+    if (upstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterUpstreamDistance(upstreamDist);
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterNoOpposite() {
+    Helper::addSubscriptionFilter(SUBS_FILTER_NOOPPOSITE);
+}
+
+
+void
+Vehicle::addSubscriptionFilterDownstreamDistance(double dist) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_DOWNSTREAM_DIST);
+    if (s != nullptr) {
+        s->filterDownstreamDist = dist;
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterUpstreamDistance(double dist) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_UPSTREAM_DIST);
+    if (s != nullptr) {
+        s->filterUpstreamDist = dist;
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterCFManeuver(double downstreamDist, double upstreamDist) {
+    addSubscriptionFilterLeadFollow(std::vector<int>({0}));
+    if (downstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterDownstreamDistance(downstreamDist);
+    }
+    if (upstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterUpstreamDistance(upstreamDist);
+    }
+
+}
+
+
+void
+Vehicle::addSubscriptionFilterLCManeuver(int direction, bool noOpposite, double downstreamDist, double upstreamDist) {
+    std::vector<int> lanes;
+    if (direction ==INVALID_INT_VALUE) {
+        // Using default: both directions
+        lanes = std::vector<int>({-1, 0, 1});
+    } else if (direction != -1 && direction != 1) {
+        WRITE_WARNING("Ignoring lane change subscription filter with non-neighboring lane offset direction=" +
+                      toString(direction) + ".");
+    } else {
+        lanes = std::vector<int>({0, direction});
+    }
+    addSubscriptionFilterLeadFollow(lanes);
+    if (noOpposite) {
+        addSubscriptionFilterNoOpposite();
+    }
+    if (downstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterDownstreamDistance(downstreamDist);
+    }
+    if (upstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterUpstreamDistance(upstreamDist);
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterLeadFollow(const std::vector<int>& lanes) {
+    Helper::addSubscriptionFilter(SUBS_FILTER_LEAD_FOLLOW);
+    addSubscriptionFilterLanes(lanes);
+}
+
+
+void
+Vehicle::addSubscriptionFilterTurn(double downstreamDist, double upstreamDist) {
+    Helper::addSubscriptionFilter(SUBS_FILTER_TURN);
+    if (downstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterDownstreamDistance(downstreamDist);
+    }
+    if (upstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterUpstreamDistance(upstreamDist);
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterVClass(const std::vector<std::string>& vClasses) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_VCLASS);
+    if (s != nullptr) {
+        s->filterVClasses = parseVehicleClasses(vClasses);
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterVType(const std::vector<std::string>& vTypes) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_VTYPE);
+    if (s != nullptr) {
+        s->filterVTypes.insert(vTypes.begin(), vTypes.end());
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterFieldOfVision(double openingAngle) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_FIELD_OF_VISION);
+    if (s != nullptr) {
+        s->filterFieldOfVisionOpeningAngle = openingAngle;
+    }
+}
+
+
+void
+Vehicle::addSubscriptionFilterLateralDistance(double lateralDist, double downstreamDist, double upstreamDist) {
+    Subscription* s = Helper::addSubscriptionFilter(SUBS_FILTER_LATERAL_DIST);
+    if (s != nullptr) {
+        s->filterLateralDist = lateralDist;
+    }
+    if (downstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterDownstreamDistance(downstreamDist);
+    }
+    if (upstreamDist != INVALID_DOUBLE_VALUE) {
+        addSubscriptionFilterUpstreamDistance(upstreamDist);
+    }
 }
 
 
@@ -1849,7 +1979,13 @@ Vehicle::handleVariable(const std::string& objID, const int variable, VariableWr
         case VAR_LASTACTIONTIME:
             return wrapper->wrapDouble(objID, variable, getLastActionTime(objID));
         case VAR_LEADER: {
-            const auto& lead = getLeader(objID);
+            double dist = 0.;
+            // this fallback is needed since the very first call right on subscribing has no parameters set
+            if (wrapper->getParams() != nullptr) {
+                const std::vector<unsigned char>& param = *wrapper->getParams();
+                memcpy(&dist, param.data(), sizeof(dist));
+            }
+            const auto& lead = getLeader(objID, dist);
             TraCIRoadPosition rp;
             rp.edgeID = lead.first;
             rp.pos = lead.second;

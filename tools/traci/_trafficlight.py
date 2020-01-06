@@ -10,7 +10,6 @@
 # @file    _trafficlight.py
 # @author  Michael Behrisch
 # @date    2011-03-16
-# @version $Id$
 
 from __future__ import absolute_import
 import struct
@@ -73,8 +72,8 @@ def _readLogics(result):
         programID = result.readTypedString()
         type = result.readTypedInt()
         currentPhaseIndex = result.readTypedInt()
-        logic = Logic(programID, type, currentPhaseIndex)
         numPhases = result.readCompound()
+        phases = []
         for __ in range(numPhases):
             result.readCompound(6)
             duration = result.readTypedDouble()
@@ -84,13 +83,14 @@ def _readLogics(result):
             numNext = result.readCompound()
             next = tuple([result.readTypedInt() for ___ in range(numNext)])
             name = result.readTypedString()
-            logic.phases.append(Phase(duration, state, minDur, maxDur, next, name))
+            phases.append(Phase(duration, state, minDur, maxDur, next, name))
+        logic = Logic(programID, type, currentPhaseIndex, tuple(phases))
         numParams = result.readCompound()
         for __ in range(numParams):
             key, value = result.readTypedStringList()
             logic.subParameter[key] = value
         logics.append(logic)
-    return logics
+    return tuple(logics)
 
 
 def _readLinks(result):
@@ -143,13 +143,15 @@ class TrafficLightDomain(Domain):
         """
         return self._getUniversal(tc.TL_RED_YELLOW_GREEN_STATE, tlsID)
 
-    def getCompleteRedYellowGreenDefinition(self, tlsID):
-        """getCompleteRedYellowGreenDefinition(string) -> list(Logic)
+    def getAllProgramLogics(self, tlsID):
+        """getAllProgramLogics(string) -> list(Logic)
 
         Returns a list of Logic objects.
         Each Logic encodes a traffic light program for the given tlsID.
         """
         return self._getUniversal(tc.TL_COMPLETE_DEFINITION_RYG, tlsID)
+
+    getCompleteRedYellowGreenDefinition = getAllProgramLogics
 
     def getControlledLanes(self, tlsID):
         """getControlledLanes(string) -> c
@@ -276,8 +278,8 @@ class TrafficLightDomain(Domain):
         self._connection._sendDoubleCmd(
             tc.CMD_SET_TL_VARIABLE, tc.TL_PHASE_DURATION, tlsID, phaseDuration)
 
-    def setCompleteRedYellowGreenDefinition(self, tlsID, tls):
-        """setCompleteRedYellowGreenDefinition(string, Logic) -> None
+    def setProgramLogic(self, tlsID, tls):
+        """setProgramLogic(string, Logic) -> None
 
         Sets a new program for the given tlsID from a Logic object.
         See getCompleteRedYellowGreenDefinition.
@@ -312,3 +314,5 @@ class TrafficLightDomain(Domain):
         for par in tls.subParameter.items():
             self._connection._packStringList(par)
         self._connection._sendExact()
+
+    setCompleteRedYellowGreenDefinition = setProgramLogic

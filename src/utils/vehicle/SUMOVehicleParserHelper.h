@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Laura Bieker
 /// @date    Mon, 07.04.2008
-/// @version $Id$
 ///
 // Helper methods for parsing vehicle attributes
 /****************************************************************************/
@@ -79,7 +78,7 @@ public:
      * @exception ProcessError If an attribute's value is invalid
      * @note: the caller is responsible for deleting the returned pointer
      */
-    static SUMOVehicleParameter* parseVehicleAttributes(const SUMOSAXAttributes& attrs, const bool hardFail, const bool optionalID = false, const bool skipDepart = false, const bool isPerson = false);
+    static SUMOVehicleParameter* parseVehicleAttributes(int element, const SUMOSAXAttributes& attrs, const bool hardFail, const bool optionalID = false, const bool skipDepart = false);
 
     /** @brief Starts to parse a vehicle type
      *
@@ -93,7 +92,7 @@ public:
      */
     static SUMOVTypeParameter* beginVTypeParsing(const SUMOSAXAttributes& attrs, const bool hardFail, const std::string& file);
 
-    /** @brief Parse string containing AngleTimes triplets (angle, entry time, exit time) 
+    /** @brief Parse string containing AngleTimes triplets (angle, entry time, exit time)
      *
      * @param[in] vtype - the vtype element constructed in the parser
      * @param[in] string - containing , separated  AngleTimes triplets "angle entry time exit time"

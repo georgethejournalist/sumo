@@ -10,7 +10,6 @@
 /// @file    GNEDestProbReroute.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jan 2017
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -35,8 +34,8 @@
 
 GNEDestProbReroute::GNEDestProbReroute(GNERerouterIntervalDialog* rerouterIntervalDialog) :
     GNEAdditional(rerouterIntervalDialog->getEditedAdditional(), rerouterIntervalDialog->getEditedAdditional()->getViewNet(), GLO_REROUTER, SUMO_TAG_DEST_PROB_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}),
-    myNewEdgeDestination(rerouterIntervalDialog->getEditedAdditional()->getAdditionalParents().at(0)->getEdgeChildren().at(0)) {
+{}, {}, {}, {rerouterIntervalDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}),
+myNewEdgeDestination(rerouterIntervalDialog->getEditedAdditional()->getParentAdditionals().at(0)->getChildEdges().at(0)) {
     // fill dest prob reroute interval with default values
     setDefaultValues();
 }
@@ -44,9 +43,9 @@ GNEDestProbReroute::GNEDestProbReroute(GNERerouterIntervalDialog* rerouterInterv
 
 GNEDestProbReroute::GNEDestProbReroute(GNEAdditional* rerouterIntervalParent, GNEEdge* newEdgeDestination, double probability):
     GNEAdditional(rerouterIntervalParent, rerouterIntervalParent->getViewNet(), GLO_REROUTER, SUMO_TAG_DEST_PROB_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {}, {}, {}),
-    myNewEdgeDestination(newEdgeDestination),
-    myProbability(probability) {
+{}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {}, {}, {}),
+myNewEdgeDestination(newEdgeDestination),
+myProbability(probability) {
 }
 
 
@@ -72,17 +71,17 @@ GNEDestProbReroute::updateGeometry() {
 
 Position
 GNEDestProbReroute::getPositionInView() const {
-    return getAdditionalParents().at(0)->getPositionInView();
+    return getParentAdditionals().at(0)->getPositionInView();
 }
 
 
 Boundary
 GNEDestProbReroute::getCenteringBoundary() const {
-    return getAdditionalParents().at(0)->getCenteringBoundary();
+    return getParentAdditionals().at(0)->getCenteringBoundary();
 }
 
 
-void 
+void
 GNEDestProbReroute::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -90,7 +89,7 @@ GNEDestProbReroute::splitEdgeGeometry(const double /*splitPosition*/, const GNEN
 
 std::string
 GNEDestProbReroute::getParentName() const {
-    return getAdditionalParents().at(0)->getID();
+    return getParentAdditionals().at(0)->getID();
 }
 
 
@@ -110,7 +109,7 @@ GNEDestProbReroute::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_PROB:
             return toString(myProbability);
         case GNE_ATTR_PARENT:
-            return getAdditionalParents().at(0)->getID();
+            return getParentAdditionals().at(0)->getID();
         case GNE_ATTR_PARAMETERS:
             return getParametersStr();
         default:
@@ -119,7 +118,7 @@ GNEDestProbReroute::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNEDestProbReroute::getAttributeDouble(SumoXMLAttr key) const {
     throw InvalidArgument(getTagStr() + " doesn't have a double attribute of type '" + toString(key) + "'");
 }
@@ -160,7 +159,7 @@ GNEDestProbReroute::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNEDestProbReroute::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }

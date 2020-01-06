@@ -10,7 +10,6 @@
 /// @file    GNETAZ.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Oct 2018
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -43,16 +42,16 @@ const double GNETAZ::myHintSizeSquared = 0.64;
 // ===========================================================================
 GNETAZ::GNETAZ(const std::string& id, GNEViewNet* viewNet, PositionVector shape, RGBColor color, bool blockMovement) :
     GNEAdditional(id, viewNet, GLO_TAZ, SUMO_TAG_TAZ, "", blockMovement, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
-    myColor(color),
-    myTAZShape(shape),
-    myBlockShape(false),
-    myCurrentMovingVertexIndex(-1),
-    myMaxWeightSource(0),
-    myMinWeightSource(0),
-    myAverageWeightSource(0),
-    myMaxWeightSink(0),
-    myMinWeightSink(0),
-    myAverageWeightSink(0) {
+              myColor(color),
+              myTAZShape(shape),
+              myBlockShape(false),
+              myCurrentMovingVertexIndex(-1),
+              myMaxWeightSource(0),
+              myMinWeightSource(0),
+              myAverageWeightSource(0),
+              myMaxWeightSink(0),
+              myMinWeightSink(0),
+myAverageWeightSink(0) {
 }
 
 
@@ -92,7 +91,7 @@ GNETAZ::getCenteringBoundary() const {
 }
 
 
-void 
+void
 GNETAZ::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -361,7 +360,7 @@ GNETAZ::getAttribute(SumoXMLAttr key) const {
             return toString(myColor);
         case SUMO_ATTR_EDGES: {
             std::vector<std::string> edgeIDs;
-            for (auto i : getAdditionalChildren()) {
+            for (auto i : getChildAdditionals()) {
                 edgeIDs.push_back(i->getAttribute(SUMO_ATTR_EDGE));
             }
             return toString(edgeIDs);
@@ -392,7 +391,7 @@ GNETAZ::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNETAZ::getAttributeDouble(SumoXMLAttr key) const {
     switch (key) {
         case GNE_ATTR_MIN_SOURCE:
@@ -464,7 +463,7 @@ GNETAZ::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNETAZ::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }
@@ -483,7 +482,7 @@ GNETAZ::getHierarchyName() const {
 
 
 void
-GNETAZ::updateAdditionalParent() {
+GNETAZ::updateParentAdditional() {
     // reset all stadistic variables
     myMaxWeightSource = 0;
     myMinWeightSource = -1;
@@ -494,8 +493,8 @@ GNETAZ::updateAdditionalParent() {
     // declare an extra variables for saving number of children
     int numberOfSources = 0;
     int numberOfSinks = 0;
-    // iterate over additional children
-    for (auto i : getAdditionalChildren()) {
+    // iterate over child additional
+    for (auto i : getChildAdditionals()) {
         if (i->getTagProperty().getTag() == SUMO_TAG_TAZSOURCE) {
             double weight = i->getAttributeDouble(SUMO_ATTR_WEIGHT);
             // check max Weight

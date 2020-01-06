@@ -20,7 +20,6 @@
 /// @author  Mario Krumnow
 /// @author  Leonhard Luecken
 /// @date    2007/10/24
-/// @version $Id$
 ///
 // TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
@@ -54,7 +53,7 @@
 #include <microsim/MSVehicle.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSJunctionControl.h>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/MSJunction.h>
 #include <microsim/MSEdgeControl.h>
 #include <microsim/MSLane.h>
@@ -996,8 +995,6 @@ TraCIServer::initialiseSubscription(libsumo::Subscription& s) {
             writeStatusCmd(s.commandId, libsumo::RTYPE_ERR, "Subscription has ended.");
         } else {
             if (libsumo::Helper::needNewSubscription(s, mySubscriptions, modifiedSubscription)) {
-                mySubscriptions.push_back(s);
-                modifiedSubscription = &mySubscriptions.back();
                 // Add new subscription to subscription cache (note: seems a bit inefficient)
                 if (s.beginTime < MSNet::getInstance()->getCurrentTimeStep()) {
                     // copy new subscription into cache
@@ -1014,7 +1011,7 @@ TraCIServer::initialiseSubscription(libsumo::Subscription& s) {
             }
             writeStatusCmd(s.commandId, libsumo::RTYPE_OK, "");
         }
-        if (modifiedSubscription != nullptr && isVehicleToVehicleContextSubscription(*modifiedSubscription)) {
+        if (modifiedSubscription != nullptr && modifiedSubscription->isVehicleToVehicleContextSubscription()) {
             // Set last modified vehicle context subscription active for filter modifications
             myLastContextSubscription = modifiedSubscription;
         } else {
@@ -1033,7 +1030,7 @@ TraCIServer::removeSubscription(int commandId, const std::string& id, int domain
     bool found = false;
     std::vector<libsumo::Subscription>::iterator j;
     for (j = mySubscriptions.begin(); j != mySubscriptions.end();) {
-        if (j->id == id && j->commandId == commandId && (domain < 0 || j->contextDomain == domain)) {
+        if (j->id == id && j->commandId == commandId && j->contextDomain == domain) {
             j = mySubscriptions.erase(j);
             if (j != mySubscriptions.end() && myLastContextSubscription == &(*j)) {
                 // Remove also reference for filter additions
@@ -1052,11 +1049,6 @@ TraCIServer::removeSubscription(int commandId, const std::string& id, int domain
     }
 }
 
-bool
-TraCIServer::isVehicleToVehicleContextSubscription(const libsumo::Subscription& s) {
-    return (s.commandId == libsumo::CMD_SUBSCRIBE_VEHICLE_CONTEXT && s.contextDomain == libsumo::CMD_GET_VEHICLE_VARIABLE);
-}
-
 
 bool
 TraCIServer::processSingleSubscription(const libsumo::Subscription& s, tcpip::Storage& writeInto,
@@ -1069,7 +1061,7 @@ TraCIServer::processSingleSubscription(const libsumo::Subscription& s, tcpip::St
         if ((s.activeFilters & libsumo::SUBS_FILTER_NO_RTREE) == 0) {
             PositionVector shape;
             libsumo::Helper::findObjectShape(s.commandId, s.id, shape);
-            libsumo::Helper::collectObjectsInRange(s.contextDomain, shape, s.range, objIDs);
+            libsumo::Helper::collectObjectIDsInRange(s.contextDomain, shape, s.range, objIDs);
         }
         libsumo::Helper::applySubscriptionFilters(s, objIDs);
     } else {
@@ -1181,8 +1173,8 @@ TraCIServer::addObjectVariableSubscription(const int commandId, const bool hasCo
         }
     }
     // check subscribe/unsubscribe
-    if (variables.size() == 0) {
-        removeSubscription(commandId, id, -1);
+    if (variables.empty()) {
+        removeSubscription(commandId, id, domain);
         return true;
     }
     // process subscription
@@ -1263,6 +1255,11 @@ TraCIServer::addSubscriptionFilter() {
             addSubscriptionFilterFieldOfVision(angle);
         }
         break;
+        case libsumo::FILTER_TYPE_LATERAL_DIST: {
+            myInputStorage.readByte();  // read type double
+            double dist = myInputStorage.readDouble();
+            addSubscriptionFilterLateralDistance(dist);
+        } break;
         default:
             writeStatusCmd(filterType, libsumo::RTYPE_NOTIMPLEMENTED, "'" + toString(filterType) + "' is no valid filter type code.");
             success  = false;
@@ -1361,6 +1358,15 @@ TraCIServer::addSubscriptionFilterFieldOfVision(double openingAngle) {
 #endif
     myLastContextSubscription->activeFilters = myLastContextSubscription->activeFilters | libsumo::SUBS_FILTER_FIELD_OF_VISION;
     myLastContextSubscription->filterFieldOfVisionOpeningAngle = openingAngle;
+}
+
+void
+TraCIServer::addSubscriptionFilterLateralDistance(double dist) {
+#ifdef DEBUG_SUBSCRIPTION_FILTERS
+    std::cout << "Adding lateral dist filter (dist=" << toString(dist) << ")" << std::endl;
+#endif
+    myLastContextSubscription->activeFilters = myLastContextSubscription->activeFilters | libsumo::SUBS_FILTER_LATERAL_DIST;
+    myLastContextSubscription->filterLateralDist = dist;
 }
 
 void

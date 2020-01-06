@@ -13,7 +13,6 @@
 /// @author  Laura Bieker
 /// @author  Michael Behrisch
 /// @date    Thu, 06 Jun 2002
-/// @version $Id$
 ///
 // Main for MAROUTER
 /****************************************************************************/
@@ -324,9 +323,6 @@ computeRoutes(RONet& net, OptionsCont& oc, ODMatrix& matrix) {
                         }
                     }
                 }
-                for (std::vector<RORoute*>::const_iterator j = c->pathsVector.begin(); j != c->pathsVector.end(); ++j) {
-                    delete *j;
-                }
                 if (c->end > lastEnd) {
                     lastEnd = c->end;
                 }
@@ -359,11 +355,6 @@ computeRoutes(RONet& net, OptionsCont& oc, ODMatrix& matrix) {
         // end the processing
         net.cleanup();
     } catch (ProcessError&) {
-        for (std::vector<ODCell*>::const_iterator i = matrix.getCells().begin(); i != matrix.getCells().end(); ++i) {
-            for (std::vector<RORoute*>::const_iterator j = (*i)->pathsVector.begin(); j != (*i)->pathsVector.end(); ++j) {
-                delete *j;
-            }
-        }
         net.cleanup();
         throw;
     }

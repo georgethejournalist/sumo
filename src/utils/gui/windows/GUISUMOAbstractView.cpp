@@ -14,7 +14,6 @@
 /// @author  Laura Bieker
 /// @author  Andreas Gaubatz
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // The base class for a view
 /****************************************************************************/
@@ -1512,7 +1511,6 @@ GUISUMOAbstractView::checkGDALImage(Decal& d) {
         } else if (poBand->GetColorInterpretation() == GCI_AlphaBand) {
             shift = 3;
         } else {
-            WRITE_MESSAGE("Unknown color band in " + d.filename + ", maybe fox can parse it.");
             valid = false;
             break;
         }

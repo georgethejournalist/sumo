@@ -14,7 +14,6 @@
 /// @author  Bjoern Hendriks
 /// @author  Michael Behrisch
 /// @date    Mon, 10.05.2004
-/// @version $Id$
 ///
 // Realises dumping the complete network state
 /****************************************************************************/
@@ -31,10 +30,10 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicle.h>
-#include <microsim/pedestrians/MSPModel.h>
+#include <microsim/transportables/MSPModel.h>
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <microsim/MSGlobals.h>
-#include <microsim/MSContainer.h>
+#include <microsim/transportables/MSTransportable.h>
 #include <utils/iodevices/OutputDevice.h>
 #include "MSXMLRawOut.h"
 

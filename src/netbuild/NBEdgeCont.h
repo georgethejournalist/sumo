@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
-/// @version $Id$
 ///
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
@@ -358,7 +357,7 @@ public:
      * @param[in] fix Whether to prune geometry points to avoid sharp turns at start and end
      * @see NBEdge::checkGeometry
      */
-    void checkGeometries(const double maxAngle, const double minRadius, bool fix, bool fixRailways, bool silent=false);
+    void checkGeometries(const double maxAngle, const double minRadius, bool fix, bool fixRailways, bool silent = false);
     /// @}
 
 
@@ -412,11 +411,12 @@ public:
      * Calls "NBEdge::appendTurnaround" for all edges within the container.
      *
      * @param[in] noTLSControlled Whether the turnaround shall not be connected if the edge is controlled by a tls
-     * @param[in] exceptDeadends Whether the turnaround shall only be built at deadends
-     * @todo Recheck whether a visitor-pattern should be used herefor
+     * @param[in] onlyDeadends Whether the turnaround shall only be built at deadends
+     * @param[in] onlyTurnlane Whether the turnaround shall only be built when there is an exclusive (left) turn lane
+     * @param[in] noGeometryLike Whether the turnaround shall be built at geometry-like nodes
      * @see NBEdge::appendTurnaround
      */
-    void appendTurnarounds(bool noTLSControlled, bool onlyDeadends, bool noGeometryLike);
+    void appendTurnarounds(bool noTLSControlled, bool onlyDeadends, bool onlyTurnlane, bool noGeometryLike);
 
 
     /** @brief Appends turnarounds to all edges stored in the container

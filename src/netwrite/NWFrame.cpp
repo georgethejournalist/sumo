@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
-/// @version $Id$
 ///
 // Sets and checks options for netwrite
 /****************************************************************************/
@@ -113,6 +112,7 @@ NWFrame::fillOptions(bool forNetgen) {
         oc.addDescription("railway.topology.output", "Output", "Analyse topology of the railway network");
 
         oc.doRegister("polygon-output", new Option_FileName());
+        oc.addSynonyme("polygon-output", "taz-output");
         oc.addDescription("polygon-output", "Output", "Write shapes that are embedded in the network input and that are not supported by polyconvert (OpenDRIVE)");
     }
 

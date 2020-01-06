@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Tue, May 2005
-/// @version $Id$
 ///
 // Calibrates the flow on an edge by removing an inserting vehicles
 /****************************************************************************/
@@ -80,8 +79,7 @@ MSCalibrator::MSCalibrator(const std::string& id,
     myDefaultSpeed(myLane == nullptr ? myEdge->getSpeedLimit() : myLane->getSpeedLimit()),
     myHaveWarnedAboutClearingJam(false),
     myAmActive(false),
-    myHaveInvalidJam(false)
-{
+    myHaveInvalidJam(false) {
     if (outputFilename != "") {
         myOutput = &OutputDevice::getDevice(outputFilename);
         writeXMLDetectorProlog(*myOutput);
@@ -102,7 +100,7 @@ MSCalibrator::MSCalibrator(const std::string& id,
                 laneData->setDescription("meandata_calibrator_" + lane->getID());
                 LeftoverReminders.push_back(laneData);
                 myLaneMeanData.push_back(laneData);
-                VehicleRemover* remover = new VehicleRemover(lane, (int)i, this);
+                VehicleRemover* remover = new VehicleRemover(lane, this);
                 LeftoverReminders.push_back(remover);
                 myVehicleRemovers.push_back(remover);
             }
@@ -130,8 +128,8 @@ MSCalibrator::~MSCalibrator() {
     if (myCurrentStateInterval != myIntervals.end()) {
         intervalEnd();
     }
-    for (std::vector<VehicleRemover*>::iterator it = myVehicleRemovers.begin(); it != myVehicleRemovers.end(); ++it) {
-        (*it)->disable();
+    for (VehicleRemover* const remover : myVehicleRemovers) {
+        remover->disable();
     }
 }
 
@@ -157,7 +155,7 @@ MSCalibrator::myStartElement(int element,
                 WRITE_ERROR("Overlapping or unsorted intervals in calibrator '" + getID() + "'.");
             }
             state.end = attrs.getOptSUMOTimeReporting(SUMO_ATTR_END, getID().c_str(), ok, -1);
-            state.vehicleParameter = SUMOVehicleParserHelper::parseVehicleAttributes(attrs, true, true, true);
+            state.vehicleParameter = SUMOVehicleParserHelper::parseVehicleAttributes(element, attrs, true, true, true);
             LeftoverVehicleParameters.push_back(state.vehicleParameter);
             // vehicles should be inserted with max speed unless stated otherwise
             if (state.vehicleParameter->departSpeedProcedure == DEPART_SPEED_DEFAULT) {

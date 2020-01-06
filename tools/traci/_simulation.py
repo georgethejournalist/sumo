@@ -12,7 +12,6 @@
 # @author  Jakob Erdmann
 # @author  Michael Behrisch
 # @date    2011-03-15
-# @version $Id$
 
 from __future__ import absolute_import
 import struct
@@ -515,7 +514,7 @@ class SimulationDomain(Domain):
         for _ in range(answer.readInt()):
             answer.read("!B")                   # Type
             result.append(_readStage(answer))
-        return result
+        return tuple(result)
 
     def clearPending(self, routeID=""):
         self._connection._beginMessage(tc.CMD_SET_SIM_VARIABLE, tc.CMD_CLEAR_PENDING_VEHICLES, "",

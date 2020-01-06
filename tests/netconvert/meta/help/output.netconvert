@@ -1,4 +1,4 @@
-Eclipse SUMO netconvert Version v1_3_1+0985-d8cef81c9e
+Eclipse SUMO netconvert Version v1_4_0+0301-c36eaff1a1
  Copyright (C) 2001-2019 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 Network importer / builder for the microscopic, multi-modal traffic simulation
   SUMO.
@@ -118,6 +118,10 @@ Processing Options:
   --numerical-ids                      Remaps alphanumerical IDs of nodes and
                                          edges to ensure that all IDs are
                                          integers
+  --numerical-ids.node-start INT       Remaps IDs of nodes to integers starting
+                                         at INT
+  --numerical-ids.edge-start INT       Remaps IDs of edges to integers starting
+                                         at INT
   --reserved-ids FILE                  Ensures that generated ids do not
                                          included any of the typed IDs from FILE
                                          (SUMO-GUI selection file format)
@@ -357,6 +361,9 @@ Junctions Options:
                                          geometry-like junctions
   --no-turnarounds.except-deadend      Disables building turnarounds except at
                                          dead end junctions
+  --no-turnarounds.except-turnlane     Disables building turnarounds except at
+                                         at junctions with a dedicated turning
+                                         lane
   --no-left-connections                Disables building connections to left
   --junctions.join                     Joins junctions that are close to each
                                          other (recommended for OSM import)
@@ -450,6 +457,8 @@ Railway Options:
                                          wherever rails with opposite directions
                                          meet at a straight angle
   --railway.topology.all-bidi          Make all rails usable in both direction
+  --railway.topology.all-bidi.input-file FILE  Make all rails edge ids from
+                                         FILE usable in both direction
   --railway.access-distance FLOAT      The search radius for finding suitable
                                          road accesses for rail stops
   --railway.max-accesses INT           The maximum roud accesses registered per

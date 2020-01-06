@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
@@ -52,6 +51,7 @@
 #include <microsim/devices/MSRoutingEngine.h>
 #include <microsim/devices/MSDevice_Transportable.h>
 #include <microsim/devices/MSDevice_BTreceiver.h>
+#include <microsim/devices/MSDevice_ElecHybrid.h>
 #include <gui/GUIApplicationWindow.h>
 #include <gui/GUIGlobals.h>
 
@@ -96,8 +96,10 @@ GUIParameterTableWindow*
 GUIVehicle::getParameterWindow(GUIMainWindow& app,
                                GUISUMOAbstractView&) {
     const int sublaneParams = MSGlobals::gLateralResolution > 0 ? 4 : 0;
+    const bool isElecHybrid = getDevice(typeid(MSDevice_ElecHybrid)) != nullptr ? true : false;
+    const int elecHybridParams = isElecHybrid ? 2 : 0;
     GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 39 + sublaneParams + (int)getParameter().getParametersMap().size());
+        new GUIParameterTableWindow(app, *this, 39 + sublaneParams + elecHybridParams + (int)getParameter().getParametersMap().size());
     // add items
     ret->mkItem("lane [id]", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getLaneID));
     if (MSAbstractLaneChangeModel::haveLateralDynamics()) {
@@ -177,6 +179,12 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
         ret->mkItem("leftmost edge sublane [#]", true, new FunctionBinding<GUIVehicle, int>(this, &GUIVehicle::getLeftSublaneOnEdge));
         ret->mkItem("lane change maneuver distance [m]", true, new FunctionBinding<GUIVehicle, double>(this, &GUIVehicle::getManeuverDist));
     }
+    if (isElecHybrid) {
+        ret->mkItem("actual state of charge [Wh]", true,
+            new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getStateOfCharge));
+        ret->mkItem("actual electric current [A]", true,
+            new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getElecHybridCurrent));
+    }
     ret->closeBuilding(&getParameter());
     return ret;
 }
@@ -229,7 +237,9 @@ GUIVehicle::getTypeParameterWindow(GUIMainWindow& app,
     for (auto item : myType->getParameter().jmParameter) {
         ret->mkItem(toString(item.first).c_str(), false, toString(item.second));
     }
-    if(MSGlobals::gModelParkingManoeuver) ret->mkItem("manoeuver Angle vs Times",false, myType->getParameter().getManoeuverAngleTimesS());
+    if (MSGlobals::gModelParkingManoeuver) {
+        ret->mkItem("manoeuver Angle vs Times", false, myType->getParameter().getManoeuverAngleTimesS());
+    }
 
     // close building
     ret->closeBuilding(&(myType->getParameter()));
@@ -301,9 +311,10 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
         carriageLengthWithGap = (length - locomotiveLength) / (numCarriages - 1);
         carriageLength = carriageLengthWithGap - carriageGap;
     }
-    const int firstPassengerCarriage = defaultLength == locomotiveLength || numCarriages == 1 ? 0 : 1;
-    const int totalSeats = getVType().getPersonCapacity() + getVType().getContainerCapacity();
-    const int seatsPerCarriage = (int)ceil(totalSeats / (numCarriages - firstPassengerCarriage));
+    const int firstPassengerCarriage = defaultLength == locomotiveLength || numCarriages == 1 || (getVClass() & SVC_RAIL_CLASSES) == 0 ? 0 : 1;
+    const int firstContainerCarriage = numCarriages == 1 || getVehicleType().getGuiShape() == SVS_TRUCK_1TRAILER ? 0 : 1;
+    const int seatsPerCarriage = (int)ceil(getVType().getPersonCapacity() / (numCarriages - firstPassengerCarriage));
+    const int containersPerCarriage = (int)ceil(getVType().getContainerCapacity() / (numCarriages - firstContainerCarriage));
     // lane on which the carriage front is situated
     MSLane* lane = myLane;
     int furtherIndex = 0;
@@ -314,9 +325,13 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
     double carriageOffset = myState.pos();
     double carriageBackOffset = myState.pos() - firstCarriageLength;
     // handle seats
-    int requiredSeats = getNumPassengers() + getNumContainers();
+    int requiredSeats = getNumPassengers();
+    int requiredPositions = getNumContainers();
     if (requiredSeats > 0) {
         mySeatPositions.clear();
+    }
+    if (requiredPositions > 0) {
+        myContainerPositions.clear();
     }
     Position front, back;
     double angle = 0.;
@@ -356,7 +371,10 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
         const double drawnCarriageLength = front.distanceTo2D(back);
         angle = atan2((front.x() - back.x()), (back.y() - front.y())) * (double) 180.0 / (double) M_PI;
         if (i >= firstPassengerCarriage) {
-            computeSeats(front, back, seatsPerCarriage, exaggeration, requiredSeats);
+            computeSeats(front, back, SUMO_const_waitingPersonWidth, seatsPerCarriage, exaggeration, requiredSeats, mySeatPositions);
+        }
+        if (i >= firstContainerCarriage) {
+            computeSeats(front, back, SUMO_const_waitingContainerWidth, containersPerCarriage, exaggeration, requiredPositions, myContainerPositions);
         }
         glPushMatrix();
         glTranslated(front.x(), front.y(), getType());
@@ -412,7 +430,10 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
     glRotated(degAngle, 0, 0, 1);
     glScaled(exaggeration, upscaleLength, 1);
     if (mySeatPositions.size() == 0) {
-        mySeatPositions.push_back(back);
+        mySeatPositions.push_back(Seat(back, DEG2RAD(angle)));
+    }
+    if (myContainerPositions.size() == 0) {
+        myContainerPositions.push_back(Seat(back, DEG2RAD(angle)));
     }
 }
 
@@ -645,6 +666,27 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
 #ifdef _DEBUG
         label += " (" + toString(stop.edge - myCurrEdge) + "e)";
 #endif
+        if (isStoppedTriggered()) {
+            label += " triggered:";
+            if (stop.triggered) {
+                label += "person";
+                if (stop.numExpectedPerson > 0) {
+                    label += "(" + toString(stop.numExpectedPerson) + ")";
+                }
+            }
+            if (stop.containerTriggered) {
+                label += "container";
+                if (stop.numExpectedContainer > 0) {
+                    label += "(" + toString(stop.numExpectedContainer) + ")";
+                }
+            }
+            if (stop.joinTriggered) {
+                label += "join";
+                if (stop.pars.join != "") {
+                    label += "(" + stop.pars.join + ")";
+                }
+            }
+        }
         if (stop.pars.until >= 0) {
             label += " until:" + time2string(stop.pars.until);
         }
@@ -657,7 +699,7 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
         }
         std::pair<const MSLane*, double> stopPos = std::make_pair(stop.lane, stop.getEndPos(*this));
         const double textSize = s.vehicleName.size / s.scale;
-        GLHelper::drawText(label, pos - Position(0, textSize * repeat[stopPos]), 1.0, textSize, s.vehicleName.color);
+        GLHelper::drawText(label, pos - Position(0, textSize * repeat[stopPos]), 1.0, textSize, s.vehicleName.color, s.angle);
         repeat[stopPos]++;
         stopIndex++;
     }

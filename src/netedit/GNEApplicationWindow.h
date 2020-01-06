@@ -10,7 +10,6 @@
 /// @file    GNEApplicationWindow.h
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // The main window of Netedit (adapted from GUIApplicationWindow)
 /****************************************************************************/
@@ -82,6 +81,9 @@ public:
         /// @brief The application menu bar for supermodes (network and demand)
         FXMenuBar* superModes;
 
+        /// @brief The application menu bar for save elements (NetElements, additionals and demand elements)
+        FXMenuBar* saveElements;
+
         /// @brief The application menu bar for navigation (zoom, coloring...)
         FXMenuBar* navigation;
 
@@ -100,6 +102,9 @@ public:
 
         /// @brief menu bar drag for modes (network and demand)
         FXToolBarShell* myToolBarShellSuperModes;
+
+        /// @brief menu bar drag for save elements (NetElements, additionals and demand elements)
+        FXToolBarShell* myToolBarShellSaveElements;
 
         /// @brief menu bar drag for navigation (Zoom, coloring...)
         FXToolBarShell* myToolBarShellNavigation;
@@ -627,10 +632,10 @@ private:
         FXMenuCommand* toogleGrid;
 
         /// @brief menu check for load additionals in SUMO GUI
-        FXMenuCheck *loadAdditionalsInSUMOGUI;
+        FXMenuCheck* loadAdditionalsInSUMOGUI;
 
         /// @brief menu check for load demand in SUMO GUI
-        FXMenuCheck *loadDemandInSUMOGUI;
+        FXMenuCheck* loadDemandInSUMOGUI;
 
         /// @brief FXMenuCommand for open in SUMO GUI
         FXMenuCommand* openInSUMOGUI;
@@ -798,13 +803,13 @@ private:
     void closeAllWindows();
 
     /// @brief warns about unsaved changes and gives the user the option to abort
-    bool continueWithUnsavedChanges(const std::string &operation);
+    bool continueWithUnsavedChanges(const std::string& operation);
 
     /// @brief warns about unsaved changes in additionals and gives the user the option to abort
-    bool continueWithUnsavedAdditionalChanges(const std::string &operation);
+    bool continueWithUnsavedAdditionalChanges(const std::string& operation);
 
     /// @brief warns about unsaved changes in demand elements and gives the user the option to abort
-    bool continueWithUnsavedDemandElementChanges(const std::string &operation);
+    bool continueWithUnsavedDemandElementChanges(const std::string& operation);
 };
 
 

@@ -1,4 +1,4 @@
-Eclipse SUMO Version v1_3_1+0801-355be15e4b
+Eclipse SUMO Version v1_4_0+0308-61819149b5
  Copyright (C) 2001-2019 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 A microscopic, multi-modal traffic simulation.
 
@@ -50,7 +50,16 @@ Output Options:
   --battery-output FILE                Save the battery values of each vehicle
   --battery-output.precision INT       Write battery values with the given
                                          precision (default 2)
+  --elechybrid-output FILE             Save the elecHybrid values of each
+                                         vehicle
+  --elechybrid-output.precision INT    Write elecHybrid values with the given
+                                         precision (default 2)
+  --elechybrid-output.aggregated       Write elecHybrid values into one
+                                         aggregated file
   --chargingstations-output FILE       Write data of charging stations
+  --overheadwiresegments-output FILE   Write data of overhead wire segments
+  --substations-output FILE            Write data of electrical substation
+                                         stations
   --fcd-output FILE                    Save the Floating Car Data
   --fcd-output.geo                     Save the Floating Car Data using
                                          geo-coordinates (lon/lat)
@@ -58,6 +67,7 @@ Output Options:
                                          output (brake lights etc.)
   --fcd-output.distance                Add kilometrage to the FCD output
                                          (linear referencing)
+  --fcd-output.acceleration            Add acceleration to the FCD output
   --fcd-output.filter-edges.input-file FILE  Restrict fcd output to the edge
                                          selection from the given input file
   --full-output FILE                   Save a lot of information for each
@@ -210,6 +220,8 @@ Processing Options:
                                          the deceleration value, a vClass-class
                                          specific default or the given FLOAT in
                                          m/s^2
+  --overhead-wire-solver               Use Kirchhoff's laws for solving
+                                         overhead wire circuit
   --emergencydecel.warning-threshold FLOAT  Sets the fraction of emergency
                                          decel capability that must be used to
                                          trigger a warning.
@@ -233,6 +245,11 @@ Processing Options:
                                          jam while on a pedestrian crossing when
                                          using model 'striping' (non-positive
                                          values disable squeezing)
+  --pedestrian.striping.reserve-oncoming FLOAT  Fraction of stripes to reserve
+                                         for oncoming pedestrians
+  --pedestrian.striping.reserve-oncoming.junctions FLOAT  Fraction of stripes
+                                         to reserve for oncoming pedestrians on
+                                         crossings and walkingareas
   --pedestrian.remote.address STR      The address (host:port) of the external
                                          simulation
   --ride.stop-tolerance FLOAT          Tolerance to apply when matching
@@ -314,9 +331,11 @@ Report Options:
   --error-log FILE                     Writes all warnings and errors to FILE
   --duration-log.disable               Disable performance reports for
                                          individual simulation steps
-  --duration-log.statistics            Enable statistics on vehicle trips
+  -t, --duration-log.statistics        Enable statistics on vehicle trips
   --no-step-log                        Disable console output of current
                                          simulation step
+  --step-log.period INT                Number of simulation steps between
+                                         step-log outputs
 
 Emissions Options:
   --phemlight-path FILE                Determines where to load PHEMlight
@@ -500,12 +519,33 @@ FCD Device Options:
   --device.fcd.deterministic           The 'fcd' devices are set deterministic
                                          using a fraction of 1000
   --device.fcd.period STR              Recording period for FCD-data
+  --device.fcd.radius FLOAT            Record objects in a radius around
+                                         equipped vehicles
   --person-device.fcd.probability FLOAT  The probability for a person to have a
                                          'fcd' device
   --person-device.fcd.explicit STR[]   Assign a 'fcd' device to named persons
   --person-device.fcd.deterministic    The 'fcd' devices are set deterministic
                                          using a fraction of 1000
   --person-device.fcd.period STR       Recording period for FCD-data
+
+ElecHybrid Device Options:
+  --device.elechybrid.probability FLOAT  The probability for a vehicle to have
+                                         a 'elechybrid' device
+  --device.elechybrid.explicit STR[]   Assign a 'elechybrid' device to named
+                                         vehicles
+  --device.elechybrid.deterministic    The 'elechybrid' devices are set
+                                         deterministic using a fraction of 1000
+
+Taxi Device Options:
+  --device.taxi.probability FLOAT      The probability for a vehicle to have a
+                                         'taxi' device
+  --device.taxi.explicit STR[]         Assign a 'taxi' device to named vehicles
+  --device.taxi.deterministic          The 'taxi' devices are set deterministic
+                                         using a fraction of 1000
+  --device.taxi.dispatch-algorithm STR  The dispatch algorithm
+                                         [greedy|greedyClosest]
+  --device.taxi.dispatch-period TIME   The period between successive calls to
+                                         the dispatcher
 
 Tripinfo Device Options:
   --device.tripinfo.probability FLOAT  The probability for a vehicle to have a

@@ -10,7 +10,6 @@
 /// @file    GNENetElement.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2016
-/// @version $Id$
 ///
 // A abstract class for netElements
 /****************************************************************************/
@@ -39,8 +38,8 @@
 GNENetElement::GNENetElement(GNENet* net, const std::string& id, GUIGlObjectType type, SumoXMLTag tag) :
     GUIGlObject(type, id),
     GNEAttributeCarrier(tag),
-    GNEHierarchicalElementParents(this, {}, {}, {}, {}, {}),
-                              GNEHierarchicalElementChildren(this, {}, {}, {}, {}, {}),
+    GNEHierarchicalParentElements(this, {}, {}, {}, {}, {}),
+                              GNEHierarchicalChildElements(this, {}, {}, {}, {}, {}),
                               myNet(net),
 myMovingGeometryBoundary() {
 }

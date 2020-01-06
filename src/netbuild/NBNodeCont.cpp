@@ -16,7 +16,6 @@
 /// @author  Michael Behrisch
 /// @author  Sascha Krieg
 /// @date    Tue, 20 Nov 2001
-/// @version $Id$
 ///
 // Container for nodes during the netbuilding process
 /****************************************************************************/
@@ -119,11 +118,11 @@ NBNodeCont::retrieve(const Position& position, const double offset) const {
     const double extOffset = offset + POSITION_EPS;
     const float cmin[2] = {(float)(position.x() - extOffset), (float)(position.y() - extOffset)};
     const float cmax[2] = {(float)(position.x() + extOffset), (float)(position.y() + extOffset)};
-    std::set<std::string> into;
+    std::set<const Named*> into;
     Named::StoringVisitor sv(into);
     myRTree.Search(cmin, cmax, sv);
-    for (std::set<std::string>::const_iterator i = into.begin(); i != into.end(); i++) {
-        NBNode* const node = myNodes.find(*i)->second;
+    for (const Named* namedNode : into) {
+        NBNode* node = const_cast<NBNode*>(dynamic_cast<const NBNode*>(namedNode));
         if (fabs(node->getPosition().x() - position.x()) <= offset
                 &&
                 fabs(node->getPosition().y() - position.y()) <= offset) {
@@ -1860,7 +1859,13 @@ NBNodeCont::discardRailSignals() {
 
 int
 NBNodeCont::remapIDs(bool numericaIDs, bool reservedIDs, const std::string& prefix) {
-    std::vector<std::string> avoid = getAllNames();
+    bool startGiven = !OptionsCont::getOptions().isDefault("numerical-ids.node-start");
+    std::vector<std::string> avoid;
+    if (startGiven) {
+        avoid.push_back(toString(OptionsCont::getOptions().getInt("numerical-ids.node-start") - 1));
+    } else {
+        avoid = getAllNames();
+    }
     std::set<std::string> reserve;
     if (reservedIDs) {
         NBHelpers::loadPrefixedIDsFomFile(OptionsCont::getOptions().getString("reserved-ids"), "node:", reserve); // backward compatibility
@@ -1870,6 +1875,10 @@ NBNodeCont::remapIDs(bool numericaIDs, bool reservedIDs, const std::string& pref
     IDSupplier idSupplier("", avoid);
     NodeSet toChange;
     for (NodeCont::iterator it = myNodes.begin(); it != myNodes.end(); it++) {
+        if (startGiven) {
+            toChange.insert(it->second);
+            continue;
+        }
         if (numericaIDs) {
             try {
                 StringUtils::toLong(it->first);
@@ -1884,6 +1893,8 @@ NBNodeCont::remapIDs(bool numericaIDs, bool reservedIDs, const std::string& pref
     const bool origNames = OptionsCont::getOptions().getBool("output.original-names");
     for (NBNode* node : toChange) {
         myNodes.erase(node->getID());
+    }
+    for (NBNode* node : toChange) {
         if (origNames) {
             node->setParameter(SUMO_PARAM_ORIGID, node->getID());
         }

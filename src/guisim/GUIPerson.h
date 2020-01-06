@@ -13,7 +13,6 @@
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
@@ -32,9 +31,10 @@
 #include <fx.h>
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/common/RGBColor.h>
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSPerson.h>
 #include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
 #include <utils/gui/settings/GUIPropertySchemeStorage.h>
+#include "GUIBaseVehicle.h"
 
 
 // ===========================================================================
@@ -110,7 +110,7 @@ public:
 
     /* @brief set the position of a person while riding in a vehicle
      * @note This must be called by the vehicle before the call to drawGl */
-    void setPositionInVehicle(const Position& pos);
+    void setPositionInVehicle(const GUIBaseVehicle::Seat& pos);
 
     /// @name inherited from MSPerson with added locking
     /// @{
@@ -123,6 +123,9 @@ public:
 
     /// @brief return the Network coordinate of the person (only for drawing centering and tracking)
     Position getGUIPosition() const;
+
+    /// @brief return the angle of the person (only for drawing centering and tracking)
+    double getGUIAngle() const;
 
     /// @brief return the current angle of the person
     double getNaviDegree() const;
@@ -250,11 +253,14 @@ private:
     /// @brief draw walking area path
     void drawAction_drawWalkingareaPath(const GUIVisualizationSettings& s) const;
 
+    /// @brief whether the person is jammed as defined by the current pedestrian model
+    bool isJammed() const;
+
     /// The mutex used to avoid concurrent updates of the vehicle buffer
     mutable FXMutex myLock;
 
     /// The position of a person while riding a vehicle
-    Position myPositionInVehicle;
+    GUIBaseVehicle::Seat myPositionInVehicle;
 
     /// @brief Enabled visualisations, per view
     std::map<GUISUMOAbstractView*, int> myAdditionalVisualizations;

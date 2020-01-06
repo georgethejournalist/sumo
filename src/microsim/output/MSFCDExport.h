@@ -10,7 +10,6 @@
 /// @file    MSFCDExport.h
 /// @author  Mario Krumnow
 /// @date    2012-04-26
-/// @version $Id$
 ///
 // Realises dumping Floating Car Data (FCD) Data
 /****************************************************************************/
@@ -62,7 +61,7 @@ public:
 
 private:
     /// @brief write transportable
-    static void writeTransportable(OutputDevice& of, const MSEdge* e, MSTransportable* p, SumoXMLTag tag, bool useGeo, bool elevation);
+    static void writeTransportable(OutputDevice& of, const MSEdge* e, MSTransportable* p, bool inRadius, SumoXMLTag tag, bool useGeo, bool elevation);
 
 private:
     /// @brief Invalidated copy constructor.

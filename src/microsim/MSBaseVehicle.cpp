@@ -12,7 +12,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @date    Mon, 8 Nov 2010
-/// @version $Id$
 ///
 // A base class for vehicle implementations
 /****************************************************************************/
@@ -29,9 +28,8 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSPerson.h>
 #include "MSGlobals.h"
-#include "MSTransportable.h"
 #include "MSVehicleControl.h"
 #include "MSVehicleType.h"
 #include "MSEdge.h"
@@ -41,7 +39,9 @@
 #include "MSNet.h"
 #include "devices/MSDevice.h"
 #include "devices/MSDevice_Routing.h"
+#include "devices/MSDevice_Battery.h"
 #include <microsim/devices/MSDevice_Transportable.h>
+#include <microsim/devices/MSDevice_Taxi.h>
 #include "MSInsertionControl.h"
 
 //#define DEBUG_REROUTE
@@ -72,6 +72,7 @@ MSBaseVehicle::getPreviousSpeed() const {
 
 MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
                              MSVehicleType* type, const double speedFactor) :
+    SUMOVehicle(pars->id),
     myParameter(pars),
     myRoute(route),
     myType(type),
@@ -85,6 +86,7 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myArrivalPos(-1),
     myArrivalLane(-1),
     myNumberReroutes(0),
+    myOdometer(0.),
     myNumericalID(myCurrentNumericalIndex++)
 #ifdef _DEBUG
     , myTraceMoveReminders(myShallTraceMoveReminders.count(pars->id) > 0)
@@ -133,15 +135,24 @@ MSBaseVehicle::~MSBaseVehicle() {
 }
 
 
-const std::string&
-MSBaseVehicle::getID() const {
-    return myParameter->id;
+void
+MSBaseVehicle::setID(const std::string& /*newID*/) {
+    throw ProcessError("Changing a vehicle ID is not permitted");
 }
-
 
 const SUMOVehicleParameter&
 MSBaseVehicle::getParameter() const {
     return *myParameter;
+}
+
+const std::map<int, double>*
+MSBaseVehicle::getEmissionParameters() const {
+    MSDevice_Battery* batteryDevice = static_cast<MSDevice_Battery*>(getDevice(typeid(MSDevice_Battery)));
+    if (batteryDevice != nullptr) {
+        return &batteryDevice->getEnergyParams();
+    } else {
+        return nullptr;
+    }
 }
 
 void
@@ -390,30 +401,47 @@ MSBaseVehicle::resetRoutePosition(int index, DepartLaneDefinition departLaneProc
     myArrivalPos = (*(myRoute->end() - 1))->getLanes()[0]->getLength();
 }
 
-
-void
-MSBaseVehicle::addPerson(MSTransportable* person) {
-    if (myPersonDevice == nullptr) {
-        myPersonDevice = MSDevice_Transportable::buildVehicleDevices(*this, myDevices, false);
-        myMoveReminders.push_back(std::make_pair(myPersonDevice, 0.));
-        if (myParameter->departProcedure == DEPART_TRIGGERED && myParameter->depart == -1) {
-            const_cast<SUMOVehicleParameter*>(myParameter)->depart = MSNet::getInstance()->getCurrentTimeStep();
-        }
-    }
-    myPersonDevice->addTransportable(person);
+double
+MSBaseVehicle::getOdometer() const {
+    return -myDepartPos + myOdometer + (hasArrived() ? myArrivalPos : getPositionOnLane());
 }
 
-void
-MSBaseVehicle::addContainer(MSTransportable* container) {
-    if (myContainerDevice == nullptr) {
-        myContainerDevice = MSDevice_Transportable::buildVehicleDevices(*this, myDevices, true);
-        myMoveReminders.push_back(std::make_pair(myContainerDevice, 0.));
-        if (myParameter->departProcedure == DEPART_TRIGGERED && myParameter->depart == -1) {
-            const_cast<SUMOVehicleParameter*>(myParameter)->depart = MSNet::getInstance()->getCurrentTimeStep();
-        }
+bool
+MSBaseVehicle::allowsBoarding(MSTransportable* t) const {
+    if (getPersonNumber() >= getVehicleType().getPersonCapacity()) {
+        return false;
     }
-    myContainerDevice->addTransportable(container);
+    MSDevice_Taxi* taxiDevice = static_cast<MSDevice_Taxi*>(getDevice(typeid(MSDevice_Taxi)));
+    if (taxiDevice != nullptr) {
+        return taxiDevice->allowsBoarding(t);
+    }
+    return true;
 }
+
+
+void
+MSBaseVehicle::addTransportable(MSTransportable* transportable) {
+    if (transportable->isPerson()) {
+        if (myPersonDevice == nullptr) {
+            myPersonDevice = MSDevice_Transportable::buildVehicleDevices(*this, myDevices, false);
+            myMoveReminders.push_back(std::make_pair(myPersonDevice, 0.));
+            if (myParameter->departProcedure == DEPART_TRIGGERED && myParameter->depart == -1) {
+                const_cast<SUMOVehicleParameter*>(myParameter)->depart = MSNet::getInstance()->getCurrentTimeStep();
+            }
+        }
+        myPersonDevice->addTransportable(transportable);
+    } else {
+        if (myContainerDevice == nullptr) {
+            myContainerDevice = MSDevice_Transportable::buildVehicleDevices(*this, myDevices, true);
+            myMoveReminders.push_back(std::make_pair(myContainerDevice, 0.));
+            if (myParameter->departProcedure == DEPART_CONTAINER_TRIGGERED && myParameter->depart == -1) {
+                const_cast<SUMOVehicleParameter*>(myParameter)->depart = MSNet::getInstance()->getCurrentTimeStep();
+            }
+        }
+        myContainerDevice->addTransportable(transportable);
+    }
+}
+
 
 bool
 MSBaseVehicle::hasValidRoute(std::string& msg, const MSRoute* route) const {

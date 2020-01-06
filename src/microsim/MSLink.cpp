@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Laura Bieker
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A connnection between lanes
 /****************************************************************************/
@@ -32,12 +31,13 @@
 #include "MSJunction.h"
 #include "MSLink.h"
 #include "MSLane.h"
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSPerson.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include "MSEdge.h"
 #include "MSGlobals.h"
 #include "MSVehicle.h"
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
-#include <microsim/pedestrians/MSPModel.h>
+#include <microsim/transportables/MSPModel.h>
 
 //#define MSLink_DEBUG_CROSSING_POINTS
 //#define MSLink_DEBUG_OPENED
@@ -577,9 +577,9 @@ MSLink::blockedAtTime(SUMOTime arrivalTime, SUMOTime leaveTime, double arrivalSp
                     && ego->getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_FOE_PROB, 0) > 0) {
                 std::stringstream stream; // to reduce output interleaving from different threads
                 stream << SIMTIME << " " << myApproachingVehicles.size() << "   foe link=" << getViaLaneOrLane()->getID()
-                          << " foeVeh=" << it.first->getID() << " (below ignore speed)"
-                          << " ignoreFoeProb=" << ego->getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_FOE_PROB, 0)
-                          << "\n";
+                       << " foeVeh=" << it.first->getID() << " (below ignore speed)"
+                       << " ignoreFoeProb=" << ego->getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_FOE_PROB, 0)
+                       << "\n";
                 std::cout << stream.str();
             }
         }
@@ -611,11 +611,11 @@ MSLink::blockedByFoe(const SUMOVehicle* veh, const ApproachingVehicleInformation
     if (gDebugFlag1) {
         std::stringstream stream; // to reduce output interleaving from different threads
         stream << "    foe link=" << getViaLaneOrLane()->getID()
-                  << " foeVeh=" << veh->getID()
-                  << " req=" << avi.willPass
-                  << " aT=" << avi.arrivalTime
-                  << " lT=" << avi.leavingTime
-                  << "\n";
+               << " foeVeh=" << veh->getID()
+               << " req=" << avi.willPass
+               << " aT=" << avi.arrivalTime
+               << " lT=" << avi.leavingTime
+               << "\n";
         std::cout << stream.str();
     }
 #endif
@@ -1094,7 +1094,8 @@ MSLink::getLeaderInfo(const MSVehicle* ego, double dist, std::vector<const MSPer
                 const bool wayIn = myLengthsBehindCrossing[i].first < myLaneBefore->getLength() * 0.5;
                 const double vehSideOffset = (foeDistToCrossing + myLaneBefore->getWidth() * 0.5 - vehWidth * 0.5
                                               + ego->getLateralPositionOnLane() * (wayIn ? -1 : 1));
-                if (distToPeds >= -MSPModel::SAFETY_GAP && MSPModel::getModel()->blockedAtDist(foeLane, vehSideOffset, vehWidth,
+                // can access the movement model here since we already checked for existing persons above
+                if (distToPeds >= -MSPModel::SAFETY_GAP && MSNet::getInstance()->getPersonControl().getMovementModel()->blockedAtDist(foeLane, vehSideOffset, vehWidth,
                         ego->getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_CROSSING_GAP, JM_CROSSING_GAP_DEFAULT),
                         collectBlockers)) {
                     result.push_back(LinkLeader((MSVehicle*)nullptr, -1, distToPeds));
@@ -1251,19 +1252,19 @@ MSLink::getZipperSpeed(const MSVehicle* ego, const double dist, double vSafe,
     if (secondsToArrival > ZIPPER_ADAPT_TIME && dist > ZIPPER_ADAPT_DIST) {
 #ifdef DEBUG_ZIPPER
         if (DEBUG_COND_ZIPPER) DEBUGOUT(SIMTIME << " getZipperSpeed ego=" << ego->getID()
-                << " dist=" << dist << " ignoring foes (arrival in " << STEPS2TIME(arrivalTime - now) << ")\n")
+                                            << " dist=" << dist << " ignoring foes (arrival in " << STEPS2TIME(arrivalTime - now) << ")\n")
 #endif
-        return vSafe;
+            return vSafe;
     }
 #ifdef DEBUG_ZIPPER
     if (DEBUG_COND_ZIPPER) DEBUGOUT(SIMTIME << " getZipperSpeed ego=" << ego->getID()
-                                         << " egoAT=" << arrivalTime
-                                         << " dist=" << dist
-                                         << " vSafe=" << vSafe
-                                         << " numFoes=" << collectFoes->size()
-                                         << "\n")
+                                        << " egoAT=" << arrivalTime
+                                        << " dist=" << dist
+                                        << " vSafe=" << vSafe
+                                        << " numFoes=" << collectFoes->size()
+                                        << "\n")
 #endif
-    MSLink* foeLink = myFoeLinks[0];
+        MSLink* foeLink = myFoeLinks[0];
     for (const auto& item : *collectFoes) {
         const MSVehicle* foe = dynamic_cast<const MSVehicle*>(item);
         assert(foe != 0);

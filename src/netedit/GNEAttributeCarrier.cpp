@@ -10,7 +10,6 @@
 /// @file    GNEAttributeCarrier.cpp
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // Abstract Base class for gui objects which carry attributes
 /****************************************************************************/
@@ -904,7 +903,7 @@ GNEAttributeCarrier::TagProperties::canMaskXYZPositions() const {
 }
 
 
-bool 
+bool
 GNEAttributeCarrier::TagProperties::canCenterCameraAfterCreation() const {
     return (myTagProperty & TAGPROPERTY_CENTERAFTERCREATION) != 0;
 }
@@ -1164,7 +1163,7 @@ GNEAttributeCarrier::lanesConsecutives(const std::vector<GNELane*>& lanes) {
 }
 
 
-std::string 
+std::string
 GNEAttributeCarrier::getAlternativeValueForDisabledAttributes(SumoXMLAttr key) const {
     switch (key) {
         // Crossings
@@ -1176,11 +1175,11 @@ GNEAttributeCarrier::getAlternativeValueForDisabledAttributes(SumoXMLAttr key) c
             // special case for connection directions
             std::string direction = getAttribute(key);
             if (direction == "s") {
-                return "Straight (s)"; 
+                return "Straight (s)";
             } else if (direction ==  "t") {
-                return "Turn (t))"; 
+                return "Turn (t))";
             } else if (direction ==  "l") {
-                return "Left (l)"; 
+                return "Left (l)";
             } else if (direction ==  "r") {
                 return "Right (r)";
             } else if (direction ==  "L") {
@@ -1820,7 +1819,13 @@ GNEAttributeCarrier::fillNetElements() {
 
         attrProperty = AttributeProperties(SUMO_ATTR_TLLINKINDEX,
                                            ATTRPROPERTY_INT | ATTRPROPERTY_DEFAULTVALUESTATIC,
-                                           "sets the distance to the connection at which all relevant foes are visible",
+                                           "sets index of this connection within the controlling trafficlight",
+                                           "-1");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = AttributeProperties(SUMO_ATTR_TLLINKINDEX2,
+                                           ATTRPROPERTY_INT | ATTRPROPERTY_DEFAULTVALUESTATIC,
+                                           "sets index for the internal junction of this connection within the controlling trafficlight",
                                            "-1");
         myTagProperties[currentTag].addAttribute(attrProperty);
 
@@ -4509,7 +4514,7 @@ GNEAttributeCarrier::checkParsedAttribute(const TagProperties& tagProperties,
             if (SUMOXMLDefinitions::isValidVehicleID(parsedAttribute) == false) {
                 errorFormat = "Demand Element ID contains invalid characters; ";
             }
-        } else if (SUMOXMLDefinitions::isValidNetID(parsedAttribute) == false) {
+        } else if (SUMOXMLDefinitions::isValidAdditionalID(parsedAttribute) == false) {
             errorFormat = "ID contains invalid characters; ";
         }
     }
@@ -4626,7 +4631,7 @@ GNEAttributeCarrier::checkParsedAttribute(const TagProperties& tagProperties,
         }
     }
     // set extra check for RouteProbes
-    if ((attribute == SUMO_ATTR_ROUTEPROBE) && !SUMOXMLDefinitions::isValidNetID(parsedAttribute)) {
+    if ((attribute == SUMO_ATTR_ROUTEPROBE) && !SUMOXMLDefinitions::isValidAdditionalID(parsedAttribute)) {
         errorFormat = "RouteProbe ID contains invalid characters; ";
     }
     // set extra check for list of edges
@@ -4642,7 +4647,7 @@ GNEAttributeCarrier::checkParsedAttribute(const TagProperties& tagProperties,
         errorFormat = "List of vTypes contains invalid characters; ";
     }
     // set extra check for list of RouteProbe
-    if ((attribute == SUMO_ATTR_ROUTEPROBE) && !parsedAttribute.empty() && !SUMOXMLDefinitions::isValidNetID(parsedAttribute)) {
+    if ((attribute == SUMO_ATTR_ROUTEPROBE) && !parsedAttribute.empty() && !SUMOXMLDefinitions::isValidAdditionalID(parsedAttribute)) {
         errorFormat = "RouteProbe ID contains invalid characters; ";
     }
     // If attribute has an invalid format

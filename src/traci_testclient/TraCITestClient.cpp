@@ -15,7 +15,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    2008/04/07
-/// @version $Id$
 ///
 // A test execution class
 /****************************************************************************/
@@ -658,7 +657,7 @@ TraCITestClient::testAPI() {
     answerLog << "    laneNumber: " << edge.getLaneNumber(edgeID) << "\n";
     answerLog << "    streetName: " << edge.getStreetName(edgeID) << "\n";
     edge.setMaxSpeed(edgeID, 42);
-    answerLog << "    maxSpeed: " << lane.getMaxSpeed(edgeID+"_0") << "\n";
+    answerLog << "    maxSpeed: " << lane.getMaxSpeed(edgeID + "_0") << "\n";
 
     // lane
     answerLog << "  lane:\n";
@@ -908,16 +907,23 @@ TraCITestClient::testAPI() {
     std::vector<int> vars3;
     vars3.push_back(libsumo::VAR_SPEED);
     vehicle.subscribeContext("1", libsumo::CMD_GET_VEHICLE_VARIABLE, 1000, vars3, 0, 100);
-    //vehicle.addSubscriptionFilterTurn();
-    //vehicle.addSubscriptionFilterDownstreamDistance(1000);
-    //vehicle.addSubscriptionFilterUpstreamDistance(1000);
-    //vehicle.addSubscriptionFilterVClass(std::vector<std::string>({"passenger"}));
-    //vehicle.addSubscriptionFilterLanes(std::vector<int>({0, 1, 2}));
-    //vehicle.addSubscriptionFilterLeadFollow(std::vector<int>({0, 1, 2}));
-    //vehicle.addSubscriptionFilterLanes(std::vector<int>({0}));
-    //vehicle.addSubscriptionFilterLeadFollow(std::vector<int>({0}));
-    //vehicle.addSubscriptionFilterCFManeuver();
+    vehicle.addSubscriptionFilterLanes(std::vector<int>({0, 1, 2}));
+    vehicle.addSubscriptionFilterNoOpposite();
+    vehicle.addSubscriptionFilterDownstreamDistance(1000);
+    vehicle.addSubscriptionFilterUpstreamDistance(1000);
+    vehicle.addSubscriptionFilterCFManeuver();
+    vehicle.addSubscriptionFilterLeadFollow(std::vector<int>({0, 1, 2}));
+    vehicle.addSubscriptionFilterTurn();
+    vehicle.addSubscriptionFilterVClass(std::vector<std::string>({"passenger"}));
+    vehicle.addSubscriptionFilterVType(std::vector<std::string>({"passenger"}));
     vehicle.addSubscriptionFilterLCManeuver(1);
+
+    vehicle.subscribeContext("3", libsumo::CMD_GET_VEHICLE_VARIABLE, 200, vars3, 0, 100);
+    vehicle.addSubscriptionFilterFieldOfVision(90);
+
+    vehicle.subscribeContext("4", libsumo::CMD_GET_VEHICLE_VARIABLE, 200, vars3, 0, 100);
+    vehicle.addSubscriptionFilterLateralDistance(50);
+    //
 
     simulationStep();
     answerLog << "    context subscription results:\n";

@@ -13,7 +13,6 @@
 # @author  Lena Kalleske
 # @author  Michael Behrisch
 # @date    2007-10-25
-# @version $Id$
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -128,8 +127,7 @@ if __name__ == "__main__":
             logging.debug("Creating detector for lane %s" % (str(lane_id)))
 
             if lane_id in lanes_with_detectors:
-                logging.warn("Detector for lane %s already generated" %
-                             (str(lane_id)))
+                logging.warning("Detector for lane %s already generated" % lane_id)
                 continue
 
             lanes_with_detectors.add(lane_id)

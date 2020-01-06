@@ -10,7 +10,6 @@
 # @file    tracemapper.py
 # @author  Michael Behrisch
 # @date    2013-10-23
-# @version $Id$
 
 
 from __future__ import print_function
@@ -91,6 +90,8 @@ if __name__ == "__main__":
     optParser.add_option("--blur", type="float",
                          default=0, help="maximum random disturbance to route geometry")
     optParser.add_option("-l", "--layer", default=100, help="layer for generated polygons")
+    optParser.add_option("-b", "--debug", action="store_true",
+                         default=False, help="print out the debugging messages")
     (options, args) = optParser.parse_args()
 
     if not options.output or not options.net:
@@ -110,7 +111,7 @@ if __name__ == "__main__":
         else:
             outfile = os.path.basename(t).split('.')[0] + '.tc.xml'
         with open(outfile, "w") as outf:
-            outf.write('<routes>\n')
+            sumolib.xml.writeHeader(outf, root='routes')
             poiOut = None
             if options.poi_output is not None:
                 if len(tracefiles) == 1:
@@ -118,7 +119,7 @@ if __name__ == "__main__":
                 else:
                     poi_output = os.path.basename(t).split('.')[0] + '.poi.xml'
                 poiOut = open(poi_output, "w")
-                poiOut.write('<pois>\n')
+                sumolib.xml.writeHeader(poiOut, root='additional')
             polyOut = None
             if options.polygon_output is not None:
                 if len(tracefiles) == 1:
@@ -126,7 +127,7 @@ if __name__ == "__main__":
                 else:
                     polygon_output = os.path.basename(t).split('.')[0] + '.poly.xml'
                 polyOut = open(polygon_output, "w")
-                polyOut.write('<polygons>\n')
+                sumolib.xml.writeHeader(polyOut, root='additional')
                 colorgen = sumolib.miscutils.Colorgen(('random', 1, 1))
             # determine file type by reading the first 10000 bytes
             head = open(t).read(10000)
@@ -137,7 +138,7 @@ if __name__ == "__main__":
             else:
                 traces = readLines(t, net, options.geo)
             mapOpts = (options.delta, options.verbose, options.air_dist_factor,
-                       options.fill_gaps, options.gap_penalty)
+                       options.fill_gaps, options.gap_penalty, options.debug)
             for tid, trace in traces:
                 if poiOut is not None:
                     for idx, pos in enumerate(trace):
@@ -153,8 +154,8 @@ if __name__ == "__main__":
 
             outf.write('</routes>\n')
             if poiOut is not None:
-                poiOut.write('</pois>\n')
+                poiOut.write('</additional>\n')
                 poiOut.close()
             if polyOut is not None:
-                polyOut.write('</polygons>\n')
+                polyOut.write('</additional>\n')
                 polyOut.close()

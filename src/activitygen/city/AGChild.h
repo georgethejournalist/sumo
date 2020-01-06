@@ -15,7 +15,6 @@
 /// @author  Walter Bamberger
 /// @author  Michael Behrisch
 /// @date    July 2010
-/// @version $Id$
 ///
 // Person in age to go to school: linked to a school object
 /****************************************************************************/
@@ -42,7 +41,7 @@ class AGChild : public AGPerson {
 public:
     AGChild(int age) :
         AGPerson(age),
-        school(NULL) {};
+        mySchool(nullptr) {};
     void print() const;
     bool setSchool(AGSchool* school);
     /**
@@ -61,7 +60,7 @@ public:
     int getSchoolClosing() const;
 
 private:
-    AGSchool* school;
+    AGSchool* mySchool;
 };
 
 #endif

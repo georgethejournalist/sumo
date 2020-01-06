@@ -10,7 +10,6 @@
 /// @file    GNEChargingStation.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Nov 2015
-/// @version $Id$
 ///
 // A class for visualizing chargingStation geometry (adapted from GUILaneWrapper)
 /****************************************************************************/
@@ -38,8 +37,8 @@
 // member method definitions
 // ===========================================================================
 
-GNEChargingStation::GNEChargingStation(const std::string& id, GNELane* lane, GNEViewNet* viewNet, const double startPos, const double endPos, const int parametersSet, 
-        const std::string& name, double chargingPower, double efficiency, bool chargeInTransit, SUMOTime chargeDelay, bool friendlyPosition, bool blockMovement) :
+GNEChargingStation::GNEChargingStation(const std::string& id, GNELane* lane, GNEViewNet* viewNet, const double startPos, const double endPos, const int parametersSet,
+                                       const std::string& name, double chargingPower, double efficiency, bool chargeInTransit, SUMOTime chargeDelay, bool friendlyPosition, bool blockMovement) :
     GNEStoppingPlace(id, viewNet, GLO_CHARGING_STATION, SUMO_TAG_CHARGING_STATION, lane, startPos, endPos, parametersSet, name, friendlyPosition, blockMovement),
     myChargingPower(chargingPower),
     myEfficiency(efficiency),
@@ -72,7 +71,7 @@ GNEChargingStation::updateGeometry() {
     myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
 
     // Set block icon rotation, and using their rotation for sign
-    myBlockIcon.setRotation(getLaneParents().front());
+    myBlockIcon.setRotation(getParentLanes().front());
 }
 
 
@@ -123,7 +122,7 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
             // Push matrix for details
             glPushMatrix();
             // draw power depending of detailSettings
-            if (s.drawDetail(s.detailSettings.stoppingPlaceText, exaggeration)) {
+            if (s.drawDetail(s.detailSettings.stoppingPlaceText, exaggeration) && !s.drawForPositionSelection) {
                 // push a new matrix for charging power
                 glPushMatrix();
                 // draw line with a color depending of the selection status
@@ -158,7 +157,7 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
             // Draw internt sign
             GLHelper::drawFilledCircle(myCircleInWidth, s.getCircleResolution());
             // Draw sign 'C' depending of detail settings
-            if (s.drawDetail(s.detailSettings.stoppingPlaceText, exaggeration)) {
+            if (s.drawDetail(s.detailSettings.stoppingPlaceText, exaggeration) && !s.drawForPositionSelection) {
                 if (drawUsingSelectColor()) {
                     GLHelper::drawText("C", Position(), .1, myCircleInText, s.colorSettings.selectedAdditionalColor, myBlockIcon.rotation);
                 } else {
@@ -174,7 +173,7 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
         glPopMatrix();
         // Draw name if isn't being drawn for selecting
         drawName(getPositionInView(), s.scale, s.addName);
-        if (s.addFullName.show && (myAdditionalName != "") && !s.drawForRectangleSelection) {
+        if (s.addFullName.show && (myAdditionalName != "") && !s.drawForRectangleSelection && !s.drawForPositionSelection) {
             GLHelper::drawText(myAdditionalName, mySignPos, GLO_MAX - getType(), s.addFullName.scaledSize(s.scale), s.addFullName.color, myBlockIcon.rotation);
         }
         // check if dotted contour has to be drawn
@@ -183,8 +182,8 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
         }
         // Pop name matrix
         glPopName();
-        // draw demand element children
-        for (const auto& i : getDemandElementChildren()) {
+        // draw child demand elements
+        for (const auto& i : getChildDemandElements()) {
             if (!i->getTagProperty().isPlacedInRTree()) {
                 i->drawGL(s);
             }
@@ -199,7 +198,7 @@ GNEChargingStation::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_ID:
             return getAdditionalID();
         case SUMO_ATTR_LANE:
-            return getLaneParents().front()->getID();
+            return getParentLanes().front()->getID();
         case SUMO_ATTR_STARTPOS:
             if (myParametersSet & STOPPINGPLACE_STARTPOS_SET) {
                 return toString(myStartPosition);
@@ -278,7 +277,7 @@ GNEChargingStation::isValid(SumoXMLAttr key, const std::string& value) {
             if (value.empty()) {
                 return true;
             } else if (canParse<double>(value)) {
-                return SUMORouteHandler::isStopPosValid(parse<double>(value), myEndPosition, getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
+                return SUMORouteHandler::isStopPosValid(parse<double>(value), myEndPosition, getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
             } else {
                 return false;
             }
@@ -286,7 +285,7 @@ GNEChargingStation::isValid(SumoXMLAttr key, const std::string& value) {
             if (value.empty()) {
                 return true;
             } else if (canParse<double>(value)) {
-                return SUMORouteHandler::isStopPosValid(myStartPosition, parse<double>(value), getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
+                return SUMORouteHandler::isStopPosValid(myStartPosition, parse<double>(value), getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
             } else {
                 return false;
             }
@@ -324,7 +323,7 @@ GNEChargingStation::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeAdditionalID(value);
             break;
         case SUMO_ATTR_LANE:
-            changeLaneParents(this, value);
+            replaceParentLanes(this, value);
             break;
         case SUMO_ATTR_STARTPOS:
             if (!value.empty()) {

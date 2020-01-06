@@ -11,7 +11,6 @@
 /// @author  Robert Hilbrich
 /// @author  Leonhard Luecken
 /// @date    15.09.2017
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -53,9 +52,9 @@ typedef std::map<const MSLane*, std::pair<double, double> >  LaneCoverageInfo; /
 class LaneStoringVisitor {
 public:
     /// @brief Constructor
-    LaneStoringVisitor(std::set<std::string>& ids, const PositionVector& shape,
+    LaneStoringVisitor(std::set<const Named*>& objects, const PositionVector& shape,
                        const double range, const int domain)
-        : myIDs(ids), myShape(shape), myRange(range), myDomain(domain) {}
+        : myObjects(objects), myShape(shape), myRange(range), myDomain(domain) {}
 
     /// @brief Destructor
     ~LaneStoringVisitor() {}
@@ -64,7 +63,7 @@ public:
     void add(const MSLane* const l) const;
 
     /// @brief The container
-    std::set<std::string>& myIDs;
+    std::set<const Named*>& myObjects;
     const PositionVector& myShape;
     const double myRange;
     const int myDomain;
@@ -108,11 +107,15 @@ public:
     static void subscribe(const int commandId, const std::string& id, const std::vector<int>& variables,
                           const double beginTime, const double endTime, const int contextDomain = 0, const double range = 0.);
 
+    static void addSubscriptionParam(double param);
+
     static void handleSubscriptions(const SUMOTime t);
 
     static bool needNewSubscription(libsumo::Subscription& s, std::vector<Subscription>& subscriptions, libsumo::Subscription*& modifiedSubscription);
 
     static void clearSubscriptions();
+
+    static Subscription* addSubscriptionFilter(SubscriptionFilterType filter);
 
     /// @brief helper functions
     static TraCIPositionVector makeTraCIPositionVector(const PositionVector& positionVector);
@@ -132,17 +135,24 @@ public:
 
     static void findObjectShape(int domain, const std::string& id, PositionVector& shape);
 
-    static void collectObjectsInRange(int domain, const PositionVector& shape, double range, std::set<std::string>& into);
+    static void collectObjectsInRange(int domain, const PositionVector& shape, double range, std::set<const Named*>& into);
+    static void collectObjectIDsInRange(int domain, const PositionVector& shape, double range, std::set<std::string>& into);
 
-    /// @brief Filter the given ID-Set (which was obtained from an R-Tree search)
-    ///        according to the filters set by the subscription or firstly build the object ID list if
-    ///        if the filters rather demand searching along the road network than considering a geometric range.
-    /// @param[in] s Subscription which holds the filter specification to be applied
-    /// @param[in/out] objIDs Set of object IDs that is to be filtered. Result is stored in place.
-    /// @note Currently this assumes that the objects are vehicles.
+    /** 
+     * @brief Filter the given ID-Set (which was obtained from an R-Tree search)
+     *        according to the filters set by the subscription or firstly build the object ID list if
+     *        the filters rather demand searching along the road network than considering a geometric range.
+     * @param[in] s Subscription which holds the filter specification to be applied
+     * @param[in/out] objIDs Set of object IDs that is to be filtered. Result is stored in place.
+     * @note Currently this assumes that the objects are vehicles.
+     */
     static void applySubscriptionFilters(const Subscription& s, std::set<std::string>& objIDs);
 
     static void applySubscriptionFilterFieldOfVision(const Subscription& s, std::set<std::string>& objIDs);
+
+    static void applySubscriptionFilterLateralDistanceSinglePass(std::set<std::string>& objIDs, std::set<const MSVehicle*>& vehs,
+                                                                 const std::vector<const MSLane*>& lanes, double lateralDist, double streamDist,
+                                                                 double posOnLane, bool isDownstream);
 
     static void setRemoteControlled(MSVehicle* v, Position xyPos, MSLane* l, double pos, double posLat, double angle,
                                     int edgeOffset, ConstMSEdgeVector route, SUMOTime t);
@@ -162,10 +172,10 @@ public:
 
     /// @name functions for moveToXY
     /// @{
-    static bool moveToXYMap(const Position& pos, double maxRouteDistance, bool mayLeaveNetwork, const std::string& origID, const double angle,
-                            double speed, const ConstMSEdgeVector& currentRoute, const int routePosition, MSLane* currentLane, double currentLanePos, bool onRoad,
-                            SUMOVehicleClass vClass,
-                            double& bestDistance, MSLane** lane, double& lanePos, int& routeOffset, ConstMSEdgeVector& edges);
+    static bool moveToXYMap(const Position& pos, double maxRouteDistance, bool mayLeaveNetwork, const std::string& origID,
+                            const double angle, double speed, const ConstMSEdgeVector& currentRoute, const int routePosition,
+                            MSLane* currentLane, double currentLanePos, bool onRoad, SUMOVehicleClass vClass, double& bestDistance,
+                            MSLane** lane, double& lanePos, int& routeOffset, ConstMSEdgeVector& edges);
 
     static bool moveToXYMap_matchingRoutePosition(const Position& pos, const std::string& origID,
             const ConstMSEdgeVector& currentRoute, int routeIndex,
@@ -198,6 +208,10 @@ public:
     public:
         SubscriptionWrapper(VariableWrapper::SubscriptionHandler handler, SubscriptionResults& into, ContextSubscriptionResults& context);
         void setContext(const std::string& refID);
+        void setParams(const std::vector<unsigned char>* params);
+        const std::vector<unsigned char>* getParams() const {
+            return myParams;
+        }
         void clear();
         bool wrapDouble(const std::string& objID, const int variable, const double value);
         bool wrapInt(const std::string& objID, const int variable, const int value);
@@ -210,6 +224,7 @@ public:
         SubscriptionResults& myResults;
         ContextSubscriptionResults& myContextResults;
         SubscriptionResults* myActiveResults;
+        const std::vector<unsigned char>* myParams = nullptr;
     private:
         /// @brief Invalidated assignment operator
         SubscriptionWrapper& operator=(const SubscriptionWrapper& s) = delete;
@@ -235,6 +250,9 @@ private:
 
     /// @brief The list of known, still valid subscriptions
     static std::vector<Subscription> mySubscriptions;
+
+    /// @brief The last context subscription
+    static Subscription* myLastContextSubscription;
 
     /// @brief Map of commandIds -> their executors; applicable if the executor applies to the method footprint
     static std::map<int, std::shared_ptr<VariableWrapper> > myWrapper;

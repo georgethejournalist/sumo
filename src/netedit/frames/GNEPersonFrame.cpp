@@ -10,7 +10,6 @@
 /// @file    GNEPersonFrame.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    May 2019
-/// @version $Id$
 ///
 // The Widget for add Person elements
 /****************************************************************************/
@@ -337,7 +336,7 @@ GNEPersonFrame::demandElementSelected() {
             }
             // check if myEdgePathCreator has to be show
             if ((myPersonPlanTagSelector->getCurrentTagProperties().getTag() == SUMO_TAG_WALK_ROUTE) ||
-                (myPersonPlanTagSelector->getCurrentTagProperties().isPersonStop())) {
+                    (myPersonPlanTagSelector->getCurrentTagProperties().isPersonStop())) {
                 // hide edge path creator modul
                 myEdgePathCreator->hideEdgePathCreator();
                 // show Netedit attributes modul
@@ -579,7 +578,7 @@ GNEPersonFrame::buildPerson() {
         // declare SUMOSAXAttributesImpl_Cached to convert valuesMap into SUMOSAXAttributes
         SUMOSAXAttributesImpl_Cached SUMOSAXAttrs(valuesMap, getPredefinedTagsMML(), toString(personTag));
         // obtain person parameters
-        SUMOVehicleParameter* personParameters = SUMOVehicleParserHelper::parseVehicleAttributes(SUMOSAXAttrs, false, false, false, true);
+        SUMOVehicleParameter* personParameters = SUMOVehicleParserHelper::parseVehicleAttributes(SUMO_TAG_PERSON, SUMOSAXAttrs, false, false, false);
         // build person in GNERouteHandler
         GNERouteHandler::buildPerson(myViewNet, true, *personParameters);
         // delete personParameters

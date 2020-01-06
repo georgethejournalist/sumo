@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Leonhard Luecken
 /// @date    30.05.2012
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -82,6 +81,7 @@ public:
     static std::vector<std::string> getInternalFoes(const std::string& laneID);
 
     // Setter
+    static void setAllowed(std::string laneID, std::string allowedClass);
     static void setAllowed(std::string laneID, std::vector<std::string> allowedClasses);
     static void setDisallowed(std::string laneID, std::vector<std::string> disallowedClasses);
     static void setMaxSpeed(std::string laneID, double speed);

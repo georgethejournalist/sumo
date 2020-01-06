@@ -10,7 +10,6 @@
 /// @file    GNERoute.h
 /// @author  Pablo Alvarez Lopez
 /// @date    Jan 2019
-/// @version $Id$
 ///
 // A class for visualizing routes in Netedit
 /****************************************************************************/
@@ -143,7 +142,7 @@ public:
     void updateGeometry();
 
     /// @brief partial update pre-computed geometry information
-    void updatePartialGeometry(const GNEEdge *edge);
+    void updatePartialGeometry(const GNEEdge* edge);
 
     /// @brief compute path
     void computePath();
@@ -247,6 +246,12 @@ public:
     /// @brief get Hierarchy Name (Used in AC Hierarchy)
     std::string getHierarchyName() const;
     /// @}
+
+    /** @brief check if a route is valid
+     * @param[in] edges vector with the route's edges
+     * @return an empty string if route is valid, or a string with the problem
+     */
+    static std::string isRouteValid(const std::vector<GNEEdge*>& edges);
 
 protected:
     /// @brief route color

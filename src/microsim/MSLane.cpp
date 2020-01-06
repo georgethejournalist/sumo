@@ -18,7 +18,6 @@
 /// @author  Mario Krumnow
 /// @author  Leonhard Luecken
 /// @date    Mon, 05 Mar 2001
-/// @version $Id$
 ///
 // Representation of a lane in the micro simulation
 /****************************************************************************/
@@ -49,7 +48,8 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/emissions/HelpersHarmonoise.h>
 #include <utils/geom/GeomHelper.h>
-#include <microsim/pedestrians/MSPModel.h>
+#include <microsim/transportables/MSPModel.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/traffic_lights/MSRailSignal.h>
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include "MSNet.h"
@@ -576,7 +576,7 @@ MSLane::insertVehicle(MSVehicle& veh) {
                 pos = veh.getNextStop().getEndPos(veh);
                 break;
             }
-            /// fall through
+            FALLTHROUGH;
         case DEPART_POS_BASE:
         case DEPART_POS_DEFAULT:
         default:
@@ -739,7 +739,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                 // no sense in trying later
                 errorMsg = "unpriorised junction too close";
             }
-            if (checkFailure(aVehicle, speed, dist, cfModel.insertionStopSpeed(aVehicle, speed, seen),
+            const double remaining = seen - currentLane->getStopOffset(aVehicle);
+            if (checkFailure(aVehicle, speed, dist, cfModel.insertionStopSpeed(aVehicle, speed, remaining),
                              patchSpeed, errorMsg)) {
                 // we may not drive with the given velocity - we cannot stop at the junction in time
                 return false;
@@ -1435,7 +1436,7 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
     }
 
 
-    if (myEdge->getPersons().size() > 0 && MSPModel::getModel()->hasPedestrians(this)) {
+    if (myEdge->getPersons().size() > 0 && hasPedestrians()) {
 #ifdef DEBUG_PEDESTRIAN_COLLISIONS
         if (DEBUG_COND) {
             std::cout << SIMTIME << " detect pedestrian collisions stage=" << stage << " lane=" << getID() << "\n";
@@ -1447,7 +1448,7 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
             const double back = v->getBackPositionOnLane(this);
             const double length = v->getVehicleType().getLength();
             const double right = v->getRightSideOnEdge(this) - getRightSideOnEdge();
-            PersonDist leader = MSPModel::getModel()->nextBlocking(this, back, right, right + v->getVehicleType().getWidth());
+            PersonDist leader = nextBlocking(back, right, right + v->getVehicleType().getWidth());
 #ifdef DEBUG_PEDESTRIAN_COLLISIONS
             if (DEBUG_COND && DEBUG_COND2(v)) {
                 std::cout << SIMTIME << " back=" << back << " right=" << right << " person=" << Named::getIDSecure(leader.first) << " dist=" << leader.second << "\n";
@@ -1484,7 +1485,7 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
 void
 MSLane::detectPedestrianJunctionCollision(const MSVehicle* collider, const PositionVector& colliderBoundary, const MSLane* foeLane,
         SUMOTime timestep, const std::string& stage) {
-    if (foeLane->getEdge().getPersons().size() > 0 && MSPModel::getModel()->hasPedestrians(foeLane)) {
+    if (foeLane->getEdge().getPersons().size() > 0 && foeLane->hasPedestrians()) {
 #ifdef DEBUG_PEDESTRIAN_COLLISIONS
         if (DEBUG_COND) {
             std::cout << SIMTIME << " detect pedestrian junction collisions stage=" << stage << " lane=" << getID() << " foeLane=" << foeLane->getID() << "\n";
@@ -1590,6 +1591,9 @@ void
 MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVehicle* collider, MSVehicle* victim,
                                double gap, double latGap, std::set<const MSVehicle*, ComparatorNumericalIdLess>& toRemove,
                                std::set<const MSVehicle*, ComparatorNumericalIdLess>& toTeleport) const {
+    if (collider->ignoreCollision() || victim->ignoreCollision()) {
+        return;
+    }
     std::string collisionType = ((collider->getLaneChangeModel().isOpposite() != victim->getLaneChangeModel().isOpposite()
                                   || (&collider->getLane()->getEdge() == victim->getLane()->getEdge().getBidiEdge()))
                                  ?  "frontal collision" : "collision");
@@ -1608,6 +1612,7 @@ MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
         stop.busstop = "";
         stop.containerstop = "";
         stop.chargingStation = "";
+        stop.overheadWireSegment = "";
         stop.parkingarea = "";
         stop.until = 0;
         stop.triggered = false;
@@ -2648,6 +2653,19 @@ MSLane::getOutgoingViaLanes() const {
     return result;
 }
 
+std::vector<const MSLane*>
+MSLane::getNormalIncomingLanes() const {
+    std::vector<const MSLane*> result = {};
+    for (std::map<MSEdge*, std::vector<MSLane*> >::const_iterator it = myApproachingLanes.begin(); it != myApproachingLanes.end(); ++it) {
+        for (std::vector<MSLane*>::const_iterator it_lane = (*it).second.begin(); it_lane != (*it).second.end(); ++it_lane) {
+            if (!((*it_lane)->isInternal())) {
+                result.push_back(*it_lane);
+            }
+        }
+    }
+    return result;
+}
+
 
 void
 MSLane::leftByLaneChange(MSVehicle* v) {
@@ -3655,14 +3673,27 @@ MSLane::resetPermissions(long long transientID) {
 
 
 bool
+MSLane::hasPedestrians() const {
+    MSNet* const net = MSNet::getInstance();
+    return net->hasPersons() && net->getPersonControl().getMovementModel()->hasPedestrians(this);
+}
+
+
+PersonDist
+MSLane::nextBlocking(double minPos, double minRight, double maxLeft, double stopTime) const {
+    return MSNet::getInstance()->getPersonControl().getMovementModel()->nextBlocking(this, minPos, minRight, maxLeft, stopTime);
+}
+
+
+bool
 MSLane::checkForPedestrians(const MSVehicle* aVehicle, double& speed, double& dist,  double pos, bool patchSpeed) const {
-    if (getEdge().getPersons().size() > 0 && MSPModel::getModel()->hasPedestrians(this)) {
+    if (getEdge().getPersons().size() > 0 && hasPedestrians()) {
 #ifdef DEBUG_INSERTION
         if (DEBUG_COND2(aVehicle)) {
             std::cout << SIMTIME << " check for pedestrians on lane=" << getID() << " pos=" << pos << "\n";
         }
 #endif
-        PersonDist leader = MSPModel::getModel()->nextBlocking(this, pos - aVehicle->getVehicleType().getLength(),
+        PersonDist leader = nextBlocking(pos - aVehicle->getVehicleType().getLength(),
                             aVehicle->getRightSideOnLane(), aVehicle->getRightSideOnLane() + aVehicle->getVehicleType().getWidth(), ceil(speed / aVehicle->getCarFollowModel().getMaxDecel()));
         if (leader.first != 0) {
             const double gap = leader.second - aVehicle->getVehicleType().getLengthWithGap();

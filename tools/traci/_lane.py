@@ -13,7 +13,6 @@
 # @author  Laura Bieker
 # @author  Jakob Erdmann
 # @date    2011-03-17
-# @version $Id$
 
 from __future__ import absolute_import
 from .domain import Domain
@@ -125,7 +124,7 @@ class LaneDomain(Domain):
         """
         return self._getUniversal(tc.LANE_LINK_NUMBER, laneID)
 
-    def getLinks(self, laneID, extended=False):
+    def getLinks(self, laneID, extended=True):
         """getLinks(string) -> list((string, bool, bool, bool))
         A list containing id of successor lane together with priority, open and foe
         for each link.

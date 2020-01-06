@@ -16,7 +16,6 @@
 /// @author  Mario Krumnow
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // Sets and checks options for microsim; inits global outputs and settings
 /****************************************************************************/
@@ -131,8 +130,21 @@ MSFrame::fillOptions() {
     oc.doRegister("battery-output.precision", new Option_Integer(2));
     oc.addDescription("battery-output.precision", "Output", "Write battery values with the given precision (default 2)");
 
+    oc.doRegister("elechybrid-output", new Option_FileName());
+    oc.addDescription("elechybrid-output", "Output", "Save the elecHybrid values of each vehicle");
+    oc.doRegister("elechybrid-output.precision", new Option_Integer(2));
+    oc.addDescription("elechybrid-output.precision", "Output", "Write elecHybrid values with the given precision (default 2)");
+    oc.doRegister("elechybrid-output.aggregated", new Option_Bool(false));
+    oc.addDescription("elechybrid-output.aggregated", "Output", "Write elecHybrid values into one aggregated file");
+
     oc.doRegister("chargingstations-output", new Option_FileName());
     oc.addDescription("chargingstations-output", "Output", "Write data of charging stations");
+
+    oc.doRegister("overheadwiresegments-output", new Option_FileName());
+    oc.addDescription("overheadwiresegments-output", "Output", "Write data of overhead wire segments");
+
+    oc.doRegister("substations-output", new Option_FileName());
+    oc.addDescription("substations-output", "Output", "Write data of electrical substation stations");
 
     oc.doRegister("fcd-output", new Option_FileName());
     oc.addDescription("fcd-output", "Output", "Save the Floating Car Data");
@@ -142,6 +154,8 @@ MSFrame::fillOptions() {
     oc.addDescription("fcd-output.signals", "Output", "Add the vehicle signal state to the FCD output (brake lights etc.)");
     oc.doRegister("fcd-output.distance", new Option_Bool(false));
     oc.addDescription("fcd-output.distance", "Output", "Add kilometrage to the FCD output (linear referencing)");
+    oc.doRegister("fcd-output.acceleration", new Option_Bool(false));
+    oc.addDescription("fcd-output.acceleration", "Output", "Add acceleration to the FCD output");
     oc.doRegister("fcd-output.filter-edges.input-file", new Option_FileName());
     oc.addDescription("fcd-output.filter-edges.input-file", "Output", "Restrict fcd output to the edge selection from the given input file");
 
@@ -354,6 +368,9 @@ MSFrame::fillOptions() {
     oc.doRegister("default.emergencydecel", new Option_String("default"));
     oc.addDescription("default.emergencydecel", "Processing", "Select default emergencyDecel value among ('decel', 'default', FLOAT) which sets the value either to the same as the deceleration value, a vClass-class specific default or the given FLOAT in m/s^2");
 
+    oc.doRegister("overhead-wire-solver", new Option_Bool(true));
+    oc.addDescription("overhead-wire-solver", "Processing", "Use Kirchhoff's laws for solving overhead wire circuit");
+
     oc.doRegister("emergencydecel.warning-threshold", new Option_Float(1));
     oc.addDescription("emergencydecel.warning-threshold", "Processing", "Sets the fraction of emergency decel capability that must be used to trigger a warning.");
 
@@ -374,6 +391,12 @@ MSFrame::fillOptions() {
     oc.addDescription("pedestrian.striping.jamtime", "Processing", "Time in seconds after which pedestrians start squeezing through a jam when using model 'striping' (non-positive values disable squeezing)");
     oc.doRegister("pedestrian.striping.jamtime.crossing", new Option_String("10", "TIME"));
     oc.addDescription("pedestrian.striping.jamtime.crossing", "Processing", "Time in seconds after which pedestrians start squeezing through a jam while on a pedestrian crossing when using model 'striping' (non-positive values disable squeezing)");
+
+    oc.doRegister("pedestrian.striping.reserve-oncoming", new Option_Float(0.0));
+    oc.addDescription("pedestrian.striping.reserve-oncoming", "Processing", "Fraction of stripes to reserve for oncoming pedestrians");
+
+    oc.doRegister("pedestrian.striping.reserve-oncoming.junctions", new Option_Float(0.34));
+    oc.addDescription("pedestrian.striping.reserve-oncoming.junctions", "Processing", "Fraction of stripes to reserve for oncoming pedestrians on crossings and walkingareas");
 
     oc.doRegister("pedestrian.remote.address", new Option_String("localhost:9000"));
     oc.addDescription("pedestrian.remote.address", "Processing", "The address (host:port) of the external simulation");
@@ -416,11 +439,14 @@ MSFrame::fillOptions() {
     oc.addSynonyme("duration-log.disable", "no-duration-log", false);
     oc.addDescription("duration-log.disable", "Report", "Disable performance reports for individual simulation steps");
 
-    oc.doRegister("duration-log.statistics", new Option_Bool(false));
+    oc.doRegister("duration-log.statistics", 't', new Option_Bool(false));
     oc.addDescription("duration-log.statistics", "Report", "Enable statistics on vehicle trips");
 
     oc.doRegister("no-step-log", new Option_Bool(false));
     oc.addDescription("no-step-log", "Report", "Disable console output of current simulation step");
+
+    oc.doRegister("step-log.period", new Option_Integer(100));
+    oc.addDescription("step-log.period", "Report", "Number of simulation steps between step-log outputs");
 
     //remote port 0 if not used
     oc.addOptionSubTopic("TraCI Server");
@@ -541,7 +567,13 @@ MSFrame::buildStreams() {
     OutputDevice::createDeviceByOption("fcd-output", "fcd-export", "fcd_file.xsd");
     OutputDevice::createDeviceByOption("emission-output", "emission-export", "emission_file.xsd");
     OutputDevice::createDeviceByOption("battery-output", "battery-export");
+    if (OptionsCont::getOptions().getBool("elechybrid-output.aggregated")) {
+        OutputDevice::createDeviceByOption("elechybrid-output", "elecHybrid-export-aggregated");
+    }
+    //OutputDevice::createDeviceByOption("elecHybrid-output", "elecHybrid-export");
     OutputDevice::createDeviceByOption("chargingstations-output", "chargingstations-export");
+    OutputDevice::createDeviceByOption("overheadwiresegments-output", "overheadWireSegments-export");
+    OutputDevice::createDeviceByOption("substations-output", "substations-export");
     OutputDevice::createDeviceByOption("full-output", "full-export", "full_file.xsd");
     OutputDevice::createDeviceByOption("queue-output", "queue-export", "queue_file.xsd");
     OutputDevice::createDeviceByOption("amitran-output", "trajectories", "amitran/trajectories.xsd\" timeStepSize=\"" + toString(STEPS2MS(DELTA_T)));
@@ -657,6 +689,9 @@ MSFrame::checkOptions() {
         if (oc.isDefault("battery-output.precision")) {
             oc.set("battery-output.precision", toString(oc.getInt("precision")));
         }
+        if (oc.isDefault("elechybrid-output.precision")) {
+            oc.set("elechybrid-output.precision", toString(oc.getInt("precision")));
+        }
     }
     if (!SUMOXMLDefinitions::CarFollowModels.hasString(oc.getString("carfollow.model"))) {
         WRITE_ERROR("Unknown model '" + oc.getString("carfollow.model")  + "' for option 'carfollow.model'.");
@@ -739,6 +774,8 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     }
     MSGlobals::gWaitingTimeMemory = string2time(oc.getString("waiting-time-memory"));
     MSAbstractLaneChangeModel::initGlobalOptions(oc);
+    MSGlobals::gOverheadWireSolver = oc.getBool("overhead-wire-solver");
+
     MSLane::initCollisionOptions(oc);
 
     DELTA_T = string2time(oc.getString("step-length"));

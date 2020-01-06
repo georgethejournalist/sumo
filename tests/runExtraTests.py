@@ -10,7 +10,6 @@
 # @file    runExtraTests.py
 # @author  Michael Behrisch
 # @date    2012-03-29
-# @version $Id$
 
 
 import optparse
@@ -54,10 +53,10 @@ def run(suffix, args, out=sys.stdout, guiTests=False, console=False, chrouter=Tr
     env["GUISIM_BINARY"] = os.path.join(root, "..", "bin", "sumo-gui" + suffix)
     env["MAROUTER_BINARY"] = os.path.join(
         root, "..", "bin", "marouter" + suffix)
-    apps = "sumo.meso,sumo.ballistic,sumo.idm,sumo.sublanes,sumo.astar,sumo.parallel,netconvert.gdal,polyconvert.gdal"
+    apps = "sumo.extra,sumo.meso,sumo.ballistic,sumo.idm,sumo.sublanes,sumo.astar,sumo.parallel,netconvert.gdal,polyconvert.gdal"
     apps += ",complex.meso,duarouter.astar"
     if chrouter:
-        apps += ",duarouter.chrouter"
+        apps += ",duarouter.chrouter,duarouter.chwrapper"
     ttBin = 'texttest.py'
     if os.name == "posix":
         if subprocess.call(['which', 'texttest']) == 0:

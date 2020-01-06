@@ -11,7 +11,6 @@
 # @author  Daniel Krajzewicz
 # @author  Michael Behrisch
 # @date    2012-10-19
-# @version $Id$
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -56,7 +55,7 @@ def runSingle(traciEndTime, viewRange, objID):
                                            viewRange, [traci.constants.VAR_POSITION])
             sys.stdout.flush()
 
-            laneList = map(int, sys.argv[3].strip('[]').split(','))
+            laneList = list(map(int, sys.argv[3].strip('[]').split(',')))
 
             traci.vehicle.addSubscriptionFilterLanes(laneList)
             traci.vehicle.addSubscriptionFilterUpstreamDistance(float(sys.argv[4]))

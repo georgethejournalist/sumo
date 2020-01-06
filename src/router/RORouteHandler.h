@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Mon, 9 Jul 2001
-/// @version $Id$
 ///
 // Parser and container for routes during their loading
 /****************************************************************************/
@@ -211,6 +210,9 @@ protected:
 
     /// @brief whether to keep the the vtype distribution in output
     const bool myKeepVTypeDist;
+
+    /// @brief maximum distance when map-matching
+    const double myMapMatchingDistance;
 
     /// @brief The currently parsed distribution of vehicle types (probability->vehicle type)
     RandomDistributor<SUMOVTypeParameter*>* myCurrentVTypeDistribution;

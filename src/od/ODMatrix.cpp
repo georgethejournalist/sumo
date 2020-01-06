@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Yun-Pang Floetteroed
 /// @date    05 Apr. 2006
-/// @version $Id$
 ///
 // An O/D (origin/destination) matrix
 /****************************************************************************/
@@ -41,6 +40,7 @@
 #include <utils/importio/LineReader.h>
 #include <utils/xml/SUMOSAXHandler.h>
 #include <utils/xml/XMLSubSys.h>
+#include <router/RORoute.h>
 #include "ODAmitranHandler.h"
 #include "ODMatrix.h"
 
@@ -53,8 +53,11 @@ ODMatrix::ODMatrix(const ODDistrictCont& dc)
 
 
 ODMatrix::~ODMatrix() {
-    for (std::vector<ODCell*>::iterator i = myContainer.begin(); i != myContainer.end(); ++i) {
-        delete *i;
+    for (ODCell* const cell: myContainer) {
+        for (RORoute* const r :cell->pathsVector) {
+            delete r;
+        }
+        delete cell;
     }
     myContainer.clear();
 }

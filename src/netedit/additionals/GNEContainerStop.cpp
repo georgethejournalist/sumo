@@ -10,7 +10,6 @@
 /// @file    GNEContainerStop.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2016
-/// @version $Id$
 ///
 // A lane area vehicles can halt at (GNE version)
 /****************************************************************************/
@@ -38,8 +37,8 @@
 // method definitions
 // ===========================================================================
 
-GNEContainerStop::GNEContainerStop(const std::string& id, GNELane* lane, GNEViewNet* viewNet, const double startPos, const double endPos, const int parametersSet, 
-        const std::string& name, const std::vector<std::string>& lines, bool friendlyPosition, bool blockMovement) :
+GNEContainerStop::GNEContainerStop(const std::string& id, GNELane* lane, GNEViewNet* viewNet, const double startPos, const double endPos, const int parametersSet,
+                                   const std::string& name, const std::vector<std::string>& lines, bool friendlyPosition, bool blockMovement) :
     GNEStoppingPlace(id, viewNet, GLO_CONTAINER_STOP, SUMO_TAG_CONTAINER_STOP, lane, startPos, endPos, parametersSet, name, friendlyPosition, blockMovement),
     myLines(lines) {
 }
@@ -54,7 +53,7 @@ GNEContainerStop::updateGeometry() {
     double offsetSign = OptionsCont::getOptions().getBool("lefthand") ? -1 : 1;
 
     // Update common geometry of stopping place
-    setStoppingPlaceGeometry(getLaneParents().front()->getParentEdge()->getNBEdge()->getLaneWidth(getLaneParents().front()->getIndex()) / 2);
+    setStoppingPlaceGeometry(getParentLanes().front()->getParentEdge()->getNBEdge()->getLaneWidth(getParentLanes().front()->getIndex()) / 2);
 
     // Obtain a copy of the shape
     PositionVector tmpShape = myAdditionalGeometry.getShape();
@@ -69,7 +68,7 @@ GNEContainerStop::updateGeometry() {
     myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
 
     // Set block icon rotation, and using their rotation for sign
-    myBlockIcon.setRotation(getLaneParents().front());
+    myBlockIcon.setRotation(getParentLanes().front());
 }
 
 
@@ -119,21 +118,24 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
         } else if (s.drawDetail(s.detailSettings.stoppingPlaceDetails, exaggeration)) {
             // Add a draw matrix for details
             glPushMatrix();
-            // Iterate over every line
-            for (int i = 0; i < (int)myLines.size(); ++i) {
-                // push a new matrix for every line
-                glPushMatrix();
-                // Rotate and traslaste
-                glTranslated(mySignPos.x(), mySignPos.y(), 0);
-                glRotated(-1 * myBlockIcon.rotation, 0, 0, 1);
-                // draw line with a color depending of the selection status
-                if (drawUsingSelectColor()) {
-                    GLHelper::drawText(myLines[i].c_str(), Position(1.2, (double)i), .1, 1.f, s.colorSettings.selectionColor, 0, FONS_ALIGN_LEFT);
-                } else {
-                    GLHelper::drawText(myLines[i].c_str(), Position(1.2, (double)i), .1, 1.f, s.colorSettings.containerStop, 0, FONS_ALIGN_LEFT);
+            // only draw lines if we aren't in draw for position selection
+            if (!s.drawForPositionSelection) {
+                // Iterate over every line
+                for (int i = 0; i < (int)myLines.size(); ++i) {
+                    // push a new matrix for every line
+                    glPushMatrix();
+                    // Rotate and traslaste
+                    glTranslated(mySignPos.x(), mySignPos.y(), 0);
+                    glRotated(-1 * myBlockIcon.rotation, 0, 0, 1);
+                    // draw line with a color depending of the selection status
+                    if (drawUsingSelectColor()) {
+                        GLHelper::drawText(myLines[i].c_str(), Position(1.2, (double)i), .1, 1.f, s.colorSettings.selectionColor, 0, FONS_ALIGN_LEFT);
+                    } else {
+                        GLHelper::drawText(myLines[i].c_str(), Position(1.2, (double)i), .1, 1.f, s.colorSettings.containerStop, 0, FONS_ALIGN_LEFT);
+                    }
+                    // pop matrix for every line
+                    glPopMatrix();
                 }
-                // pop matrix for every line
-                glPopMatrix();
             }
             // Start drawing sign traslating matrix to signal position
             glTranslated(mySignPos.x(), mySignPos.y(), 0);
@@ -158,7 +160,7 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
             // draw another circle in the same position, but a little bit more small
             GLHelper::drawFilledCircle(myCircleInWidth, s.getCircleResolution());
             // draw text depending of detail settings
-            if (s.drawDetail(s.detailSettings.stoppingPlaceText, exaggeration)) {
+            if (s.drawDetail(s.detailSettings.stoppingPlaceText, exaggeration) && !s.drawForPositionSelection) {
                 if (drawUsingSelectColor()) {
                     GLHelper::drawText("C", Position(), .1, myCircleInText, s.colorSettings.selectedAdditionalColor, myBlockIcon.rotation);
                 } else {
@@ -182,8 +184,8 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
         }
         // Pop name
         glPopName();
-        // draw demand element children
-        for (const auto& i : getDemandElementChildren()) {
+        // draw child demand elements
+        for (const auto& i : getChildDemandElements()) {
             if (!i->getTagProperty().isPlacedInRTree()) {
                 i->drawGL(s);
             }
@@ -198,7 +200,7 @@ GNEContainerStop::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_ID:
             return getAdditionalID();
         case SUMO_ATTR_LANE:
-            return getLaneParents().front()->getID();
+            return getParentLanes().front()->getID();
         case SUMO_ATTR_STARTPOS:
             if (myParametersSet & STOPPINGPLACE_STARTPOS_SET) {
                 return toString(myStartPosition);
@@ -268,7 +270,7 @@ GNEContainerStop::isValid(SumoXMLAttr key, const std::string& value) {
             if (value.empty()) {
                 return true;
             } else if (canParse<double>(value)) {
-                return SUMORouteHandler::isStopPosValid(parse<double>(value), myEndPosition, getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
+                return SUMORouteHandler::isStopPosValid(parse<double>(value), myEndPosition, getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
             } else {
                 return false;
             }
@@ -276,7 +278,7 @@ GNEContainerStop::isValid(SumoXMLAttr key, const std::string& value) {
             if (value.empty()) {
                 return true;
             } else if (canParse<double>(value)) {
-                return SUMORouteHandler::isStopPosValid(myStartPosition, parse<double>(value), getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
+                return SUMORouteHandler::isStopPosValid(myStartPosition, parse<double>(value), getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength(), POSITION_EPS, myFriendlyPosition);
             } else {
                 return false;
             }
@@ -308,7 +310,7 @@ GNEContainerStop::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeAdditionalID(value);
             break;
         case SUMO_ATTR_LANE:
-            changeLaneParents(this, value);
+            replaceParentLanes(this, value);
             break;
         case SUMO_ATTR_STARTPOS:
             if (!value.empty()) {

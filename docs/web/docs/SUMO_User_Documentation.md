@@ -119,12 +119,14 @@ documentation, submission of code, or other results.
 
 - [Emissions](Models/Emissions.md)
 - [Electric Vehicles](Models/Electric.md)
+- [Electric Hybrid Vehicles, overhead lines, power substations](Models/ElectricHybrid.md)
 - [Logistics](Specification/Logistics.md)
 - [Generic Parameters](Simulation/GenericParameters.md)
 - [Shapes Visualisation](Simulation/Shapes.md)
 - [Wireless Device Detection](Simulation/Bluetooth.md)
 - [Emergency Vehicles](Simulation/Emergency.md)
 - [Simple Platooning (Simpla)](Simpla.md)
+- [Demand Responsive Transport (Taxis)](Simulation/Taxi.md)
 
 ## Model details
 

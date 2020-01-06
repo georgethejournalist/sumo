@@ -11,7 +11,6 @@
 /// @author  Laura Bieker-Walz
 /// @author  Robert Hilbrich
 /// @date    15.09.2017
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -22,6 +21,7 @@
 #include <config.h>
 
 #include <utils/options/OptionsCont.h>
+#include <utils/common/MsgHandler.h>
 #include <utils/common/StdDefs.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/StringUtils.h>
@@ -38,11 +38,13 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleControl.h>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/MSStateHandler.h>
 #include <microsim/MSStoppingPlace.h>
 #include <microsim/MSParkingArea.h>
 #include <microsim/devices/MSRoutingEngine.h>
+#include <microsim/trigger/MSChargingStation.h>
+#include <microsim/trigger/MSOverheadWire.h>
 #include <netload/NLBuilder.h>
 #include <libsumo/TraCIConstants.h>
 #include "Simulation.h"
@@ -62,11 +64,14 @@ ContextSubscriptionResults Simulation::myContextSubscriptionResults;
 // ===========================================================================
 void
 Simulation::load(const std::vector<std::string>& args) {
-    close();
+    close("Libsumo issued load command.");
     XMLSubSys::init();
     OptionsIO::setArgs(args);
     NLBuilder::init();
     Helper::registerVehicleStateListener();
+    if (MSNet::hasInstance()) {
+        WRITE_MESSAGE("Simulation started via Libsumo with time: " + time2string(SIMSTEP));
+    }
 }
 
 
@@ -92,10 +97,10 @@ Simulation::step(const double time) {
 
 
 void
-Simulation::close() {
+Simulation::close(const std::string& reason) {
     Helper::clearSubscriptions();
     if (MSNet::hasInstance()) {
-        MSNet::getInstance()->closeSimulation(0);
+        MSNet::getInstance()->closeSimulation(0, reason);
         delete MSNet::getInstance();
         XMLSubSys::close();
         SystemFrame::close();
@@ -437,7 +442,7 @@ Simulation::getDistanceRoad(const std::string& edgeID1, double pos1, const std::
 
 TraCIStage
 Simulation::findRoute(const std::string& from, const std::string& to, const std::string& typeID, const double depart, const int routingMode) {
-    TraCIStage result(MSTransportable::DRIVING);
+    TraCIStage result(STAGE_DRIVING);
     const MSEdge* const fromEdge = MSEdge::dictionary(from);
     if (fromEdge == nullptr) {
         throw TraCIException("Unknown from edge '" + from + "'.");
@@ -577,12 +582,7 @@ Simulation::findIntermodalRoute(const std::string& from, const std::string& to,
             double cost = 0;
             for (std::vector<MSNet::MSIntermodalRouter::TripItem>::iterator it = items.begin(); it != items.end(); ++it) {
                 if (!it->edges.empty()) {
-                    resultCand.push_back(TraCIStage(it->line == ""
-                                                    ? MSTransportable::MOVING_WITHOUT_VEHICLE
-                                                    : MSTransportable::DRIVING));
-                    resultCand.back().vType = it->vType;
-                    resultCand.back().line = it->line;
-                    resultCand.back().destStop = it->destStop;
+                    resultCand.push_back(TraCIStage((it->line == "" ? STAGE_WALKING : STAGE_DRIVING), it->vType, it->line, it->destStop));
                     for (const MSEdge* e : it->edges) {
                         resultCand.back().edges.push_back(e->getID());
                     }
@@ -629,6 +629,19 @@ Simulation::getParameter(const std::string& objectID, const std::string& key) {
         } else {
             throw TraCIException("Invalid chargingStation parameter '" + attrName + "'");
         }
+	} else if (StringUtils::startsWith(key, "overheadWire.")) {
+		const std::string attrName = key.substr(16);
+		MSOverheadWire* cs = static_cast<MSOverheadWire*>(MSNet::getInstance()->getStoppingPlace(objectID, SUMO_TAG_OVERHEAD_WIRE_SEGMENT));
+		if (cs == 0) {
+			throw TraCIException("Invalid overhead wire '" + objectID + "'");
+		}
+		if (attrName == toString(SUMO_ATTR_TOTALENERGYCHARGED)) {
+			return toString(cs->getTotalCharged());
+        } else if (attrName == toString(SUMO_ATTR_NAME)) {
+            return toString(cs->getMyName());
+		} else {
+			throw TraCIException("Invalid overhead wire parameter '" + attrName + "'");
+		}
     } else if (StringUtils::startsWith(key, "parkingArea.")) {
         const std::string attrName = key.substr(12);
         MSParkingArea* pa = static_cast<MSParkingArea*>(MSNet::getInstance()->getStoppingPlace(objectID, SUMO_TAG_PARKING_AREA));

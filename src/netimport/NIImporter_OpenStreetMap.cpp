@@ -14,7 +14,6 @@
 /// @author  Walter Bamberger
 /// @author  Gregor Laemmel
 /// @date    Mon, 14.04.2008
-/// @version $Id$
 ///
 // Importer for networks stored in OpenStreetMap format
 /****************************************************************************/
@@ -1282,8 +1281,7 @@ NIImporter_OpenStreetMap::RelationHandler::myEndElement(int element) {
                         assert(myPlatformShapes.find(myPlatform.ref) != myPlatformShapes.end()); //already tested earlier
                         Edge* edge = (*myPlatformShapes.find(myPlatform.ref)).second;
                         if (edge->myCurrentNodes[0] == *(edge->myCurrentNodes.end() - 1)) {
-                            WRITE_WARNING("Platform '" + toString(myPlatform.ref) + "' in  relation: '" + toString(myCurrentRelation)
-                                          + "'  is given as polygon, which currently is not supported.");
+                            WRITE_WARNINGF("Platform '%' in relation: '%' is given as polygon, which currently is not supported.", myPlatform.ref, myCurrentRelation);
                             continue;
 
                         }
@@ -1342,7 +1340,7 @@ NIImporter_OpenStreetMap::RelationHandler::myEndElement(int element) {
 //                    resetValues();
 //                    return;
                     if (!ptLine->getStops().empty()) {
-                        WRITE_WARNING("Done reading first coherent chunk of pt stops. Further stops in relation " + toString(myCurrentRelation) + " are ignored");
+                        WRITE_WARNINGF("Done reading first coherent chunk of pt stops. Further stops in relation % are ignored", myCurrentRelation);
                         break;
                     }
                     continue;
@@ -1371,7 +1369,7 @@ NIImporter_OpenStreetMap::RelationHandler::myEndElement(int element) {
                 }
             }
             if (ptLine->getStops().empty()) {
-                WRITE_WARNING("PT line in relation " + toString(myCurrentRelation) + " with no stops ignored. Probably OSM file is incomplete.");
+                WRITE_WARNINGF("PT line in relation % with no stops ignored. Probably OSM file is incomplete.", myCurrentRelation);
                 resetValues();
                 return;
             }

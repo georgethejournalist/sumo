@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Andreas Gaubatz
 /// @date    2004
-/// @version $Id$
 ///
 // An enumeration of icons used by the gui applications
 /****************************************************************************/
@@ -201,6 +200,13 @@ enum GUIIcon {
     ICON_LANEBUS,
     ICON_LANEBIKE,
     ICON_LANEGREENVERGE,
+    /// @}
+
+    /// @name netedit save elements
+    /// @{
+    ICON_SAVENETELEMENTS,
+    ICON_SAVEADDITIONALS,
+    ICON_SAVEDEMANDELEMENTS,
     /// @}
 
     /// @name netedit supermode icons

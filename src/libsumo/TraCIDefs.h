@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Robert Hilbrich
 /// @date    30.05.2012
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -40,9 +39,10 @@
 // ===========================================================================
 
 #define LIBSUMO_SUBSCRIPTION_API \
-static void subscribe(const std::string& objectID, const std::vector<int>& varIDs = std::vector<int>(), double begin = libsumo::INVALID_DOUBLE_VALUE, double end = libsumo::INVALID_DOUBLE_VALUE); \
-static void subscribeContext(const std::string& objectID, int domain, double range, const std::vector<int>& varIDs = std::vector<int>(), double begin = libsumo::INVALID_DOUBLE_VALUE, double end = libsumo::INVALID_DOUBLE_VALUE); \
-static void unsubscribeContext(const std::string& objectID, int domain, double range); \
+static void subscribe(const std::string& objectID, const std::vector<int>& varIDs = std::vector<int>({-1}), double begin = libsumo::INVALID_DOUBLE_VALUE, double end = libsumo::INVALID_DOUBLE_VALUE); \
+static void unsubscribe(const std::string& objectID); \
+static void subscribeContext(const std::string& objectID, int domain, double dist, const std::vector<int>& varIDs = std::vector<int>({-1}), double begin = libsumo::INVALID_DOUBLE_VALUE, double end = libsumo::INVALID_DOUBLE_VALUE); \
+static void unsubscribeContext(const std::string& objectID, int domain, double dist); \
 static const SubscriptionResults getAllSubscriptionResults(); \
 static const TraCIResults getSubscriptionResults(const std::string& objectID); \
 static const ContextSubscriptionResults getAllContextSubscriptionResults(); \
@@ -54,12 +54,16 @@ CLASS::subscribe(const std::string& objectID, const std::vector<int>& varIDs, do
     libsumo::Helper::subscribe(CMD_SUBSCRIBE_##DOMAIN##_VARIABLE, objectID, varIDs, begin, end); \
 } \
 void \
-CLASS::subscribeContext(const std::string& objectID, int domain, double range, const std::vector<int>& varIDs, double begin, double end) { \
-    libsumo::Helper::subscribe(CMD_SUBSCRIBE_##DOMAIN##_CONTEXT, objectID, varIDs, begin, end, domain, range); \
+CLASS::unsubscribe(const std::string& objectID) { \
+    libsumo::Helper::subscribe(CMD_SUBSCRIBE_##DOMAIN##_VARIABLE, objectID, std::vector<int>(), libsumo::INVALID_DOUBLE_VALUE, libsumo::INVALID_DOUBLE_VALUE); \
 } \
 void \
-CLASS::unsubscribeContext(const std::string& objectID, int domain, double range) { \
-    libsumo::Helper::subscribe(CMD_SUBSCRIBE_##DOMAIN##_CONTEXT, objectID, std::vector<int>(), libsumo::INVALID_DOUBLE_VALUE, libsumo::INVALID_DOUBLE_VALUE, domain, range); \
+CLASS::subscribeContext(const std::string& objectID, int domain, double dist, const std::vector<int>& varIDs, double begin, double end) { \
+    libsumo::Helper::subscribe(CMD_SUBSCRIBE_##DOMAIN##_CONTEXT, objectID, varIDs, begin, end, domain, dist); \
+} \
+void \
+CLASS::unsubscribeContext(const std::string& objectID, int domain, double dist) { \
+    libsumo::Helper::subscribe(CMD_SUBSCRIBE_##DOMAIN##_CONTEXT, objectID, std::vector<int>(), libsumo::INVALID_DOUBLE_VALUE, libsumo::INVALID_DOUBLE_VALUE, domain, dist); \
 } \
 const SubscriptionResults \
 CLASS::getAllSubscriptionResults() { \
@@ -344,8 +348,13 @@ struct TraCIBestLanesData {
 
 class TraCIStage {
 public:
-    TraCIStage() {} // only to make swig happy
-    TraCIStage(int type) : type(type) {}
+    TraCIStage(int type=INVALID_INT_VALUE, const std::string& vType="", const std::string& line="", const std::string& destStop="",
+               const std::vector<std::string>& edges=std::vector<std::string>(),
+               double travelTime=INVALID_DOUBLE_VALUE, double cost=INVALID_DOUBLE_VALUE, double length=INVALID_DOUBLE_VALUE,
+               const std::string& intended="", double depart=INVALID_DOUBLE_VALUE, double departPos=INVALID_DOUBLE_VALUE,
+               double arrivalPos=INVALID_DOUBLE_VALUE, const std::string& description="") :
+               type(type), vType(vType), line(line), destStop(destStop), edges(edges), travelTime(travelTime), cost(cost),
+               length(length), intended(intended), depart(depart), departPos(departPos), arrivalPos(arrivalPos), description(description) {}
     /// @brief The type of stage (walking, driving, ...)
     int type;
     /// @brief The vehicle type when using a private car or bike
@@ -361,17 +370,17 @@ public:
     /// @brief effort needed
     double cost;
     /// @brief length in m
-    double length = INVALID_DOUBLE_VALUE;
+    double length;
     /// @brief id of the intended vehicle for public transport ride
-    std::string intended = "";
+    std::string intended;
     /// @brief intended depart time for public transport ride or INVALID_DOUBLE_VALUE
-    double depart = INVALID_DOUBLE_VALUE;
+    double depart;
     /// @brief position on the lane when starting the stage
-    double departPos = INVALID_DOUBLE_VALUE;
+    double departPos;
     /// @brief position on the lane when ending the stage
-    double arrivalPos = INVALID_DOUBLE_VALUE;
+    double arrivalPos;
     /// @brief arbitrary description string
-    std::string description = "";
+    std::string description;
 };
 }
 

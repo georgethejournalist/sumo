@@ -10,7 +10,6 @@
 /// @file    GNEPersonPlanFrame.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2019
-/// @version $Id$
 ///
 // The Widget for add PersonPlan elements
 /****************************************************************************/
@@ -225,28 +224,28 @@ GNEPersonPlanFrame::PersonPlanCreator::refreshPersonPlanCreator() {
     // clear edges
     myClickedEdges.clear();
     myTemporalEdgePath.clear();
-    // first check if person has already demand element children
+    // first check if person has already child demand elements
     if (myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement() &&
-            (myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement()->getDemandElementChildren().size() > 0)) {
+            (myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement()->getChildDemandElements().size() > 0)) {
         // obtain last person plan element tag and pointer (to improve code legibliy)
-        SumoXMLTag lastPersonPlanElementTag = myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement()->getDemandElementChildren().back()->getTagProperty().getTag();
-        GNEDemandElement* lastPersonPlanElement = myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement()->getDemandElementChildren().back();
+        SumoXMLTag lastPersonPlanElementTag = myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement()->getChildDemandElements().back()->getTagProperty().getTag();
+        GNEDemandElement* lastPersonPlanElement = myPersonPlanFrameParent->myPersonSelector->getCurrentDemandElement()->getChildDemandElements().back();
         // add edge of last person plan of current edited person
         if (lastPersonPlanElementTag == SUMO_TAG_PERSONSTOP_LANE) {
             // obtan edge's lane of stop lane
-            addEdge(lastPersonPlanElement->getLaneParents().front()->getParentEdge());
+            addEdge(lastPersonPlanElement->getParentLanes().front()->getParentEdge());
         } else if (lastPersonPlanElementTag == SUMO_TAG_PERSONSTOP_BUSSTOP) {
             // obtan edge's lane of stop stopping place
-            addEdge(lastPersonPlanElement->getAdditionalParents().front()->getLaneParents().front()->getParentEdge());
+            addEdge(lastPersonPlanElement->getParentAdditionals().front()->getParentLanes().front()->getParentEdge());
         } else if ((lastPersonPlanElementTag == SUMO_TAG_PERSONTRIP_BUSSTOP) || (lastPersonPlanElementTag == SUMO_TAG_WALK_BUSSTOP) || (lastPersonPlanElementTag == SUMO_TAG_RIDE_BUSSTOP)) {
             // obtan edge's lane of Person Plans placed over stopping places
-            addEdge(lastPersonPlanElement->getAdditionalParents().front()->getLaneParents().front()->getParentEdge());
+            addEdge(lastPersonPlanElement->getParentAdditionals().front()->getParentLanes().front()->getParentEdge());
         } else if (lastPersonPlanElementTag == SUMO_TAG_WALK_ROUTE) {
             // obtan edge's lane of Person Plans placed over stopping places
-            addEdge(lastPersonPlanElement->getDemandElementParents().back()->getEdgeParents().back());
+            addEdge(lastPersonPlanElement->getParentDemandElements().back()->getParentEdges().back());
         } else {
-            // all rest of person plans have edge parents
-            addEdge(lastPersonPlanElement->getEdgeParents().back());
+            // all rest of person plans have parent edges
+            addEdge(lastPersonPlanElement->getParentEdges().back());
         }
         // set current begin element information
         myCurrentBeginElementLabel->setText((myClickedEdges.front()->getID()).c_str());
@@ -617,7 +616,7 @@ GNEPersonPlanFrame::personPlanCreated(GNEAdditional* busStop, GNEDemandElement* 
                     return false;
                 } else {
                     // add busstop's edge to personPlan creator (To calculate a temporal route)
-                    myPersonPlanCreator->addEdge(busStop->getLaneParents().front()->getParentEdge());
+                    myPersonPlanCreator->addEdge(busStop->getParentLanes().front()->getParentEdge());
                     if (myPersonPlanCreator->getEdgePath().size() > 0) {
                         GNERouteHandler::buildPersonTripBusStop(myViewNet, true, myPersonSelector->getCurrentDemandElement(), myPersonPlanCreator->getEdgePath().front(), busStop, types, modes);
                     } else {
@@ -657,7 +656,7 @@ GNEPersonPlanFrame::personPlanCreated(GNEAdditional* busStop, GNEDemandElement* 
                     myViewNet->setStatusBarText("A walk with from and busStop attributes needs one edge and one busStop");
                 } else {
                     // add busstop's edge to personPlan creator (To calculate a temporal route)
-                    myPersonPlanCreator->addEdge(busStop->getLaneParents().front()->getParentEdge());
+                    myPersonPlanCreator->addEdge(busStop->getParentLanes().front()->getParentEdge());
                     if (myPersonPlanCreator->getEdgePath().size() > 0) {
                         GNERouteHandler::buildWalkBusStop(myViewNet, true, myPersonSelector->getCurrentDemandElement(), myPersonPlanCreator->getEdgePath().front(), busStop);
                     } else {
@@ -697,7 +696,7 @@ GNEPersonPlanFrame::personPlanCreated(GNEAdditional* busStop, GNEDemandElement* 
                     myViewNet->setStatusBarText("A ride with from and busStop attributes needs one edge and one busStop");
                 } else {
                     // add busstop's edge to personPlan creator (To calculate a temporal route)
-                    myPersonPlanCreator->addEdge(busStop->getLaneParents().front()->getParentEdge());
+                    myPersonPlanCreator->addEdge(busStop->getParentLanes().front()->getParentEdge());
                     if (myPersonPlanCreator->getEdgePath().size() > 0) {
                         GNERouteHandler::buildRideBusStop(myViewNet, true, myPersonSelector->getCurrentDemandElement(), myPersonPlanCreator->getEdgePath().front(), busStop, lines);
                     } else {

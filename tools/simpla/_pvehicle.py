@@ -9,7 +9,6 @@
 # @file    _pvehicle.py
 # @author Leonhard Luecken
 # @date   2017-04-09
-# @version $Id$
 
 import os
 import sys
@@ -119,7 +118,7 @@ class PVehicle(object):
         origVType = self._vTypes[PlatoonMode.NONE]
         if origVType not in cfg.PLATOON_VTYPES \
                 or mode not in cfg.PLATOON_VTYPES[origVType] \
-                or cfg.PLATOON_VTYPES[origVType][mode] is "":
+                or cfg.PLATOON_VTYPES[origVType][mode] == "":
             if "default" in cfg.PLATOON_VTYPES and mode in cfg.PLATOON_VTYPES["default"]:
                 if rp.VERBOSITY >= 1 and not WARNED_DEFAULT[mode]:
                     warn(("Using default vType '%s' for vehicle '%s' (PlatoonMode: '%s'). " +
@@ -304,7 +303,7 @@ class PVehicle(object):
         '''isSwitchSafe(PlatoonMode, double) -> bool
 
         Checks whether it is safe for this vehicle to continue in the target mode.
-        The parameter switchImpatience \in [0,1] indicates the emergency of the switch
+        The parameter switchImpatience in [0,1] indicates the emergency of the switch
         and controls to which degree the vehicle is disposed to break harder than
         its preferred decel.
         '''

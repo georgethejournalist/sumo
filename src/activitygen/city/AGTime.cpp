@@ -15,7 +15,6 @@
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
 /// @date    July 2010
-/// @version $Id$
 ///
 // Time manager: able to manipulate the time using Sumo's format (seconds)
 /****************************************************************************/
@@ -158,8 +157,8 @@ AGTime::setSecond(int s) {
 }
 
 void
-AGTime::setTime(int mySeconds) {
-    this->mySeconds = mySeconds;
+AGTime::setTime(int seconds) {
+    mySeconds = seconds;
 }
 
 void

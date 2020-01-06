@@ -13,7 +13,6 @@
 /// @author  Axel Wegener
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A position in the 2D- or 3D-world
 /****************************************************************************/
@@ -283,11 +282,6 @@ public:
 
     /// @brief used to indicate that a position is valid
     static const Position INVALID;
-
-    /// @brief reference to invalid position (needed if INVALID is taken by macro-definition)
-    static const Position& invalidPosition() {
-        return INVALID;
-    }
 
 private:
     /// @brief  The x-position

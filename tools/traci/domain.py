@@ -14,7 +14,6 @@
 # @author  Daniel Krajzewicz
 # @author  Jakob Erdmann
 # @date    2008-10-09
-# @version $Id$
 
 from __future__ import print_function
 from __future__ import absolute_import
@@ -138,8 +137,7 @@ class Domain:
                 varIDs = (tc.LAST_STEP_VEHICLE_NUMBER,)
             else:
                 varIDs = (tc.TRACI_ID_LIST,)
-        self._connection._subscribe(
-            self._subscribeID, begin, end, objectID, varIDs)
+        self._connection._subscribe(self._subscribeID, begin, end, objectID, varIDs)
 
     def unsubscribe(self, objectID):
         """unsubscribe(string) -> None

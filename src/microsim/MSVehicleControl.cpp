@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Wed, 10. Dec 2003
-/// @version $Id$
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
@@ -60,20 +59,33 @@ MSVehicleControl::MSVehicleControl() :
     myTotalTravelTime(0),
     myDefaultVTypeMayBeDeleted(true),
     myDefaultPedTypeMayBeDeleted(true),
+    myDefaultContainerTypeMayBeDeleted(true),
     myDefaultBikeTypeMayBeDeleted(true),
     myWaitingForPerson(0),
     myWaitingForContainer(0),
     myMaxSpeedFactor(1),
     myMinDeceleration(SUMOVTypeParameter::getDefaultDecel(SVC_IGNORING)),
-    myPendingRemovals(MSGlobals::gNumSimThreads > 1) {
+    myPendingRemovals(MSGlobals::gNumSimThreads > 1) 
+{
     SUMOVTypeParameter defType(DEFAULT_VTYPE_ID, SVC_PASSENGER);
     myVTypeDict[DEFAULT_VTYPE_ID] = MSVehicleType::build(defType);
+
     SUMOVTypeParameter defPedType(DEFAULT_PEDTYPE_ID, SVC_PEDESTRIAN);
     defPedType.parametersSet |= VTYPEPARS_VEHICLECLASS_SET;
     myVTypeDict[DEFAULT_PEDTYPE_ID] = MSVehicleType::build(defPedType);
+
     SUMOVTypeParameter defBikeType(DEFAULT_BIKETYPE_ID, SVC_BICYCLE);
     defBikeType.parametersSet |= VTYPEPARS_VEHICLECLASS_SET;
     myVTypeDict[DEFAULT_BIKETYPE_ID] = MSVehicleType::build(defBikeType);
+
+    SUMOVTypeParameter defContainerType(DEFAULT_CONTAINERTYPE_ID, SVC_IGNORING);
+    // ISO Container TEU (cannot set this based on vClass)
+    defContainerType.length = 6.1;
+    defContainerType.width = 2.4;
+    defContainerType.height = 2.6;
+    defContainerType.parametersSet |= VTYPEPARS_VEHICLECLASS_SET;
+    myVTypeDict[DEFAULT_CONTAINERTYPE_ID] = MSVehicleType::build(defContainerType);
+
     myScale = OptionsCont::getOptions().getFloat("scale");
 }
 
@@ -91,7 +103,7 @@ MSVehicleControl::~MSVehicleControl() {
     myVTypeDistDict.clear();
     // delete vehicle types
     for (VTypeDictType::iterator i = myVTypeDict.begin(); i != myVTypeDict.end(); ++i) {
-        delete(*i).second;
+        delete (*i).second;
     }
     myVTypeDict.clear();
 }
@@ -146,7 +158,7 @@ MSVehicleControl::removePending() {
         myRunningVehNo--;
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_ARRIVED);
         for (MSVehicleDevice* const dev : veh->getDevices()) {
-            dev->generateOutput();
+            dev->generateOutput(tripinfoOut);
         }
         if (tripinfoOut != nullptr) {
             // close tag after tripinfo (possibly including emissions from another device) have been written
@@ -219,7 +231,7 @@ MSVehicleControl::addVehicle(const std::string& id, SUMOVehicle* v) {
         // id not in myVehicleDict.
         myVehicleDict[id] = v;
         const SUMOVehicleParameter& pars = v->getParameter();
-        if (pars.departProcedure == DEPART_TRIGGERED || pars.departProcedure == DEPART_CONTAINER_TRIGGERED) {
+        if (pars.departProcedure == DEPART_TRIGGERED || pars.departProcedure == DEPART_CONTAINER_TRIGGERED || pars.departProcedure == DEPART_SPLIT) {
             const MSEdge* const firstEdge = v->getRoute().getEdges()[0];
             if (!MSGlobals::gUseMesoSim) {
                 // position will be checked against person position later
@@ -279,6 +291,14 @@ MSVehicleControl::checkVType(const std::string& id) {
             delete myVTypeDict[id];
             myVTypeDict.erase(myVTypeDict.find(id));
             myDefaultPedTypeMayBeDeleted = false;
+        } else {
+            return false;
+        }
+    } else if (id == DEFAULT_CONTAINERTYPE_ID) {
+        if (myDefaultContainerTypeMayBeDeleted) {
+            delete myVTypeDict[id];
+            myVTypeDict.erase(myVTypeDict.find(id));
+            myDefaultContainerTypeMayBeDeleted = false;
         } else {
             return false;
         }
@@ -394,7 +414,8 @@ MSVehicleControl::getVTypeDistributionMembership(const std::string& id) const {
 void
 MSVehicleControl::abortWaiting() {
     for (VehicleDictType::iterator i = myVehicleDict.begin(); i != myVehicleDict.end(); ++i) {
-        WRITE_WARNING("Vehicle " + i->first + " aborted waiting for a person or a container that will never come.");
+        WRITE_WARNINGF("Vehicle '%' aborted waiting for a % that will never come.", i->first, 
+                i->second->getParameter().departProcedure == DEPART_SPLIT ? "split" : "person or container")
     }
 }
 

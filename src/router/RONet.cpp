@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // The router's network representation
 /****************************************************************************/
@@ -79,14 +78,17 @@ RONet::RONet()
     SUMOVTypeParameter* type = new SUMOVTypeParameter(DEFAULT_VTYPE_ID, SVC_PASSENGER);
     type->onlyReferenced = true;
     myVehicleTypes.add(type->id, type);
+
     SUMOVTypeParameter* defPedType = new SUMOVTypeParameter(DEFAULT_PEDTYPE_ID, SVC_PEDESTRIAN);
     defPedType->onlyReferenced = true;
     defPedType->parametersSet |= VTYPEPARS_VEHICLECLASS_SET;
     myVehicleTypes.add(defPedType->id, defPedType);
+
     SUMOVTypeParameter* defBikeType = new SUMOVTypeParameter(DEFAULT_BIKETYPE_ID, SVC_BICYCLE);
     defBikeType->onlyReferenced = true;
     defBikeType->parametersSet |= VTYPEPARS_VEHICLECLASS_SET;
     myVehicleTypes.add(defBikeType->id, defBikeType);
+
     myInstance = this;
 }
 
@@ -370,6 +372,12 @@ RONet::addVehicle(const std::string& id, ROVehicle* veh) {
     }
     WRITE_ERROR("Another vehicle with the id '" + id + "' exists.");
     return false;
+}
+
+
+bool
+RONet::knowsVehicle(const std::string& id) {
+    return myVehIDs.find(id) != myVehIDs.end();
 }
 
 

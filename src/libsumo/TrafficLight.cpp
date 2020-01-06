@@ -13,7 +13,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    30.05.2012
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -27,8 +26,8 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSNet.h>
-#include <microsim/MSTransportable.h>
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSTransportable.h>
+#include <microsim/transportables/MSPerson.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
 #include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSActuatedTrafficLightLogic.h>
@@ -151,6 +150,7 @@ std::string
 TrafficLight::getPhaseName(const std::string& tlsID) {
     return getTLS(tlsID).getActive()->getCurrentPhaseDef().getName();
 }
+
 
 double
 TrafficLight::getPhaseDuration(const std::string& tlsID) {
@@ -285,9 +285,9 @@ TrafficLight::setCompleteRedYellowGreenDefinition(const std::string& tlsID, cons
                 break;
             case TLTYPE_STATIC:
                 tlLogic = new MSSimpleTrafficLightLogic(tlc,
-                        tlsID, logic.programID, TLTYPE_STATIC,
-                        phases, step, nextSwitch,
-                        logic.subParameter);
+                                                        tlsID, logic.programID, TLTYPE_STATIC,
+                                                        phases, step, nextSwitch,
+                                                        logic.subParameter);
                 break;
             default:
                 throw TraCIException("Unsupported traffic light type '" + toString(logic.type) + "'");

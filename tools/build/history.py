@@ -10,7 +10,6 @@
 # @file    history.py
 # @author  Michael Behrisch
 # @date    2014-06-21
-# @version $Id$
 
 """
 This script builds all sumo versions in a certain revision range
@@ -25,7 +24,8 @@ import os
 import sys
 import traceback
 
-import version
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sumolib  # noqa
 
 
 optParser = optparse.OptionParser()
@@ -44,7 +44,7 @@ try:
     for line in subprocess.check_output(["git", "log", "%s..%s" % (options.begin, options.end)]).splitlines():
         if line.startswith("commit "):
             h = line.split()[1]
-            commits[h] = version.gitDescribe(h)
+            commits[h] = sumolib.version.gitDescribe(h)
     haveBuild = False
     for h, desc in sorted(commits.items(), key=lambda x: x[1]):
         if not os.path.exists('../bin%s' % desc):

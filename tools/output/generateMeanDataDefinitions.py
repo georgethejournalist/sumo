@@ -11,7 +11,6 @@
 # @author  Karol Stosiek
 # @author  Michael Behrisch
 # @date    2011-10-25
-# @version $Id$  # noqa
 
 from __future__ import absolute_import
 
@@ -62,7 +61,7 @@ if __name__ == "__main__":
             detector file is invalid (None or empty). """
 
         if (provided_options.detector_file is None or
-                provided_options.detector_file is ""):
+                provided_options.detector_file == ""):
             logging.fatal("Invalid input file. \n" +
                           option_parser.format_help())
             exit()
@@ -83,7 +82,7 @@ if __name__ == "__main__":
             Validated frequency is either an empty string or is a positive
             integer. """
 
-        if provided_options.frequency is not "":
+        if provided_options.frequency != "":
             try:
                 frequency = int(provided_options.frequency)
                 if frequency < 0:

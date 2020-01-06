@@ -11,7 +11,6 @@
 # @author  Karol Stosiek
 # @author  Michael Behrisch
 # @date    2011-10-26
-# @version $Id$
 
 from __future__ import absolute_import
 
@@ -144,8 +143,8 @@ class Connections:
             self.connections_map[source][source_lane] = set()
 
         if destination in self.connections_map[source][source_lane]:
-            self.logger.warn("Destination for %s (lane %s) readded: %s"
-                             % (str(source), str(source_lane), str(destination)))
+            self.logger.warning("Destination for %s (lane %s) readded: %s"
+                                % (source, source_lane, destination))
 
         self.connections_map[source][source_lane].add(destination)
 

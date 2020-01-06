@@ -10,7 +10,6 @@
 /// @file    MSPushButton.cpp
 /// @author  Federico Caselli
 /// @date    2015-07-15
-/// @version $Id$
 ///
 // The class for a PushButton
 /****************************************************************************/
@@ -22,7 +21,7 @@
 #include "../MSEdge.h"
 #include "../MSLane.h"
 #include "../MSVehicle.h"
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSPerson.h>
 
 MSPushButton::MSPushButton(const MSEdge* edge, const MSEdge* crossingEdge) {
     m_edge = edge;

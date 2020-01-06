@@ -10,7 +10,6 @@
 /// @file    Simulation.h
 /// @author  Robert Hilbrich
 /// @date    15.09.2017
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -53,7 +52,7 @@ public:
     static bool isLoaded();
 
     /// @brief close simulation
-    static void close();
+    static void close(const std::string& reason="Libsumo requested termination.");
 
     /// @brief Advances by one step (or up to the given time)
     static void step(const double time = 0.);

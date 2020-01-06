@@ -14,7 +14,6 @@
 # @author  Jakob Erdmann
 # @author  Robert Hilbrich
 # @date    2008-03-27
-# @version $Id$
 
 """
 This file contains a content handler for parsing sumo network xml files.
@@ -89,12 +88,12 @@ class TLS:
 
 class Phase:
 
-    def __init__(self, duration, state, minDur=-1, maxDur=-1, next=[], name=""):
+    def __init__(self, duration, state, minDur=-1, maxDur=-1, next=None, name=""):
         self.duration = duration
         self.state = state
         self.minDur = minDur  # minimum duration (only for actuated tls)
         self.maxDur = maxDur  # maximum duration (only for actuated tls)
-        self.next = next
+        self.next = [] if next is None else next
         self.name = name
 
     def __repr__(self):
@@ -113,7 +112,7 @@ class TLSProgram:
         self._phases = []
         self._params = {}
 
-    def addPhase(self, state, duration, minDur=-1, maxDur=-1, next=[], name=""):
+    def addPhase(self, state, duration, minDur=-1, maxDur=-1, next=None, name=""):
         self._phases.append(Phase(duration, state, minDur, maxDur, next, name))
 
     def toXML(self, tlsID):
@@ -156,6 +155,7 @@ class Net:
         self._id2node = {}
         self._id2edge = {}
         self._crossings_and_walkingAreas = set()
+        self._macroConnectors = set()
         self._id2tls = {}
         self._nodes = []
         self._edges = []
@@ -480,7 +480,23 @@ class Net:
             e.rebuildShape()
 
     def getShortestPath(self, fromEdge, toEdge, maxCost=1e400, vClass=None):
-        q = [(0, fromEdge.getID(), fromEdge, ())]
+        """
+        Finds the shortest path from fromEdge to toEdge respecting vClass, using Dijkstra's algorithm.
+        It returns a pair of a tuple of edges and the cost. If no path is found the first element is None.
+        The cost for the returned path is equal to the sum of all edge lengths in the path,
+        including the internal connectors, if they are present in the network.
+        The path itself does not include internal edges except for the case
+        when the start or end edge are internal edges.
+        The search may be limited using the given threshold.
+        """
+        if self.hasInternal:
+            appendix = ()
+            appendixCost = 0.
+            while toEdge.getFunction() == "internal":
+                appendix = (toEdge,) + appendix
+                appendixCost += toEdge.getLength()
+                toEdge = list(toEdge.getIncoming().keys())[0]
+        q = [(fromEdge.getLength(), fromEdge.getID(), fromEdge, ())]
         seen = set()
         dist = {fromEdge: fromEdge.getLength()}
         while q:
@@ -490,6 +506,8 @@ class Net:
             seen.add(e1)
             path += (e1,)
             if e1 == toEdge:
+                if self.hasInternal:
+                    return path + appendix, cost + appendixCost
                 return path, cost
             if cost > maxCost:
                 return None, cost
@@ -527,6 +545,7 @@ class NetReader(handler.ContentHandler):
         self._withConnections = others.get('withConnections', True)
         self._withFoes = others.get('withFoes', True)
         self._withPedestrianConnections = others.get('withPedestrianConnections', False)
+        self._withMacroConnectors = others.get('withMacroConnectors', False)
         self._withInternal = others.get('withInternal', self._withPedestrianConnections)
         if self._withPedestrianConnections and not self._withInternal:
             sys.stderr.write("Warning: Option withPedestrianConnections requires withInternal\n")
@@ -538,7 +557,9 @@ class NetReader(handler.ContentHandler):
                                   "origBoundary"], attrs["projParameter"])
         if name == 'edge':
             function = attrs.get('function', '')
-            if function == '' or self._withInternal:
+            if (function == ''
+                    or (self._withInternal and function in ['internal', 'crossing', 'walkingarea'])
+                    or (self._withMacroConnectors and function == 'connector')):
                 prio = -1
                 if 'priority' in attrs:
                     prio = int(attrs['priority'])
@@ -564,6 +585,8 @@ class NetReader(handler.ContentHandler):
             else:
                 if function in ['crossing', 'walkingarea']:
                     self._net._crossings_and_walkingAreas.add(attrs['id'])
+                elif function == 'connector':
+                    self._net._macroConnectors.add(attrs['id'])
                 self._currentEdge = None
         if name == 'lane' and self._currentEdge is not None:
             self._currentLane = self._net.addLane(
@@ -622,8 +645,10 @@ class NetReader(handler.ContentHandler):
         if name == 'connection' and self._withConnections and (attrs['from'][0] != ":" or self._withInternal):
             fromEdgeID = attrs['from']
             toEdgeID = attrs['to']
-            if self._withPedestrianConnections or not (fromEdgeID in self._net._crossings_and_walkingAreas or
-                                                       toEdgeID in self._net._crossings_and_walkingAreas):
+            if ((self._withPedestrianConnections or not (fromEdgeID in self._net._crossings_and_walkingAreas or
+                                                         toEdgeID in self._net._crossings_and_walkingAreas))
+                and (self._withMacroConnectors or not (fromEdgeID in self._net._macroConnectors or toEdgeID in
+                                                       self._net._macroConnectors))):
                 fromEdge = self._net.getEdge(fromEdgeID)
                 toEdge = self._net.getEdge(toEdgeID)
                 fromLane = fromEdge.getLane(int(attrs['fromLane']))
@@ -664,7 +689,7 @@ class NetReader(handler.ContentHandler):
                 attrs['state'], int(attrs['duration']),
                 int(attrs['minDur']) if 'minDur' in attrs else -1,
                 int(attrs['maxDur']) if 'maxDur' in attrs else -1,
-                map(int, attrs['next'].split()) if 'next' in attrs else [],
+                list(map(int, attrs['next'].split())) if 'next' in attrs else [],
                 attrs['name'] if 'name' in attrs else ""
             )
         if name == 'roundabout':

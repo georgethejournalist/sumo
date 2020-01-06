@@ -20,7 +20,6 @@
 /// @author  Jakob Erdmann
 /// @author  Laura Bieker
 /// @date    2007/10/24
-/// @version $Id$
 ///
 // holds codes used for TraCI
 /****************************************************************************/
@@ -397,7 +396,7 @@ TRACI_CONST int REMOVE_TELEPORT_ARRIVED = 0x04;
 TRACI_CONST int STAGE_WAITING_FOR_DEPART = 0x00;
 // person / container stopping
 TRACI_CONST int STAGE_WAITING = 0x01;
-// person walking / container transhiping
+// person walking
 TRACI_CONST int STAGE_WALKING = 0x02;
 // person riding / container being transported
 TRACI_CONST int STAGE_DRIVING = 0x03;
@@ -405,6 +404,8 @@ TRACI_CONST int STAGE_DRIVING = 0x03;
 TRACI_CONST int STAGE_ACCESS = 0x04;
 // stage for encoding abstract travel demand
 TRACI_CONST int STAGE_TRIP = 0x05;
+// person / container transhiping
+TRACI_CONST int STAGE_TRANSHIP = 0x06;
 
 // ****************************************
 // Stop Flags
@@ -491,6 +492,9 @@ TRACI_CONST int FILTER_TYPE_VTYPE = 0x09;
 
 // Only return vehicles within field of vision in context subscription result
 TRACI_CONST int FILTER_TYPE_FIELD_OF_VISION = 0x0A;
+
+// Only return vehicles within the given lateral distance in context subscription result
+TRACI_CONST int FILTER_TYPE_LATERAL_DIST = 0x0B;
 
 // ****************************************
 // VARIABLE TYPES (for CMD_GET_*_VARIABLE)

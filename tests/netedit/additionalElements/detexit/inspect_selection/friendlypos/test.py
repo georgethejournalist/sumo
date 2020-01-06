@@ -10,7 +10,6 @@
 # @file    test.py
 # @author  Pablo Alvarez Lopez
 # @date    2016-11-25
-# @version $Id$
 
 # import common functions for netedit tests
 import os
@@ -35,7 +34,7 @@ netedit.selectionInvert()
 netedit.inspectMode()
 
 # inspect Entry
-netedit.leftClick(referencePosition, 150, 280)
+netedit.leftClick(referencePosition, 150, 240)
 
 # Change boolean parameter friendlypos
 netedit.modifyAttribute(0, "true", True)

@@ -388,6 +388,7 @@ These values have the following meanings:
 | emissionClass     | emission class (enum)             | ["PC_G_EU4"](Models/Emissions/HBEFA3-based.md)            | An [emission class (see below)](#vehicle_emission_classes). By default a gasoline passenger car conforming to emission standard *EURO 4* is used.                                                           |
 | guiShape          | shape (enum)                      | "unknown"                                                           | [a vehicle shape for drawing](#visualization). By default a standard passenger car body is drawn.                                                                                                           |
 | width             | float                             | 1.8                                                                 | The vehicle's width \[m\] (used only for visualization with the default model, affects [sublane model](Simulation/SublaneModel.md))                                                                            |
+| height            | float                             | 1.5                                                                 | The vehicle's height \[m\]                                                                            |
 | collisionMinGapFactor | float                             | depends on carFollowModel (1.0 for most models)                                                                | The minimum fraction of minGap that must be maintained to the leader vehicle to avoid a collision event                                                                            |
 | imgFile           | filename (string)                 | ""                                                                  | Image file for rendering vehicles of this type (should be grayscale to allow functional coloring)                                                                                                                      |
 | osgFile           | filename (string)                 | ""                                                                  | Object file for rendering with OpenSceneGraph (any of the file types supported by the available OSG-plugins)                                                                                                           |
@@ -630,6 +631,15 @@ length look quite odd, buses with 2m length, too.
 
 !!! caution
     Not all of these named shapes are implemented.
+    
+Further parameters can be used to achieve visualization of individual rail carriages
+```
+<vType id="rail">
+    <param key="carriageLength" value="20"/>
+    <param key="carriageGap" value="1"/>
+    <param key="locomotiveLength" value="25"/>   
+</vType>
+```
 
 ## Car-Following Models
 
@@ -761,6 +771,8 @@ lists which parameter are used by which model(s).
 | lcTurnAlignmentDistance | Distance to an upcoming turn on the vehicles route, below which the alignment should be dynamically adapted to match the turn direction. *default: 0.0 (i.e., disabled)*                                                                                 | SL2015         |
 | lcMaxSpeedLatStanding   | Upper bound on lateral speed when standing. *default: maxSpeedLat (i.e., disabled)*   | LC2013, SL2015         |
 | lcMaxSpeedLatFactor     | Upper bound on lateral speed while moving computed as lcMaxSpeedLatStanding + lcMaxSpeedLatFactor \* getSpeed(). *default: 1.0*                                                                                                                          | LC2013, SL2015         |
+| lcLaneDiscipline     | Reluctance to perform speedGain-changes that would place the vehicle across a lane boundary. *default: 0.0*| SL2015         |
+| lcSigma     | Lateral positioning-imperfection. *default: 0.0*                                                                                                                          | LC2013, SL2015         |
 
 The parameters are set within the `<vType>`:
 
@@ -987,17 +999,19 @@ as output (device.fcd) or behavior (device.rerouting).
 The following device names are supported and can be used for the
 placeholder `<DEVICENAME>` below
 
-- emission
-- battery
-- btreiver
-- btsender
-- bluelight
-- rerouting
+- [emission](Models/Emissions.md)
+- [battery](Models/Electric.md)
+- [elechybrid](Models/ElectricHybrid.md)
+- [btreiver](Simulation/Bluetooth.md)
+- [btsender](Simulation/Bluetooth.md)
+- [bluelight](Simulation/Emergency.md)
+- [rerouting](Demand/Automatic_Routing.md)
 - [ssm](Simulation/Output/SSM_Device.md)
 - [toc](ToC_Device.md)
 - [driverstate](Driver_State.md)
-- fcd
-- example
+- [fcd](Simulation/Output/FCDOutput.md)
+- [Demand Responsive Transport (Taxis)](Simulation/Taxi.md)
+- [example](Developer/How_To/Device.md)
 
 ## Automatic assignment
 

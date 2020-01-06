@@ -9,7 +9,6 @@
 # @file    _utils.py
 # @author Leonhard Luecken
 # @date   2018-06-26
-# @version $Id$
 
 '''
 Utility functions and classes for simpla
@@ -98,7 +97,7 @@ class GapController(traci.StepListener):
             return
 
         (leaderID, gap) = leaderInfo
-        assert(leaderID is not "")
+        assert(leaderID != "")
 
         self._egoSpeed = traci.vehicle.getSpeed(self._vehID)
         self._leaderSpeed = traci.vehicle.getSpeed(leaderID)

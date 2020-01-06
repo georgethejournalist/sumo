@@ -12,7 +12,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    Fri, 30.01.2009
-/// @version $Id$
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
@@ -119,7 +118,7 @@ public:
      *
      * @exception IOError not yet implemented
      */
-    void generateOutput() const;
+    void generateOutput(OutputDevice* tripinfoOut) const;
 
 
     /** @brief Called on route retrieval

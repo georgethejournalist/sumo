@@ -11,7 +11,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    2013-06-05
-/// @version $Id$
 ///
 // Tests the cfmodel functions
 /****************************************************************************/
@@ -76,6 +75,7 @@ protected :
         dummyEdge->initialize(&lanes);
         edges.push_back(dummyEdge);
         route = new MSRoute("dummyRoute", edges, true, 0, defs->stops);
+        MSGlobals::gActionStepLength = DELTA_T;
         type = MSVehicleType::build(typeDefs);
         veh = new MSVehicleMock(defs, route, type, 1);
         veh->setTentativeLaneAndPosition(dummyLane, 0);

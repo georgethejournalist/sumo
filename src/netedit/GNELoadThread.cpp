@@ -10,7 +10,6 @@
 /// @file    GNELoadThread.cpp
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // The thread that performs the loading of a Netedit-net (adapted from
 // GUILoadThread)
@@ -81,6 +80,9 @@ GNELoadThread::run() {
             submitEndAndCleanup(net);
             return 0;
         }
+    }
+    if (oc.isDefault("aggregate-warnings")) {
+        oc.set("aggregate-warnings", "5");
     }
     MsgHandler::initOutputOptions();
     if (!(NIFrame::checkOptions() &&

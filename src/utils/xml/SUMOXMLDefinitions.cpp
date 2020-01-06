@@ -15,7 +15,6 @@
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
@@ -72,6 +71,10 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "parkingArea",                SUMO_TAG_PARKING_AREA },
     { "space",                      SUMO_TAG_PARKING_SPACE },
     { "chargingStation",            SUMO_TAG_CHARGING_STATION },
+    { "overheadWireSegment",        SUMO_TAG_OVERHEAD_WIRE_SEGMENT },
+    { "overheadWire",               SUMO_TAG_OVERHEAD_WIRE_SECTION },
+    { "tractionSubstation",         SUMO_TAG_TRACTION_SUBSTATION },
+    { "overheadWireClamp",          SUMO_TAG_OVERHEAD_WIRE_CLAMP },
     { "vTypeProbe",                 SUMO_TAG_VTYPEPROBE },
     { "routeProbe",                 SUMO_TAG_ROUTEPROBE },
     { "routes",                     SUMO_TAG_ROUTES },
@@ -161,7 +164,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "delay",                      SUMO_TAG_DELAY },
     { "viewport",                   SUMO_TAG_VIEWPORT },
     { "snapshot",                   SUMO_TAG_SNAPSHOT },
-    { "breakpoints-file",           SUMO_TAG_BREAKPOINTS_FILE },
     { "breakpoint",                 SUMO_TAG_BREAKPOINT },
     { "location",                   SUMO_TAG_LOCATION },
     { "colorScheme",                SUMO_TAG_COLORSCHEME },
@@ -317,6 +319,20 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "boardingDuration",       SUMO_ATTR_BOARDING_DURATION },
     { "loadingDuration",        SUMO_ATTR_LOADING_DURATION },
     { "maneuverAngleTimes",     SUMO_ATTR_MANEUVER_ANGLE_TIMES },
+    // MSDevice_ElecHybrid
+    { "overheadWireChargingPower",      SUMO_ATTR_OVERHEADWIRECHARGINGPOWER },
+    // OverheadWire
+    { "overheadWireSegment",    SUMO_ATTR_OVERHEAD_WIRE_SEGMENT },
+    { "segments",               SUMO_ATTR_OVERHEAD_WIRE_SECTION },
+    { "voltage",                SUMO_ATTR_VOLTAGE },
+    { "voltageSource",          SUMO_ATTR_VOLTAGESOURCE },
+    { "currentLimit",           SUMO_ATTR_CURRENTLIMIT },
+    { "substationId",           SUMO_ATTR_SUBSTATIONID },
+    { "wireResistivity",        SUMO_ATTR_OVERHEAD_WIRE_RESISTIVITY },
+    { "forbiddenInnerLanes",    SUMO_ATTR_OVERHEAD_WIRE_FORBIDDEN },
+    { "clamps",                  SUMO_ATTR_OVERHEAD_WIRE_CLAMPS },
+    { "idSegmentStartClamp",    SUMO_ATTR_OVERHEAD_WIRE_CLAMP_START },
+    { "idSegmentEndClamp",      SUMO_ATTR_OVERHEAD_WIRE_CLAMP_END },
     // Charging Station
     { "power",                  SUMO_ATTR_CHARGINGPOWER },
     { "efficiency",             SUMO_ATTR_EFFICIENCY },
@@ -337,6 +353,12 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "recuperationEfficiency",         SUMO_ATTR_RECUPERATIONEFFICIENCY },
     { "recuperationEfficiencyByDecel",  SUMO_ATTR_RECUPERATIONEFFICIENCY_BY_DECELERATION },
     { "stoppingTreshold",               SUMO_ATTR_STOPPINGTRESHOLD },
+    // MSElecHybridExport
+    { "overheadWireId",         SUMO_ATTR_OVERHEADWIREID },
+    { "tractionSubstationId",   SUMO_ATTR_TRACTIONSUBSTATIONID },
+    { "current",                SUMO_ATTR_CURRENTFROMOVERHEADWIRE },
+    { "circuitVoltage",         SUMO_ATTR_VOLTAGEOFOVERHEADWIRE },
+    { "alphaCircuitSolver",     SUMO_ATTR_ALPHACIRCUITSOLVER },
     // MSBatteryExport
     { "energyConsumed",         SUMO_ATTR_ENERGYCONSUMED },
     { "chargingStationId",      SUMO_ATTR_CHARGINGSTATIONID },
@@ -415,6 +437,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     { "last",                   SUMO_ATTR_LAST },
     { "cost",                   SUMO_ATTR_COST },
+    { "costs",                  SUMO_ATTR_COSTS },
     { "savings",                SUMO_ATTR_SAVINGS },
     { "probability",            SUMO_ATTR_PROB },
     { "probabilities",          SUMO_ATTR_PROBS },
@@ -521,6 +544,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "line",                   SUMO_ATTR_LINE },
     { "lines",                  SUMO_ATTR_LINES },
     { "tripId",                 SUMO_ATTR_TRIP_ID },
+    { "split",                  SUMO_ATTR_SPLIT },
+    { "join",                   SUMO_ATTR_JOIN },
     { "intended",               SUMO_ATTR_INTENDED },
     { "value",                  SUMO_ATTR_VALUE },
     { "prohibitor",             SUMO_ATTR_PROHIBITOR },
@@ -981,16 +1006,20 @@ SUMOXMLDefinitions::isValidTypeID(const std::string& value) {
     return (value.size() > 0) && value.find_first_of(" \t\n\r|\\'\";,<>&*?") == std::string::npos;
 }
 
+bool
+SUMOXMLDefinitions::isValidAdditionalID(const std::string& value) {
+    return (value.size() > 0) && value.find_first_of(" \t\n\r|\\'\";,!<>&*?") == std::string::npos;
+}
 
 bool
 SUMOXMLDefinitions::isValidDetectorID(const std::string& value) {
-    return (value.size() > 0) && value.find_first_of("\t\n\r|\\'\";,:!<>&*?") == std::string::npos;
+    // special case: ' ' allowed
+    return (value.size() > 0) && value.find_first_of("\t\n\r|\\'\";,!<>&*?") == std::string::npos;
 }
-
 
 bool
 SUMOXMLDefinitions::isValidAttribute(const std::string& value) {
-    return value.find_first_of("\t\n\r@$%^&/|\\{}*'\";:<>") == std::string::npos;
+    return value.find_first_of("\t\n\r@$%^&/|\\{}*'\";<>") == std::string::npos;
 }
 
 
@@ -1024,7 +1053,7 @@ SUMOXMLDefinitions::isValidListOfTypeID(const std::string& value) {
         return false;
     } else {
         // check that gives IDs are valid
-        for (const auto &i : typeIDs) {
+        for (const auto& i : typeIDs) {
             if (!SUMOXMLDefinitions::isValidTypeID(i)) {
                 return false;
             }

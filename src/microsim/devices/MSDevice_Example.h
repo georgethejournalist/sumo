@@ -11,7 +11,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @date    11.06.2013
-/// @version $Id$
 ///
 // A device which stands as an implementation example and which outputs movereminder calls
 /****************************************************************************/
@@ -65,7 +64,8 @@ public:
      */
     static void buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>& into);
 
-
+    /// @brief resets counters
+    static void cleanup();
 
 public:
     /// @brief Destructor.
@@ -130,7 +130,7 @@ public:
      * @exception IOError not yet implemented
      * @see MSDevice::generateOutput
      */
-    void generateOutput() const;
+    void generateOutput(OutputDevice* tripinfoOut) const;
 
 
 

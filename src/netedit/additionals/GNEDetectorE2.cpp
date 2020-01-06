@@ -10,7 +10,6 @@
 /// @file    GNEDetectorE2.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Nov 2015
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -39,14 +38,16 @@
 // ===========================================================================
 
 GNEDetectorE2::GNEDetectorE2(const std::string& id, GNELane* lane, GNEViewNet* viewNet, double pos, double length, SUMOTime freq, const std::string& filename, const std::string& vehicleTypes,
-        const std::string& name, SUMOTime timeThreshold, double speedThreshold, double jamThreshold, bool friendlyPos, bool blockMovement) :
-    GNEDetector(id, viewNet, GLO_E2DETECTOR, SUMO_TAG_E2DETECTOR, pos, freq, filename, vehicleTypes, name, friendlyPos, blockMovement, {lane}),
-    myLength(length),
-    myEndPositionOverLane(0.),
-    myTimeThreshold(timeThreshold),
-    mySpeedThreshold(speedThreshold),
-    myJamThreshold(jamThreshold),
-    myE2valid(true) {
+                             const std::string& name, SUMOTime timeThreshold, double speedThreshold, double jamThreshold, bool friendlyPos, bool blockMovement) :
+    GNEDetector(id, viewNet, GLO_E2DETECTOR, SUMO_TAG_E2DETECTOR, pos, freq, filename, vehicleTypes, name, friendlyPos, blockMovement, {
+    lane
+}),
+myLength(length),
+myEndPositionOverLane(0.),
+myTimeThreshold(timeThreshold),
+mySpeedThreshold(speedThreshold),
+myJamThreshold(jamThreshold),
+myE2valid(true) {
 }
 
 
@@ -68,12 +69,12 @@ GNEDetectorE2::~GNEDetectorE2() {
 
 bool
 GNEDetectorE2::isAdditionalValid() const {
-    if (getLaneParents().size() == 1) {
+    if (getParentLanes().size() == 1) {
         // with friendly position enabled position are "always fixed"
         if (myFriendlyPosition) {
             return true;
         } else {
-            return (myPositionOverLane >= 0) && ((myPositionOverLane + myLength) <= getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength());
+            return (myPositionOverLane >= 0) && ((myPositionOverLane + myLength) <= getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength());
         }
     } else {
         // first check if there is connection between all consecutive lanes
@@ -82,8 +83,8 @@ GNEDetectorE2::isAdditionalValid() const {
             if (myFriendlyPosition) {
                 return true;
             } else {
-                return (myPositionOverLane >= 0) && ((myPositionOverLane) <= getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength() &&
-                                                     myEndPositionOverLane >= 0) && ((myEndPositionOverLane) <= getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength());
+                return (myPositionOverLane >= 0) && ((myPositionOverLane) <= getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength() &&
+                                                     myEndPositionOverLane >= 0) && ((myEndPositionOverLane) <= getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength());
             }
         } else {
             return false;
@@ -96,15 +97,15 @@ std::string
 GNEDetectorE2::getAdditionalProblem() const {
     // declare variable for error position
     std::string errorFirstLanePosition, separator, errorLastLanePosition;
-    if (getLaneParents().size() == 1) {
+    if (getParentLanes().size() == 1) {
         // check positions over lane
         if (myPositionOverLane < 0) {
             errorFirstLanePosition = (toString(SUMO_ATTR_POSITION) + " < 0");
         }
-        if (myPositionOverLane > getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength()) {
+        if (myPositionOverLane > getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength()) {
             errorFirstLanePosition = (toString(SUMO_ATTR_POSITION) + " > lanes's length");
         }
-        if ((myPositionOverLane + myLength) > getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength()) {
+        if ((myPositionOverLane + myLength) > getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength()) {
             errorFirstLanePosition = (toString(SUMO_ATTR_POSITION) + " + " + toString(SUMO_ATTR_LENGTH) + " > lanes's length");
         }
     } else {
@@ -113,14 +114,14 @@ GNEDetectorE2::getAdditionalProblem() const {
             if (myPositionOverLane < 0) {
                 errorFirstLanePosition = (toString(SUMO_ATTR_POSITION) + " < 0");
             }
-            if (myPositionOverLane > getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength()) {
+            if (myPositionOverLane > getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength()) {
                 errorFirstLanePosition = (toString(SUMO_ATTR_POSITION) + " > lanes's length");
             }
             // check positions over last lane
             if (myEndPositionOverLane < 0) {
                 errorLastLanePosition = (toString(SUMO_ATTR_ENDPOS) + " < 0");
             }
-            if (myEndPositionOverLane > getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
+            if (myEndPositionOverLane > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
                 errorLastLanePosition = (toString(SUMO_ATTR_ENDPOS) + " > lanes's length");
             }
         } else {
@@ -138,12 +139,12 @@ GNEDetectorE2::getAdditionalProblem() const {
 
 void
 GNEDetectorE2::fixAdditionalProblem() {
-    if (getLaneParents().size() == 1) {
+    if (getParentLanes().size() == 1) {
         // obtain position and length
         double newPositionOverLane = myPositionOverLane;
         double newLength = myLength;
         // fix pos and length using fixE2DetectorPosition
-        GNEAdditionalHandler::fixE2DetectorPosition(newPositionOverLane, newLength, getLaneParents().at(0)->getParentEdge()->getNBEdge()->getFinalLength(), true);
+        GNEAdditionalHandler::fixE2DetectorPosition(newPositionOverLane, newLength, getParentLanes().at(0)->getParentEdge()->getNBEdge()->getFinalLength(), true);
         // set new position and length
         setAttribute(SUMO_ATTR_POSITION, toString(newPositionOverLane), myViewNet->getUndoList());
         setAttribute(SUMO_ATTR_LENGTH, toString(myLength), myViewNet->getUndoList());
@@ -153,21 +154,21 @@ GNEDetectorE2::fixAdditionalProblem() {
             bool foundConnection = true;
             int i = 0;
             // iterate over all lanes, and stop if myE2valid is false
-            while (i < ((int)getLaneParents().size() - 1)) {
+            while (i < ((int)getParentLanes().size() - 1)) {
                 // change foundConnection to false
                 foundConnection = false;
                 // if a connection betwen "from" lane and "to" lane of connection is found, change myE2valid to true again
-                for (auto j : getLaneParents().at(i)->getParentEdge()->getGNEConnections()) {
-                    if (j->getLaneFrom() == getLaneParents().at(i) && j->getLaneTo() == getLaneParents().at(i + 1)) {
+                for (auto j : getParentLanes().at(i)->getParentEdge()->getGNEConnections()) {
+                    if (j->getLaneFrom() == getParentLanes().at(i) && j->getLaneTo() == getParentLanes().at(i + 1)) {
                         foundConnection = true;
                     }
                 }
                 // if connection wasn't found
                 if (!foundConnection) {
                     // create new connection manually
-                    NBEdge::Connection newCon(getLaneParents().at(i)->getIndex(), getLaneParents().at(i + 1)->getParentEdge()->getNBEdge(), getLaneParents().at(i + 1)->getIndex());
+                    NBEdge::Connection newCon(getParentLanes().at(i)->getIndex(), getParentLanes().at(i + 1)->getParentEdge()->getNBEdge(), getParentLanes().at(i + 1)->getIndex());
                     // allow to undo creation of new lane
-                    myViewNet->getUndoList()->add(new GNEChange_Connection(getLaneParents().at(i)->getParentEdge(), newCon, false, true), true);
+                    myViewNet->getUndoList()->add(new GNEChange_Connection(getParentLanes().at(i)->getParentEdge(), newCon, false, true), true);
                 }
                 // update lane iterator
                 i++;
@@ -176,13 +177,13 @@ GNEDetectorE2::fixAdditionalProblem() {
             // declare new position
             double newPositionOverLane = myPositionOverLane;
             // fix pos and length  checkAndFixDetectorPosition
-            GNEAdditionalHandler::checkAndFixDetectorPosition(newPositionOverLane, getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength(), true);
+            GNEAdditionalHandler::checkAndFixDetectorPosition(newPositionOverLane, getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength(), true);
             // set new position
             setAttribute(SUMO_ATTR_POSITION, toString(newPositionOverLane), myViewNet->getUndoList());
             // declare new end position
             double newEndPositionOverLane = myEndPositionOverLane;
             // fix pos and length  checkAndFixDetectorPosition
-            GNEAdditionalHandler::checkAndFixDetectorPosition(newEndPositionOverLane, getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength(), true);
+            GNEAdditionalHandler::checkAndFixDetectorPosition(newEndPositionOverLane, getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength(), true);
             // set new position
             setAttribute(SUMO_ATTR_ENDPOS, toString(newEndPositionOverLane), myViewNet->getUndoList());
         }
@@ -197,13 +198,13 @@ GNEDetectorE2::moveGeometry(const Position& offset) {
     newPosition.add(offset);
     // filtern position using snap to active grid
     newPosition = myViewNet->snapToActiveGrid(newPosition);
-    double offsetLane = getLaneParents().front()->getLaneShape().nearest_offset_to_point2D(newPosition, false) - getLaneParents().front()->getLaneShape().nearest_offset_to_point2D(myMove.originalViewPosition, false);
+    double offsetLane = getParentLanes().front()->getLaneShape().nearest_offset_to_point2D(newPosition, false) - getParentLanes().front()->getLaneShape().nearest_offset_to_point2D(myMove.originalViewPosition, false);
     // move geometry depending of number of lanes
-    if (getLaneParents().size() == 1) {
+    if (getParentLanes().size() == 1) {
         // calculate new position over lane
         double newPositionOverLane = parse<double>(myMove.firstOriginalLanePosition) + offsetLane;
         // obtain lane length
-        double laneLength = getLaneParents().front()->getParentEdge()->getNBEdge()->getFinalLength() * getLane()->getLengthGeometryFactor();
+        double laneLength = getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength() * getLane()->getLengthGeometryFactor();
         if (newPositionOverLane < 0) {
             myPositionOverLane = 0;
         } else if (newPositionOverLane + myLength > laneLength) {
@@ -216,8 +217,8 @@ GNEDetectorE2::moveGeometry(const Position& offset) {
         double newStartPosition = parse<double>(myMove.firstOriginalLanePosition) + offsetLane;
         double newEndPosition = parse<double>(myMove.secondOriginalPosition) + offsetLane;
         // change start and end position of E2 detector ONLY if both extremes aren't overpassed
-        if ((newStartPosition >= 0) && (newStartPosition <= getLaneParents().front()->getLaneShapeLength()) &&
-                (newEndPosition >= 0) && (newEndPosition <= getLaneParents().back()->getLaneShapeLength())) {
+        if ((newStartPosition >= 0) && (newStartPosition <= getParentLanes().front()->getLaneShapeLength()) &&
+                (newEndPosition >= 0) && (newEndPosition <= getParentLanes().back()->getLaneShapeLength())) {
             myPositionOverLane = newStartPosition;
             myEndPositionOverLane = newEndPosition;
         }
@@ -230,7 +231,7 @@ GNEDetectorE2::moveGeometry(const Position& offset) {
 void
 GNEDetectorE2::commitGeometryMoving(GNEUndoList* undoList) {
     // commit geometry moving depending of number of lanes
-    if (getLaneParents().size() == 1) {
+    if (getParentLanes().size() == 1) {
         // commit new position allowing undo/redo
         undoList->p_begin("position of " + getTagStr());
         undoList->p_add(new GNEChange_Attribute(this, myViewNet->getNet(), SUMO_ATTR_POSITION, toString(myPositionOverLane), true, myMove.firstOriginalLanePosition));
@@ -250,13 +251,13 @@ GNEDetectorE2::updateGeometry() {
     double startPosFixed, endPosFixed;
 
     // calculate start and end positions dependin of number of lanes
-    if (getLaneParents().size() == 1) {
+    if (getParentLanes().size() == 1) {
 
         // set start position
         if (myPositionOverLane < 0) {
             startPosFixed = 0;
-        } else if (myPositionOverLane > getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
-            startPosFixed = getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength();
+        } else if (myPositionOverLane > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
+            startPosFixed = getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength();
         } else {
             startPosFixed = myPositionOverLane;
         }
@@ -264,20 +265,20 @@ GNEDetectorE2::updateGeometry() {
         // set end position
         if ((myPositionOverLane + myLength) < 0) {
             endPosFixed = 0;
-        } else if ((myPositionOverLane + myLength) > getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
-            endPosFixed = getLaneParents().back()->getParentEdge()->getNBEdge()->getFinalLength();
+        } else if ((myPositionOverLane + myLength) > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
+            endPosFixed = getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength();
         } else {
             endPosFixed = (myPositionOverLane + myLength);
         }
 
         // Cut shape using as delimitators fixed start position and fixed end position
-        myAdditionalGeometry.updateGeometryShape(getLaneParents().front()->getLaneShape(), startPosFixed * getLaneParents().front()->getLengthGeometryFactor(), endPosFixed * getLaneParents().back()->getLengthGeometryFactor());
+        myAdditionalGeometry.updateGeometryShape(getParentLanes().front()->getLaneShape(), startPosFixed * getParentLanes().front()->getLengthGeometryFactor(), endPosFixed * getParentLanes().back()->getLengthGeometryFactor());
 
         // Set block icon position
         myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
 
-    } else if (getLaneParents().size() > 1) {
-        GNEGeometry::calculateLaneGeometricPath(this, mySegmentGeometry, getLaneParents(), myPositionOverLane, myEndPositionOverLane);
+    } else if (getParentLanes().size() > 1) {
+        GNEGeometry::calculateLaneGeometricPath(this, mySegmentGeometry, getParentLanes(), myPositionOverLane, myEndPositionOverLane);
         /*
         // Set block icon position
         myBlockIcon.position = myAdditionalGeometry.multiShape.front().getLineCenter();
@@ -291,7 +292,7 @@ GNEDetectorE2::updateGeometry() {
     myBlockIcon.offset = Position(-0.75, 0);
 
     // Set block icon rotation, and using their rotation for draw logo
-    myBlockIcon.setRotation(getLaneParents().front());
+    myBlockIcon.setRotation(getParentLanes().front());
 }
 
 
@@ -307,12 +308,12 @@ GNEDetectorE2::checkE2MultilaneIntegrity() {
     myE2valid = true;
     int i = 0;
     // iterate over all lanes, and stop if myE2valid is false
-    while (i < ((int)getLaneParents().size() - 1) && myE2valid) {
+    while (i < ((int)getParentLanes().size() - 1) && myE2valid) {
         // set myE2valid to false
         myE2valid = false;
         // if a connection betwen "from" lane and "to" lane of connection is found, change myE2valid to true again
-        for (auto j : getLaneParents().at(i)->getParentEdge()->getGNEConnections()) {
-            if (j->getLaneFrom() == getLaneParents().at(i) && j->getLaneTo() == getLaneParents().at(i + 1)) {
+        for (auto j : getParentLanes().at(i)->getParentEdge()->getGNEConnections()) {
+            if (j->getLaneFrom() == getParentLanes().at(i) && j->getLaneTo() == getParentLanes().at(i + 1)) {
                 myE2valid = true;
             }
         }
@@ -363,7 +364,7 @@ GNEDetectorE2::drawGL(const GUIVisualizationSettings& s) const {
         // Pop last matrix
         glPopMatrix();
         // Check if the distance is enougth to draw details and isn't being drawn for selecting
-        if ((s.drawDetail(s.detailSettings.detectorDetails, exaggeration)) && !s.drawForRectangleSelection) {
+        if ((s.drawDetail(s.detailSettings.detectorDetails, exaggeration)) && !s.drawForRectangleSelection && !s.drawForPositionSelection) {
             // draw logo depending if this is an Multilane E2 detector
             if (myTagProperty.getTag() == SUMO_TAG_E2DETECTOR) {
                 // Push matrix
@@ -375,7 +376,7 @@ GNEDetectorE2::drawGL(const GUIVisualizationSettings& s) const {
                 // move to logo position
                 glTranslated(-0.75, 0, 0);
                 // scale text
-            glScaled(exaggeration, exaggeration, 1);
+                glScaled(exaggeration, exaggeration, 1);
                 // draw E2 logo
                 if (drawUsingSelectColor()) {
                     GLHelper::drawText("E2", Position(), .1, 1.5, s.colorSettings.selectionColor);
@@ -441,7 +442,7 @@ GNEDetectorE2::getAttribute(SumoXMLAttr key) const {
             return getAdditionalID();
         case SUMO_ATTR_LANE:
         case SUMO_ATTR_LANES:
-            return parseIDs(getLaneParents());
+            return parseIDs(getParentLanes());
         case SUMO_ATTR_POSITION:
             return toString(myPositionOverLane);
         case SUMO_ATTR_ENDPOS:
@@ -565,7 +566,7 @@ GNEDetectorE2::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNEDetectorE2::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }
@@ -582,7 +583,7 @@ GNEDetectorE2::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case SUMO_ATTR_LANE:
         case SUMO_ATTR_LANES:
-            changeLaneParents(this, value);
+            replaceParentLanes(this, value);
             checkE2MultilaneIntegrity();
             break;
         case SUMO_ATTR_POSITION:

@@ -12,7 +12,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    11.06.2013
-/// @version $Id$
 ///
 // A device which stands as an implementation FCD and which outputs movereminder calls
 /****************************************************************************/
@@ -51,6 +50,9 @@ MSDevice_FCD::insertOptions(OptionsCont& oc) {
 
     oc.doRegister("device.fcd.period", new Option_String("0"));
     oc.addDescription("device.fcd.period", "FCD Device", "Recording period for FCD-data");
+
+    oc.doRegister("device.fcd.radius", new Option_Float(0));
+    oc.addDescription("device.fcd.radius", "FCD Device", "Record objects in a radius around equipped vehicles");
 }
 
 

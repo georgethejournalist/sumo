@@ -10,7 +10,6 @@
 /// @file    GNEAdditional.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Dec 2015
-/// @version $Id$
 ///
 // A abstract class for representation of additional elements
 /****************************************************************************/
@@ -43,21 +42,21 @@
 // ===========================================================================
 
 GNEAdditional::GNEAdditional(const std::string& id, GNEViewNet* viewNet, GUIGlObjectType type, SumoXMLTag tag, std::string additionalName, bool blockMovement,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren) :
+                             const std::vector<GNEEdge*>& parentEdges,
+                             const std::vector<GNELane*>& parentLanes,
+                             const std::vector<GNEShape*>& parentShapes,
+                             const std::vector<GNEAdditional*>& parentAdditionals,
+                             const std::vector<GNEDemandElement*>& parentDemandElements,
+                             const std::vector<GNEEdge*>& childEdges,
+                             const std::vector<GNELane*>& childLanes,
+                             const std::vector<GNEShape*>& childShapes,
+                             const std::vector<GNEAdditional*>& childAdditionals,
+                             const std::vector<GNEDemandElement*>& childDemandElements) :
     GUIGlObject(type, id),
     GNEAttributeCarrier(tag),
     Parameterised(),
-    GNEHierarchicalElementParents(this, edgeParents, laneParents, shapeParents, additionalParents, demandElementParents),
-    GNEHierarchicalElementChildren(this, edgeChildren, laneChildren, shapeChildren, additionalChildren, demandElementChildren),
+    GNEHierarchicalParentElements(this, parentEdges, parentLanes, parentShapes, parentAdditionals, parentDemandElements),
+    GNEHierarchicalChildElements(this, childEdges, childLanes, childShapes, childAdditionals, childDemandElements),
     myViewNet(viewNet),
     myAdditionalName(additionalName),
     myBlockMovement(blockMovement),
@@ -67,21 +66,21 @@ GNEAdditional::GNEAdditional(const std::string& id, GNEViewNet* viewNet, GUIGlOb
 
 
 GNEAdditional::GNEAdditional(GNEAdditional* additionalParent, GNEViewNet* viewNet, GUIGlObjectType type, SumoXMLTag tag, std::string additionalName, bool blockMovement,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren) :
+                             const std::vector<GNEEdge*>& parentEdges,
+                             const std::vector<GNELane*>& parentLanes,
+                             const std::vector<GNEShape*>& parentShapes,
+                             const std::vector<GNEAdditional*>& parentAdditionals,
+                             const std::vector<GNEDemandElement*>& parentDemandElements,
+                             const std::vector<GNEEdge*>& childEdges,
+                             const std::vector<GNELane*>& childLanes,
+                             const std::vector<GNEShape*>& childShapes,
+                             const std::vector<GNEAdditional*>& childAdditionals,
+                             const std::vector<GNEDemandElement*>& childDemandElements) :
     GUIGlObject(type, additionalParent->generateChildID(tag)),
     GNEAttributeCarrier(tag),
     Parameterised(),
-    GNEHierarchicalElementParents(this, edgeParents, laneParents, shapeParents, additionalParents, demandElementParents),
-    GNEHierarchicalElementChildren(this, edgeChildren, laneChildren, shapeChildren, additionalChildren, demandElementChildren),
+    GNEHierarchicalParentElements(this, parentEdges, parentLanes, parentShapes, parentAdditionals, parentDemandElements),
+    GNEHierarchicalChildElements(this, childEdges, childLanes, childShapes, childAdditionals, childDemandElements),
     myViewNet(viewNet),
     myAdditionalName(additionalName),
     myBlockMovement(blockMovement),
@@ -95,7 +94,7 @@ GNEAdditional::~GNEAdditional() {}
 
 std::string
 GNEAdditional::generateChildID(SumoXMLTag childTag) {
-    int counter = (int)getAdditionalChildren().size();
+    int counter = (int)getChildAdditionals().size();
     while (myViewNet->getNet()->retrieveAdditional(childTag, getID() + toString(childTag) + toString(counter), false) != nullptr) {
         counter++;
     }
@@ -124,7 +123,7 @@ GNEAdditional::setSpecialColor(const RGBColor* color) {
 void
 GNEAdditional::writeAdditional(OutputDevice& device) const {
     // first check if minimum number of children is correct
-    if ((myTagProperty.hasMinimumNumberOfChildren() || myTagProperty.hasMinimumNumberOfChildren()) && !checkAdditionalChildRestriction()) {
+    if ((myTagProperty.hasMinimumNumberOfChildren() || myTagProperty.hasMinimumNumberOfChildren()) && !checkChildAdditionalRestriction()) {
         WRITE_WARNING(getTagStr() + " with ID='" + getID() + "' cannot be written");
     } else {
         // Open Tag or synonym Tag
@@ -197,9 +196,9 @@ GNEAdditional::writeAdditional(OutputDevice& device) const {
             OutputDevice& deviceChildren = OutputDevice::getDevice(FileHelpers::getFilePath(OptionsCont::getOptions().getString("additional-files")) + getAttribute(SUMO_ATTR_FILE));
             deviceChildren.writeXMLHeader("rerouterValue", "additional_file.xsd");
             // save children in a different filename
-            for (auto i : getAdditionalChildren()) {
+            for (auto i : getChildAdditionals()) {
                 // avoid to write two times additionals that haben two parents (Only write as child of first parent)
-                if (i->getAdditionalParents().size() < 1) {
+                if (i->getParentAdditionals().size() < 1) {
                     i->writeAdditional(deviceChildren);
                 } else if (myTagProperty.getTag() == i->getTagProperty().getParentTag()) {
                     i->writeAdditional(deviceChildren);
@@ -207,9 +206,9 @@ GNEAdditional::writeAdditional(OutputDevice& device) const {
             }
             deviceChildren.close();
         } else {
-            for (auto i : getAdditionalChildren()) {
+            for (auto i : getChildAdditionals()) {
                 // avoid to write two times additionals that haben two parents (Only write as child of first parent)
-                if (i->getAdditionalParents().size() < 2) {
+                if (i->getParentAdditionals().size() < 2) {
                     i->writeAdditional(device);
                 } else if (myTagProperty.getTag() == i->getTagProperty().getParentTag()) {
                     i->writeAdditional(device);
@@ -276,7 +275,7 @@ GNEAdditional::startGeometryMoving() {
             myMove.movingGeometryBoundary = getCenteringBoundary();
         }
         // start geometry in all children
-        for (const auto& i : getDemandElementChildren()) {
+        for (const auto& i : getChildDemandElements()) {
             i->startGeometryMoving();
         }
     }
@@ -297,7 +296,7 @@ GNEAdditional::endGeometryMoving() {
             myViewNet->getNet()->addGLObjectIntoGrid(this);
         }
         // end geometry in all children
-        for (const auto& i : getDemandElementChildren()) {
+        for (const auto& i : getChildDemandElements()) {
             i->endGeometryMoving();
         }
     }
@@ -383,7 +382,7 @@ GNEAdditional::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
 }
 
 
-const std::string &
+const std::string&
 GNEAdditional::getOptionalAdditionalName() const {
     return myAdditionalName;
 }
@@ -481,7 +480,7 @@ GNEAdditional::getAdditionalID() const {
 
 bool
 GNEAdditional::isValidAdditionalID(const std::string& newID) const {
-    if (SUMOXMLDefinitions::isValidNetID(newID) && (myViewNet->getNet()->retrieveAdditional(myTagProperty.getTag(), newID, false) == nullptr)) {
+    if (SUMOXMLDefinitions::isValidAdditionalID(newID) && (myViewNet->getNet()->retrieveAdditional(myTagProperty.getTag(), newID, false) == nullptr)) {
         return true;
     } else {
         return false;
@@ -574,9 +573,9 @@ GNEAdditional::disableAttribute(SumoXMLAttr /*key*/, GNEUndoList* /*undoList*/) 
 
 
 bool
-GNEAdditional::checkAdditionalChildRestriction() const {
+GNEAdditional::checkChildAdditionalRestriction() const {
     // throw exception because this function mus be implemented in child (see GNEE3Detector)
-    throw ProcessError("Calling non-implemented function checkAdditionalChildRestriction during saving of " + getTagStr() + ". It muss be reimplemented in child class");
+    throw ProcessError("Calling non-implemented function checkChildAdditionalRestriction during saving of " + getTagStr() + ". It muss be reimplemented in child class");
 }
 
 

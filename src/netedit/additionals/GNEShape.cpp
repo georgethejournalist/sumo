@@ -10,7 +10,6 @@
 /// @file    GNEShape.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2017
-/// @version $Id$
 ///
 // Abstract class for Shapes uses in netedit
 /****************************************************************************/
@@ -37,19 +36,19 @@
 // ===========================================================================
 
 GNEShape::GNEShape(GNENet* net, SumoXMLTag tag, bool movementBlocked,
-                   const std::vector<GNEEdge*>& edgeParents,
-                   const std::vector<GNELane*>& laneParents,
-                   const std::vector<GNEShape*>& shapeParents,
-                   const std::vector<GNEAdditional*>& additionalParents,
-                   const std::vector<GNEDemandElement*>& demandElementParents,
-                   const std::vector<GNEEdge*>& edgeChildren,
-                   const std::vector<GNELane*>& laneChildren,
-                   const std::vector<GNEShape*>& shapeChildren,
-                   const std::vector<GNEAdditional*>& additionalChildren,
-                   const std::vector<GNEDemandElement*>& demandElementChildren) :
+                   const std::vector<GNEEdge*>& parentEdges,
+                   const std::vector<GNELane*>& parentLanes,
+                   const std::vector<GNEShape*>& parentShapes,
+                   const std::vector<GNEAdditional*>& parentAdditionals,
+                   const std::vector<GNEDemandElement*>& parentDemandElements,
+                   const std::vector<GNEEdge*>& childEdges,
+                   const std::vector<GNELane*>& childLanes,
+                   const std::vector<GNEShape*>& childShapes,
+                   const std::vector<GNEAdditional*>& childAdditionals,
+                   const std::vector<GNEDemandElement*>& childDemandElements) :
     GNEAttributeCarrier(tag),
-    GNEHierarchicalElementParents(this, edgeParents, laneParents, shapeParents, additionalParents, demandElementParents),
-    GNEHierarchicalElementChildren(this, edgeChildren, laneChildren, shapeChildren, additionalChildren, demandElementChildren),
+    GNEHierarchicalParentElements(this, parentEdges, parentLanes, parentShapes, parentAdditionals, parentDemandElements),
+    GNEHierarchicalChildElements(this, childEdges, childLanes, childShapes, childAdditionals, childDemandElements),
     myNet(net),
     myBlockMovement(movementBlocked) {
 }

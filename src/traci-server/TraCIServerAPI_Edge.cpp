@@ -16,7 +16,6 @@
 /// @author  Mario Krumnow
 /// @author  Gregor Laemmel
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // APIs for getting/setting edge values via TraCI
 /****************************************************************************/
@@ -33,7 +32,7 @@
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSPerson.h>
 #include <libsumo/TraCIConstants.h>
 #include "TraCIServerAPI_Edge.h"
 #include <microsim/MSEdgeWeightsStorage.h>

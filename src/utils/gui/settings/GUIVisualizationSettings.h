@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // Stores the information about how to visualize structures
 /****************************************************************************/
@@ -158,6 +157,9 @@ struct GUIVisualizationColorSettings {
 
     /// @brief person plan selection color (Rides, Walks, personStops...)
     RGBColor selectedPersonPlanColor;
+
+    /// @brief color for highlighthing deadends
+    static const RGBColor SUMO_color_DEADEND_SHOW;
 
     /// @brief color for child connections between parents and child elements
     static const RGBColor childConnections;

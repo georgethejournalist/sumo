@@ -11,7 +11,6 @@
 # @author  Karol Stosiek
 # @author  Michael Behrisch
 # @date    2011-10-26
-# @version $Id$
 
 from __future__ import absolute_import
 
@@ -59,8 +58,8 @@ class TurnDefinitions():
         self.turn_definitions[source][destination] += probability
 
         if self.turn_definitions[source][destination] > 100:
-            self.logger.warn("Turn probability overflow: %f; lowered to 100" %
-                             (self.turn_definitions[source][destination]))
+            self.logger.warning("Turn probability overflow: %f; lowered to 100" %
+                                (self.turn_definitions[source][destination]))
             self.turn_definitions[source][destination] = 100
 
     def get_sources(self):

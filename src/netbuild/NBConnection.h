@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Sascha Krieg
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // The class holds a description of a connection between two edges
 /****************************************************************************/
@@ -47,7 +46,7 @@ public:
     NBConnection(NBEdge* from, NBEdge* to);
 
     /// @brief Constructor
-    NBConnection(NBEdge* from, int fromLane, NBEdge* to, int toLane, int tlIndex = InvalidTlIndex);
+    NBConnection(NBEdge* from, int fromLane, NBEdge* to, int toLane, int tlIndex = InvalidTlIndex, int tlIndex2 = InvalidTlIndex);
 
     /// @brief Constructor
     NBConnection(const std::string& fromID, NBEdge* from,
@@ -94,10 +93,16 @@ public:
     int getTLIndex() const {
         return myTlIndex;
     }
+    int getTLIndex2() const {
+        return myTlIndex2;
+    }
 
     // @brief reset the tlIndex
     void setTLIndex(int tlIndex) {
         myTlIndex = tlIndex;
+    }
+    void setTLIndex2(int tlIndex) {
+        myTlIndex2 = tlIndex;
     }
 
     /// @brief returns the id of the connection (!!! not really pretty)
@@ -139,6 +144,8 @@ private:
 
     // @brief the index within the controlling tls if this connection is tls-controlled
     int myTlIndex;
+    /// @brief The index of the internal junction within the controlling traffic light (optional)
+    int myTlIndex2;
 };
 
 

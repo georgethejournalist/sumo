@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Andreas Gaubatz
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // The main window of the SUMO-gui.
 /****************************************************************************/
@@ -44,7 +43,7 @@
 #include <microsim/MSVehicleControl.h>
 #include <microsim/MSEdgeControl.h>
 #include <microsim/MSInsertionControl.h>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 
 #include "GUISUMOViewParent.h"
 #include "GUILoadThread.h"
@@ -458,7 +457,7 @@ GUIApplicationWindow::fillMenuBar() {
                       "Edit Visualisation\tF9\tOpens a dialog for editing visualization settings.",
                       nullptr, this, MID_HOTKEY_F9_EDIT_VIEWSCHEME);
     new FXMenuCommand(myEditMenu,
-                      "Edit Viewport\tCtrl+I\tOpens a dialog for editing viewing are, zoom and rotation.",
+                      "Edit Viewport\tCtrl+I\tOpens a dialog for editing viewing area, zoom and rotation.",
                       nullptr, this, MID_HOTKEY_CTRL_I_EDITVIEWPORT);
     new FXMenuSeparator(myEditMenu);
     new FXMenuCommand(myEditMenu,
@@ -976,7 +975,7 @@ GUIApplicationWindow::onCmdSaveConfig(FXObject*, FXSelector, void*) {
         return 1;
     }
     std::string file = MFXUtils::assureExtension(opendialog.getFilename(),
-                    opendialog.getPatternText(opendialog.getCurrentPattern()).after('.').before(')')).text();
+                       opendialog.getPatternText(opendialog.getCurrentPattern()).after('.').before(')')).text();
     std::ofstream out(file);
     if (out.good()) {
         OptionsCont::getOptions().writeConfiguration(out, true, false, false);
@@ -1092,7 +1091,7 @@ GUIApplicationWindow::onCmdSaveState(FXObject*, FXSelector, void*) {
     }
 
     const std::string file = MFXUtils::assureExtension(opendialog.getFilename(),
-                    opendialog.getPatternText(opendialog.getCurrentPattern()).after('.').before(')')).text();
+                             opendialog.getPatternText(opendialog.getCurrentPattern()).after('.').before(')')).text();
     MSStateHandler::saveState(file, MSNet::getInstance()->getCurrentTimeStep());
     setStatusBarText("Simulation saved to " + file);
     return 1;
@@ -1778,7 +1777,9 @@ GUIApplicationWindow::closeAllWindows() {
     while (!myGLWindows.empty()) {
         delete myGLWindows.front();
     }
-    for (FXMainWindow* const window : myTrackerWindows) {
+    // make a copy because deleting modifyes the vector;
+    std::vector<FXMainWindow*> trackerWindows = myTrackerWindows;;
+    for (FXMainWindow* const window : trackerWindows) {
         delete window;
     }
     myTrackerWindows.clear();

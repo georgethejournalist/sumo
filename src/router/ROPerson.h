@@ -11,7 +11,6 @@
 /// @author  Robert Hilbrich
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A person as used by router
 /****************************************************************************/
@@ -164,6 +163,10 @@ public:
         virtual void saveAsXML(OutputDevice& os, const bool extended) const = 0;
         SUMOTime getDuration() const {
             return TIME2STEPS(cost);
+        }
+
+        double getCost() const {
+            return cost;
         }
     protected:
         double cost;

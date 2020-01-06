@@ -10,7 +10,6 @@
 /// @file    GNENet.cpp
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // A visual container for GNE-network-components such as GNEEdge and GNEJunction.
 // GNE components wrap netbuild-components and supply visualisation and editing
@@ -313,8 +312,10 @@ GNENet::getVisualisationSpeedUp() const {
 GNEJunction*
 GNENet::createJunction(const Position& pos, GNEUndoList* undoList) {
     std::string id = myJunctionIDSupplier.getNext();
+    // create new NBNode
     NBNode* nbn = new NBNode(id, pos);
-    GNEJunction* junction = new GNEJunction(*nbn, this);
+    // create GNEJunciton
+    GNEJunction* junction = new GNEJunction(this, nbn);
     undoList->add(new GNEChange_Junction(junction, true), true);
     assert(myAttributeCarriers.junctions[id]);
     return junction;
@@ -429,37 +430,37 @@ void
 GNENet::deleteEdge(GNEEdge* edge, GNEUndoList* undoList, bool recomputeConnections) {
     undoList->p_begin("delete " + toString(SUMO_TAG_EDGE));
     // delete all shapes children of edge
-    while (edge->getShapeChildren().size() > 0) {
-        deleteShape(edge->getShapeChildren().front(), undoList);
+    while (edge->getChildShapes().size() > 0) {
+        deleteShape(edge->getChildShapes().front(), undoList);
     }
     // delete all shapes children of lane
     for (auto i : edge->getLanes()) {
-        while (i->getShapeChildren().size() > 0) {
-            deleteShape(i->getShapeChildren().front(), undoList);
+        while (i->getChildShapes().size() > 0) {
+            deleteShape(i->getChildShapes().front(), undoList);
         }
     }
-    // delete all additionals children of edge
-    while (edge->getAdditionalChildren().size() > 0) {
-        deleteAdditional(edge->getAdditionalChildren().front(), undoList);
+    // delete all child edge demand elements
+    while (edge->getChildDemandElements().size() > 0) {
+        deleteDemandElement(edge->getChildDemandElements().front(), undoList);
     }
-    // delete all additionals children of lane
+    // delete all child demand elementss of edge's lanes
     for (auto i : edge->getLanes()) {
-        while (i->getAdditionalChildren().size() > 0) {
-            deleteAdditional(i->getAdditionalChildren().front(), undoList);
+        while (i->getChildDemandElements().size() > 0) {
+            deleteDemandElement(i->getChildDemandElements().front(), undoList);
         }
     }
-    // delete all demand element children of edge
-    while (edge->getDemandElementChildren().size() > 0) {
-        deleteDemandElement(edge->getDemandElementChildren().front(), undoList);
+    // delete all child edge additional
+    while (edge->getChildAdditionals().size() > 0) {
+        deleteAdditional(edge->getChildAdditionals().front(), undoList);
     }
-    // delete all demand element children of lane
+    // delete all child additional of edge's lanes
     for (auto i : edge->getLanes()) {
-        while (i->getDemandElementChildren().size() > 0) {
-            deleteDemandElement(i->getDemandElementChildren().front(), undoList);
+        while (i->getChildAdditionals().size() > 0) {
+            deleteAdditional(i->getChildAdditionals().front(), undoList);
         }
     }
     // invalidate path element childrens
-    edge->invalidatePathElementChildrens();
+    edge->invalidatePathChildElementss();
     // remove edge from crossings related with this edge
     edge->getGNEJunctionSource()->removeEdgeFromCrossings(edge, undoList);
     edge->getGNEJunctionDestiny()->removeEdgeFromCrossings(edge, undoList);
@@ -493,36 +494,36 @@ GNENet::replaceIncomingEdge(GNEEdge* which, GNEEdge* by, GNEUndoList* undoList) 
     undoList->p_begin("replace " + toString(SUMO_TAG_EDGE));
     undoList->p_add(new GNEChange_Attribute(by, this, SUMO_ATTR_TO, which->getAttribute(SUMO_ATTR_TO)));
     // replace in additionals children of edge
-    while (which->getAdditionalChildren().size() > 0) {
-        undoList->p_add(new GNEChange_Attribute(which->getAdditionalChildren().front(), this, SUMO_ATTR_EDGE, by->getID()));
+    while (which->getChildAdditionals().size() > 0) {
+        undoList->p_add(new GNEChange_Attribute(which->getChildAdditionals().front(), this, SUMO_ATTR_EDGE, by->getID()));
     }
     // replace in additionals children of lane
     for (auto i : which->getLanes()) {
-        std::vector<GNEAdditional*> copyOfLaneAdditionals = i->getAdditionalChildren();
+        std::vector<GNEAdditional*> copyOfLaneAdditionals = i->getChildAdditionals();
         for (auto j : copyOfLaneAdditionals) {
             undoList->p_add(new GNEChange_Attribute(j, this, SUMO_ATTR_LANE, by->getNBEdge()->getLaneID(i->getIndex())));
         }
     }
     // replace in demand elements children of edge
-    while (which->getDemandElementChildren().size() > 0) {
-        undoList->p_add(new GNEChange_Attribute(which->getDemandElementChildren().front(), this, SUMO_ATTR_EDGE, by->getID()));
+    while (which->getChildDemandElements().size() > 0) {
+        undoList->p_add(new GNEChange_Attribute(which->getChildDemandElements().front(), this, SUMO_ATTR_EDGE, by->getID()));
     }
     // replace in demand elements children of lane
     for (auto i : which->getLanes()) {
-        std::vector<GNEDemandElement*> copyOfLaneDemandElements = i->getDemandElementChildren();
+        std::vector<GNEDemandElement*> copyOfLaneDemandElements = i->getChildDemandElements();
         for (auto j : copyOfLaneDemandElements) {
             undoList->p_add(new GNEChange_Attribute(j, this, SUMO_ATTR_LANE, by->getNBEdge()->getLaneID(i->getIndex())));
         }
     }
     // replace in shapes children of lane
     for (auto i : which->getLanes()) {
-        std::vector<GNEShape*> copyOfLaneShapes = i->getShapeChildren();
+        std::vector<GNEShape*> copyOfLaneShapes = i->getChildShapes();
         for (auto j : copyOfLaneShapes) {
             undoList->p_add(new GNEChange_Attribute(j, this, SUMO_ATTR_LANE, by->getNBEdge()->getLaneID(i->getIndex())));
         }
     }
     // replace in rerouters
-    for (auto rerouter : which->getAdditionalParents()) {
+    for (auto rerouter : which->getParentAdditionals()) {
         replaceInListAttribute(rerouter, SUMO_ATTR_EDGES, which->getID(), by->getID(), undoList);
     }
     // replace in crossings
@@ -553,16 +554,16 @@ GNENet::deleteLane(GNELane* lane, GNEUndoList* undoList, bool recomputeConnectio
     } else {
         undoList->p_begin("delete " + toString(SUMO_TAG_LANE));
         // delete additionals children of lane
-        while (lane->getAdditionalChildren().size() > 0) {
-            deleteAdditional(lane->getAdditionalChildren().front(), undoList);
+        while (lane->getChildAdditionals().size() > 0) {
+            deleteAdditional(lane->getChildAdditionals().front(), undoList);
         }
-        // delete demand element children of lane
-        while (lane->getDemandElementChildren().size() > 0) {
-            deleteDemandElement(lane->getDemandElementChildren().front(), undoList);
+        // delete child demand elements of lane
+        while (lane->getChildDemandElements().size() > 0) {
+            deleteDemandElement(lane->getChildDemandElements().front(), undoList);
         }
         // delete POIShapes of Lane
-        while (lane->getShapeChildren().size() > 0) {
-            undoList->add(new GNEChange_Shape(lane->getShapeChildren().front(), false), true);
+        while (lane->getChildShapes().size() > 0) {
+            undoList->add(new GNEChange_Shape(lane->getChildShapes().front(), false), true);
         }
         // update affected connections
         if (recomputeConnections) {
@@ -626,9 +627,13 @@ GNENet::deleteShape(GNEShape* shape, GNEUndoList* undoList) {
 void
 GNENet::deleteAdditional(GNEAdditional* additional, GNEUndoList* undoList) {
     undoList->p_begin("delete " + additional->getTagStr());
-    // first remove all additional children of this additional calling this function recursively
-    while (additional->getAdditionalChildren().size() > 0) {
-        deleteAdditional(additional->getAdditionalChildren().front(), undoList);
+    // first remove all child demand elements of this additional calling this function recursively
+    while (additional->getChildDemandElements().size() > 0) {
+        deleteDemandElement(additional->getChildDemandElements().front(), undoList);
+    }
+    // first remove all child additional of this additional calling this function recursively
+    while (additional->getChildAdditionals().size() > 0) {
+        deleteAdditional(additional->getChildAdditionals().front(), undoList);
     }
     // remove additional
     undoList->add(new GNEChange_Additional(additional, false), true);
@@ -643,12 +648,23 @@ GNENet::deleteDemandElement(GNEDemandElement* demandElement, GNEUndoList* undoLi
         throw ProcessError("Trying to delete a default Vehicle Type");
     } else {
         undoList->p_begin("delete " + demandElement->getTagStr());
-        // first remove all demand element children of this demandElement calling this function recursively
-        while (demandElement->getDemandElementChildren().size() > 0) {
-            deleteDemandElement(demandElement->getDemandElementChildren().front(), undoList);
+        // first remove all child demand elements of this demandElement calling this function recursively
+        while (demandElement->getChildDemandElements().size() > 0) {
+            deleteDemandElement(demandElement->getChildDemandElements().front(), undoList);
         }
-        // remove demandElement
-        undoList->add(new GNEChange_DemandElement(demandElement, false), true);
+        // we need an special case for person
+        if (demandElement->getTagProperty().isPersonPlan() && (demandElement->getParentDemandElements().front()->getChildDemandElements().size() == 1)) {
+            // obtain person
+            GNEDemandElement* person = demandElement->getParentDemandElements().front();
+            // remove demandElement
+            undoList->add(new GNEChange_DemandElement(demandElement, false), true);
+            // und now remove person
+            undoList->add(new GNEChange_DemandElement(person, false), true);
+        } else {
+            // remove demandElement
+            undoList->add(new GNEChange_DemandElement(demandElement, false), true);
+
+        }
         undoList->p_end();
     }
 }
@@ -703,7 +719,7 @@ GNENet::restrictLane(SUMOVehicleClass vclass, GNELane* lane, GNEUndoList* undoLi
 bool
 GNENet::addRestrictedLane(SUMOVehicleClass vclass, GNEEdge* edge, int index, GNEUndoList* undoList) {
     // First check that edge don't have a restricted lane of the given vclass
-    for (const auto &lane : edge->getLanes()) {
+    for (const auto& lane : edge->getLanes()) {
         if (lane->isRestricted(vclass)) {
             return false;
         }
@@ -739,7 +755,7 @@ GNENet::addRestrictedLane(SUMOVehicleClass vclass, GNEEdge* edge, int index, GNE
 bool
 GNENet::removeRestrictedLane(SUMOVehicleClass vclass, GNEEdge* edge, GNEUndoList* undoList) {
     // iterate over lanes of edge
-    for (const auto &lane : edge->getLanes()) {
+    for (const auto& lane : edge->getLanes()) {
         if (lane->isRestricted(vclass)) {
             // Delete lane
             deleteLane(lane, undoList, true);
@@ -761,7 +777,7 @@ GNENet::splitEdge(GNEEdge* edge, const Position& pos, GNEUndoList* undoList, GNE
     // obtain edge geometry and split position
     const PositionVector& oldEdgeGeometry = edge->getNBEdge()->getGeometry();
     const double edgeSplitPosition = oldEdgeGeometry.nearest_offset_to_point2D(pos, false);
-   // obtain lane geometry and split position (needed for adjust additional and demand childs)
+    // obtain lane geometry and split position (needed for adjust additional and demand childs)
     const PositionVector& oldLaneGeometry = edge->getLanes().front()->getLaneShape();
     const double laneSplitPosition = oldLaneGeometry.nearest_offset_to_point2D(pos, false);
     // split edge geometry in two new geometries using edgeSplitPosition
@@ -775,9 +791,10 @@ GNENet::splitEdge(GNEEdge* edge, const Position& pos, GNEUndoList* undoList, GNE
     if (edge->wasSplit()) {
         const std::string::size_type sep_index = baseName.rfind('.');
         // edge may have been renamed in between
-        if (sep_index != std::string::npos) { 
+        if (sep_index != std::string::npos) {
             std::string posString = baseName.substr(sep_index + 1);
-            if (GNEAttributeCarrier::canParse<int>(posString.c_str())) {;
+            if (GNEAttributeCarrier::canParse<int>(posString.c_str())) {
+                ;
                 posBase = GNEAttributeCarrier::parse<int>(posString.c_str());
                 baseName = baseName.substr(0, sep_index); // includes the .
             }
@@ -827,23 +844,23 @@ GNENet::splitEdge(GNEEdge* edge, const Position& pos, GNEUndoList* undoList, GNE
     for (const auto& nbC : affectedCrossings) {
         undoList->add(new GNEChange_Crossing(secondPart->getGNEJunctionDestiny(), nbC, true), true);
     }
-    // Split geometry of all additional children
-    for (const auto &additional : edge->getAdditionalChildren()) {
+    // Split geometry of all child additional
+    for (const auto& additional : edge->getChildAdditionals()) {
         additional->splitEdgeGeometry(edgeSplitPosition, edge, secondPart, undoList);
     }
-    // Split geometry of all lane additional children
+    // Split geometry of all child lane additional
     for (int i = 0; i < (int)edge->getLanes().size(); i++) {
-        for (const auto &additional : edge->getLanes().at(i)->getAdditionalChildren()) {
+        for (const auto& additional : edge->getLanes().at(i)->getChildAdditionals()) {
             additional->splitEdgeGeometry(laneSplitPosition, edge->getLanes().at(i), secondPart->getLanes().at(i), undoList);
         }
     }
-    // Split geometry of all demand element children
-    for (const auto &demandElement : edge->getDemandElementChildren()) {
+    // Split geometry of all child demand elements
+    for (const auto& demandElement : edge->getChildDemandElements()) {
         demandElement->splitEdgeGeometry(edgeSplitPosition, edge, secondPart, undoList);
     }
-    // Split geometry of all lane demand element children
+    // Split geometry of all child lane demand elements
     for (int i = 0; i < (int)edge->getLanes().size(); i++) {
-        for (const auto &demandElement : edge->getLanes().at(i)->getDemandElementChildren()) {
+        for (const auto& demandElement : edge->getLanes().at(i)->getChildDemandElements()) {
             demandElement->splitEdgeGeometry(laneSplitPosition, edge->getLanes().at(i), secondPart->getLanes().at(i), undoList);
         }
     }
@@ -1030,9 +1047,9 @@ GNENet::setViewNet(GNEViewNet* viewNet) {
 
 
 GNEJunction*
-GNENet::retrieveJunction(const std::string& id, bool failHard) {
+GNENet::retrieveJunction(const std::string& id, bool failHard) const {
     if (myAttributeCarriers.junctions.count(id)) {
-        return myAttributeCarriers.junctions[id];
+        return myAttributeCarriers.junctions.at(id);
     } else if (failHard) {
         // If junction wasn't found, throw exception
         throw UnknownElement("Junction " + id);
@@ -1049,7 +1066,7 @@ GNENet::getAttributeCarriers() const {
 
 
 GNEEdge*
-GNENet::retrieveEdge(const std::string& id, bool failHard) {
+GNENet::retrieveEdge(const std::string& id, bool failHard) const {
     auto i = myAttributeCarriers.edges.find(id);
     // If edge was found
     if (i != myAttributeCarriers.edges.end()) {
@@ -1064,7 +1081,7 @@ GNENet::retrieveEdge(const std::string& id, bool failHard) {
 
 
 GNEEdge*
-GNENet::retrieveEdge(GNEJunction* from, GNEJunction* to, bool failHard) {
+GNENet::retrieveEdge(GNEJunction* from, GNEJunction* to, bool failHard) const {
     assert((from != nullptr) && (to != nullptr));
     // iterate over Junctions of net
     for (auto i : myAttributeCarriers.edges) {
@@ -1791,7 +1808,7 @@ GNENet::cleanUnusedRoutes(GNEUndoList* undoList) {
     routesWithoutChildren.reserve(myAttributeCarriers.demandElements.at(SUMO_TAG_ROUTE).size());
     // iterate over routes
     for (const auto& i : myAttributeCarriers.demandElements.at(SUMO_TAG_ROUTE)) {
-        if (i.second->getDemandElementChildren().empty()) {
+        if (i.second->getChildDemandElements().empty()) {
             routesWithoutChildren.push_back(i.second);
         }
     }
@@ -1820,13 +1837,13 @@ GNENet::joinRoutes(GNEUndoList* undoList) {
     for (const auto& i : myAttributeCarriers.demandElements.at(SUMO_TAG_ROUTE)) {
         // first check route has stops
         bool hasStops = false;
-        for (const auto& j : i.second->getDemandElementChildren()) {
+        for (const auto& j : i.second->getChildDemandElements()) {
             if (j->getTagProperty().isStop()) {
                 hasStops = true;
             }
         }
         if (!hasStops) {
-            mySortedRoutes.insert(std::make_pair(GNEAttributeCarrier::parseIDs(i.second->getEdgeParents()), i.second));
+            mySortedRoutes.insert(std::make_pair(GNEAttributeCarrier::parseIDs(i.second->getParentEdges()), i.second));
         }
     }
     // now declare a matrix in which organice routes to be merged
@@ -1862,8 +1879,8 @@ GNENet::joinRoutes(GNEUndoList* undoList) {
                 // iterate over duplicated routes
                 for (int j = 1; j < (int)i.size(); j++) {
                     // move all vehicles of every duplicated route
-                    while (i.at(j)->getDemandElementChildren().size() > 0) {
-                        i.at(j)->getDemandElementChildren().front()->setAttribute(SUMO_ATTR_ROUTE, i.at(0)->getID(), undoList);
+                    while (i.at(j)->getChildDemandElements().size() > 0) {
+                        i.at(j)->getChildDemandElements().front()->setAttribute(SUMO_ATTR_ROUTE, i.at(0)->getID(), undoList);
                     }
                     // finally remove route
                     undoList->add(new GNEChange_DemandElement(i.at(j), false), true);
@@ -2236,7 +2253,7 @@ GNENet::requireSaveAdditionals(bool value) {
 
 void
 GNENet::saveAdditionals(const std::string& filename) {
-    // obtain invalid additionals depending of number of their lane parents
+    // obtain invalid additionals depending of number of their parent lanes
     std::vector<GNEAdditional*> invalidSingleLaneAdditionals;
     std::vector<GNEAdditional*> invalidMultiLaneAdditionals;
     // iterate over additionals and obtain invalids
@@ -2394,14 +2411,16 @@ void
 GNENet::saveDemandElements(const std::string& filename) {
     // first recompute demand elements
     computeDemandElements(myViewNet->getViewParent()->getGNEAppWindows());
-    // obtain invalid demandElements depending of number of their lane parents
+    // obtain invalid demandElements depending of number of their parent lanes
     std::vector<GNEDemandElement*> invalidSingleLaneDemandElements;
     // iterate over demandElements and obtain invalids
-    for (auto i : myAttributeCarriers.demandElements) {
-        for (auto j : i.second) {
+    for (const auto &demandElementSet : myAttributeCarriers.demandElements) {
+        for (const auto &demandElement : demandElementSet.second) {
+            // compute before check if demand element is valid
+            demandElement.second->computePath();
             // check if has to be fixed
-            if (!j.second->isDemandElementValid()) {
-                invalidSingleLaneDemandElements.push_back(j.second);
+            if (!demandElement.second->isDemandElementValid()) {
+                invalidSingleLaneDemandElements.push_back(demandElement.second);
             }
         }
     }
@@ -2483,7 +2502,7 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
         if (GNEAttributeCarrier::getTagProperties(i.first).isStoppingPlace()) {
             for (auto j : i.second) {
                 // only save stoppingPlaces that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
-                if (j.second->getAdditionalParents().empty()) {
+                if (j.second->getParentAdditionals().empty()) {
                     j.second->writeAdditional(device);
                 }
             }
@@ -2494,7 +2513,7 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
         if (GNEAttributeCarrier::getTagProperties(i.first).isDetector()) {
             for (auto j : i.second) {
                 // only save Detectors that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
-                if (j.second->getAdditionalParents().empty()) {
+                if (j.second->getParentAdditionals().empty()) {
                     j.second->writeAdditional(device);
                 }
             }
@@ -2506,7 +2525,7 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
         if (!tagValue.isStoppingPlace() && !tagValue.isDetector() && (i.first != SUMO_TAG_ROUTEPROBE) && (i.first != SUMO_TAG_VTYPE) && (i.first != SUMO_TAG_ROUTE)) {
             for (auto j : i.second) {
                 // only save additionals that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
-                if (j.second->getAdditionalParents().empty()) {
+                if (j.second->getParentAdditionals().empty()) {
                     j.second->writeAdditional(device);
                 }
             }
@@ -2838,7 +2857,7 @@ GNENet::initJunctionsAndEdges() {
     NBNodeCont& nodeContainer = myNetBuilder->getNodeCont();
     for (auto name_it : nodeContainer.getAllNames()) {
         NBNode* nbn = nodeContainer.retrieve(name_it);
-        registerJunction(new GNEJunction(*nbn, this, true));
+        registerJunction(new GNEJunction(this, nbn, true));
     }
 
     // init edges
@@ -2857,8 +2876,8 @@ GNENet::initJunctionsAndEdges() {
     }
 
     // recalculate all lane2lane connections
-    for (const auto &i : myAttributeCarriers.edges) {
-        for (const auto&j : i.second->getLanes()) {
+    for (const auto& i : myAttributeCarriers.edges) {
+        for (const auto& j : i.second->getLanes()) {
             j->updateGeometry();
         }
     }

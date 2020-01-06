@@ -11,7 +11,6 @@
 /// @author  Jakob Erdmann
 /// @author  Pablo Alvarez Lopez
 /// @date    Mar 2011
-/// @version $Id$
 ///
 // The Widget for modifying network-element attributes (i.e. lane speed)
 /****************************************************************************/
@@ -372,8 +371,8 @@ GNEInspectorFrame::updateFrameAfterUndoRedo() {
 }
 
 
-void 
-GNEInspectorFrame::selectedOverlappedElement(GNEAttributeCarrier *AC) {
+void
+GNEInspectorFrame::selectedOverlappedElement(GNEAttributeCarrier* AC) {
     // if AC is a lane but selectEdges checkBox is enabled, then inspect their parent edge
     if (AC->getTagProperty().getTag() == SUMO_TAG_LANE && myViewNet->getNetworkViewOptions().selectEdges()) {
         inspectSingleElement(dynamic_cast<GNELane*>(AC)->getParentEdge());
@@ -415,10 +414,10 @@ GNEInspectorFrame::NeteditAttributesEditor::NeteditAttributesEditor(GNEInspector
     FXGroupBox(inspectorFrameParent->myContentFrame, "Netedit attributes", GUIDesignGroupBoxFrame),
     myInspectorFrameParent(inspectorFrameParent) {
 
-    // Create elements for additional parent
-    myHorizontalFrameAdditionalParent = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
-    myLabelAdditionalParent = new FXLabel(myHorizontalFrameAdditionalParent, "Block move", nullptr, GUIDesignLabelAttribute);
-    myTextFieldAdditionalParent = new FXTextField(myHorizontalFrameAdditionalParent, GUIDesignTextFieldNCol, this, MID_GNE_SET_ATTRIBUTE, GUIDesignTextField);
+    // Create elements for parent additional
+    myHorizontalFrameParentAdditional = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
+    myLabelParentAdditional = new FXLabel(myHorizontalFrameParentAdditional, "Block move", nullptr, GUIDesignLabelAttribute);
+    myTextFieldParentAdditional = new FXTextField(myHorizontalFrameParentAdditional, GUIDesignTextFieldNCol, this, MID_GNE_SET_ATTRIBUTE, GUIDesignTextField);
 
     // Create elements for block movement
     myHorizontalFrameBlockMovement = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
@@ -447,7 +446,7 @@ void
 GNEInspectorFrame::NeteditAttributesEditor::showNeteditAttributesEditor() {
     if (myInspectorFrameParent->myAttributesEditor->getEditedACs().size() > 0) {
         // enable all editable elements
-        myTextFieldAdditionalParent->enable();
+        myTextFieldParentAdditional->enable();
         myCheckBoxBlockMovement->enable();
         myCheckBoxBlockShape->enable();
         myCheckBoxCloseShape->enable();
@@ -522,16 +521,16 @@ GNEInspectorFrame::NeteditAttributesEditor::showNeteditAttributesEditor() {
             for (const auto& i : myInspectorFrameParent->myAttributesEditor->getEditedACs()) {
                 parents.insert(i->getAttribute(GNE_ATTR_PARENT));
             }
-            // show additional parent frame
-            myHorizontalFrameAdditionalParent->show();
+            // show parent additional frame
+            myHorizontalFrameParentAdditional->show();
             // set Label and TextField with the Tag and ID of parent
-            myLabelAdditionalParent->setText((toString(myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().getParentTag()) + " parent").c_str());
-            myTextFieldAdditionalParent->setText(toString(parents).c_str());
+            myLabelParentAdditional->setText((toString(myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().getParentTag()) + " parent").c_str());
+            myTextFieldParentAdditional->setText(toString(parents).c_str());
         }
         // disable all editable elements if we're in demand mode and inspected AC isn't a demand element
         if (((myInspectorFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_NETWORK) && myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().isDemandElement()) ||
                 ((myInspectorFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_DEMAND) && !myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().isDemandElement())) {
-            myTextFieldAdditionalParent->disable();
+            myTextFieldParentAdditional->disable();
             myCheckBoxBlockMovement->disable();
             myCheckBoxBlockShape->disable();
             myCheckBoxCloseShape->disable();
@@ -543,7 +542,7 @@ GNEInspectorFrame::NeteditAttributesEditor::showNeteditAttributesEditor() {
 void
 GNEInspectorFrame::NeteditAttributesEditor::hideNeteditAttributesEditor() {
     // hide all elements of GroupBox
-    myHorizontalFrameAdditionalParent->hide();
+    myHorizontalFrameParentAdditional->hide();
     myHorizontalFrameBlockMovement->hide();
     myHorizontalFrameBlockShape->hide();
     myHorizontalFrameCloseShape->hide();
@@ -604,10 +603,10 @@ GNEInspectorFrame::NeteditAttributesEditor::refreshNeteditAttributesEditor(bool 
             }
         }
         // Check if item has another item as parent (Currently only for single Additionals)
-        if (myHorizontalFrameAdditionalParent->shown() && ((myTextFieldAdditionalParent->getTextColor() == FXRGB(0, 0, 0)) || forceRefresh)) {
+        if (myHorizontalFrameParentAdditional->shown() && ((myTextFieldParentAdditional->getTextColor() == FXRGB(0, 0, 0)) || forceRefresh)) {
             // set Label and TextField with the Tag and ID of parent
-            myLabelAdditionalParent->setText((toString(myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().getParentTag()) + " parent").c_str());
-            myTextFieldAdditionalParent->setText(myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getAttribute(GNE_ATTR_PARENT).c_str());
+            myLabelParentAdditional->setText((toString(myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().getParentTag()) + " parent").c_str());
+            myTextFieldParentAdditional->setText(myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getAttribute(GNE_ATTR_PARENT).c_str());
         }
     }
 }
@@ -654,16 +653,16 @@ GNEInspectorFrame::NeteditAttributesEditor::onCmdSetNeteditAttribute(FXObject* o
                     myCheckBoxCloseShape->setText("false");
                 }
             }
-        } else if (obj == myTextFieldAdditionalParent) {
-            if (myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->isValid(GNE_ATTR_PARENT, myTextFieldAdditionalParent->getText().text())) {
-                // change parent of all inspected elements
+        } else if (obj == myTextFieldParentAdditional) {
+            if (myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->isValid(GNE_ATTR_PARENT, myTextFieldParentAdditional->getText().text())) {
+                // replace the parent of all inspected elements
                 for (const auto& i : myInspectorFrameParent->myAttributesEditor->getEditedACs()) {
-                    i->setAttribute(GNE_ATTR_PARENT, myTextFieldAdditionalParent->getText().text(), myInspectorFrameParent->myViewNet->getUndoList());
+                    i->setAttribute(GNE_ATTR_PARENT, myTextFieldParentAdditional->getText().text(), myInspectorFrameParent->myViewNet->getUndoList());
                 }
-                myTextFieldAdditionalParent->setTextColor(FXRGB(0, 0, 0));
-                myTextFieldAdditionalParent->killFocus();
+                myTextFieldParentAdditional->setTextColor(FXRGB(0, 0, 0));
+                myTextFieldParentAdditional->killFocus();
             } else {
-                myTextFieldAdditionalParent->setTextColor(FXRGB(255, 0, 0));
+                myTextFieldParentAdditional->setTextColor(FXRGB(255, 0, 0));
             }
         }
         // finish change multiple attributes
@@ -905,7 +904,7 @@ void
 GNEInspectorFrame::TemplateEditor::showTemplateEditor() {
     // show template editor only if we're editing an edge in Network mode
     if ((myInspectorFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_NETWORK) &&
-        (myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().getTag() == SUMO_TAG_EDGE)) {
+            (myInspectorFrameParent->myAttributesEditor->getEditedACs().front()->getTagProperty().getTag() == SUMO_TAG_EDGE)) {
         // show "Set As Template"
         if (myInspectorFrameParent->myAttributesEditor->getEditedACs().size() == 1) {
             mySetTemplateButton->show();
@@ -932,7 +931,7 @@ GNEInspectorFrame::TemplateEditor::getEdgeTemplate() const {
 }
 
 
-void 
+void
 GNEInspectorFrame::TemplateEditor::setTemplate() {
     // check if template editor AND mySetTemplateButton is enabled
     if (shown() && mySetTemplateButton->isEnabled()) {
@@ -1024,7 +1023,7 @@ GNEInspectorFrame::TemplateEditor::setEdgeTemplate(GNEEdge* tpl) {
 }
 
 
-void 
+void
 GNEInspectorFrame::TemplateEditor::updateButtons() {
     // enable or disable clear buttons depending of myEdgeTemplate
     if (myEdgeTemplate) {

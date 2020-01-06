@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Fri Nov  8 13:16:05 2019 by Eclipse SUMO Version v1_3_1+0801-355be15e4b
+<!-- generated on Fri Jan  3 19:24:35 2020 by Eclipse SUMO Version v1_4_0+0308-61819149b5
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -87,8 +87,23 @@
         <!-- Write battery values with the given precision (default 2) -->
         <battery-output.precision value="2" type="INT"/>
 
+        <!-- Save the elecHybrid values of each vehicle -->
+        <elechybrid-output value="" type="FILE"/>
+
+        <!-- Write elecHybrid values with the given precision (default 2) -->
+        <elechybrid-output.precision value="2" type="INT"/>
+
+        <!-- Write elecHybrid values into one aggregated file -->
+        <elechybrid-output.aggregated value="false" type="BOOL"/>
+
         <!-- Write data of charging stations -->
         <chargingstations-output value="" type="FILE"/>
+
+        <!-- Write data of overhead wire segments -->
+        <overheadwiresegments-output value="" type="FILE"/>
+
+        <!-- Write data of electrical substation stations -->
+        <substations-output value="" type="FILE"/>
 
         <!-- Save the Floating Car Data -->
         <fcd-output value="" type="FILE"/>
@@ -101,6 +116,9 @@
 
         <!-- Add kilometrage to the FCD output (linear referencing) -->
         <fcd-output.distance value="false" type="BOOL"/>
+
+        <!-- Add acceleration to the FCD output -->
+        <fcd-output.acceleration value="false" type="BOOL"/>
 
         <!-- Restrict fcd output to the edge selection from the given input file -->
         <fcd-output.filter-edges.input-file value="" type="FILE"/>
@@ -306,6 +324,9 @@
         <!-- Select default emergencyDecel value among (&apos;decel&apos;, &apos;default&apos;, FLOAT) which sets the value either to the same as the deceleration value, a vClass-class specific default or the given FLOAT in m/s^2 -->
         <default.emergencydecel value="default" type="STR"/>
 
+        <!-- Use Kirchhoff&apos;s laws for solving overhead wire circuit -->
+        <overhead-wire-solver value="true" type="BOOL"/>
+
         <!-- Sets the fraction of emergency decel capability that must be used to trigger a warning. -->
         <emergencydecel.warning-threshold value="1" type="FLOAT"/>
 
@@ -326,6 +347,12 @@
 
         <!-- Time in seconds after which pedestrians start squeezing through a jam while on a pedestrian crossing when using model &apos;striping&apos; (non-positive values disable squeezing) -->
         <pedestrian.striping.jamtime.crossing value="10" type="TIME"/>
+
+        <!-- Fraction of stripes to reserve for oncoming pedestrians -->
+        <pedestrian.striping.reserve-oncoming value="0" type="FLOAT"/>
+
+        <!-- Fraction of stripes to reserve for oncoming pedestrians on crossings and walkingareas -->
+        <pedestrian.striping.reserve-oncoming.junctions value="0.34" type="FLOAT"/>
 
         <!-- The address (host:port) of the external simulation -->
         <pedestrian.remote.address value="localhost:9000" type="STR"/>
@@ -448,10 +475,13 @@
         <duration-log.disable value="false" synonymes="no-duration-log" type="BOOL"/>
 
         <!-- Enable statistics on vehicle trips -->
-        <duration-log.statistics value="false" type="BOOL"/>
+        <duration-log.statistics value="false" synonymes="t" type="BOOL"/>
 
         <!-- Disable console output of current simulation step -->
         <no-step-log value="false" type="BOOL"/>
+
+        <!-- Number of simulation steps between step-log outputs -->
+        <step-log.period value="100" type="INT"/>
 
     </report>
 
@@ -696,6 +726,9 @@
         <!-- Recording period for FCD-data -->
         <device.fcd.period value="0" type="STR"/>
 
+        <!-- Record objects in a radius around equipped vehicles -->
+        <device.fcd.radius value="0" type="FLOAT"/>
+
         <!-- The probability for a person to have a &apos;fcd&apos; device -->
         <person-device.fcd.probability value="-1" type="FLOAT"/>
 
@@ -709,6 +742,36 @@
         <person-device.fcd.period value="0" type="STR"/>
 
     </fcd_device>
+
+    <elechybrid_device>
+        <!-- The probability for a vehicle to have a &apos;elechybrid&apos; device -->
+        <device.elechybrid.probability value="-1" type="FLOAT"/>
+
+        <!-- Assign a &apos;elechybrid&apos; device to named vehicles -->
+        <device.elechybrid.explicit value="" synonymes="device.elechybrid.knownveh" type="STR[]"/>
+
+        <!-- The &apos;elechybrid&apos; devices are set deterministic using a fraction of 1000 -->
+        <device.elechybrid.deterministic value="false" type="BOOL"/>
+
+    </elechybrid_device>
+
+    <taxi_device>
+        <!-- The probability for a vehicle to have a &apos;taxi&apos; device -->
+        <device.taxi.probability value="-1" type="FLOAT"/>
+
+        <!-- Assign a &apos;taxi&apos; device to named vehicles -->
+        <device.taxi.explicit value="" synonymes="device.taxi.knownveh" type="STR[]"/>
+
+        <!-- The &apos;taxi&apos; devices are set deterministic using a fraction of 1000 -->
+        <device.taxi.deterministic value="false" type="BOOL"/>
+
+        <!-- The dispatch algorithm [greedy|greedyClosest] -->
+        <device.taxi.dispatch-algorithm value="greedy" type="STR"/>
+
+        <!-- The period between successive calls to the dispatcher -->
+        <device.taxi.dispatch-period value="60" type="TIME"/>
+
+    </taxi_device>
 
     <tripinfo_device>
         <!-- The probability for a vehicle to have a &apos;tripinfo&apos; device -->

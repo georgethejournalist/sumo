@@ -15,7 +15,6 @@
 /// @author  Friedemann Wesner
 /// @author  Jakob Erdmann
 /// @date    Fri, 01 Feb 2002
-/// @version $Id$
 ///
 // Performs lane changing of vehicles
 /****************************************************************************/
@@ -36,7 +35,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
-#include <microsim/pedestrians/MSPModel.h>
+#include <microsim/transportables/MSTransportableControl.h>
+#include <microsim/transportables/MSPModel.h>
 #include <utils/common/MsgHandler.h>
 
 #define OPPOSITE_OVERTAKING_SAFE_TIMEGAP 0.0
@@ -271,6 +271,7 @@ MSLaneChanger::change() {
     if (vehicle->getLaneChangeModel().isChangingLanes() && !vehicle->getLaneChangeModel().alreadyChanged()) {
         return continueChange(vehicle, myCandi);
     }
+    vehicle->getLaneChangeModel().setSpeedLat(0);
     if (!myAllowsChanging || vehicle->getLaneChangeModel().alreadyChanged() || vehicle->isStoppedOnLane()) {
         registerUnchanged(vehicle);
         return false;
@@ -812,8 +813,8 @@ MSLaneChanger::checkChange(
             blocked |= blockedByLeader;
         }
     }
-    if (blocked == 0 && MSPModel::getModel()->hasPedestrians(targetLane)) {
-        PersonDist leader = MSPModel::getModel()->nextBlocking(targetLane, vehicle->getBackPositionOnLane(),
+    if (blocked == 0 && targetLane->hasPedestrians()) {
+        PersonDist leader = targetLane->nextBlocking(vehicle->getBackPositionOnLane(),
                             vehicle->getRightSideOnLane(), vehicle->getRightSideOnLane() + vehicle->getVehicleType().getWidth(),
                             ceil(vehicle->getSpeed() / vehicle->getCarFollowModel().getMaxDecel()));
         if (leader.first != 0) {
@@ -1543,8 +1544,8 @@ MSLaneChanger::getColumnleader(MSVehicle* vehicle, std::pair<MSVehicle*, double>
             }
         } else {
             const double requiredSpace = safetyFactor * (requiredSpaceAfterLeader
-                    + vehicle->getCarFollowModel().getSecureGap(vehicle, leadLead.first, 
-                        overtakingSpeed, leadLead.first->getSpeed(), leadLead.first->getCarFollowModel().getMaxDecel()));
+                                         + vehicle->getCarFollowModel().getSecureGap(vehicle, leadLead.first,
+                                                 overtakingSpeed, leadLead.first->getSpeed(), leadLead.first->getCarFollowModel().getMaxDecel()));
 #ifdef DEBUG_CHANGE_OPPOSITE
             if (DEBUG_COND) {
                 std::cout << "   leader's leader " << leadLead.first->getID() << " space=" << leadLead.second

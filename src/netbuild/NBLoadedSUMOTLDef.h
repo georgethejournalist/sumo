@@ -11,7 +11,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Mar 2011
-/// @version $Id$
 ///
 // A complete traffic light logic loaded from a sumo-net. (opted to reimplement
 // since NBLoadedTLDef is quite vissim specific)
@@ -106,7 +105,7 @@ public:
 
     /** @brief Adds a connection and immediately informs the edges
      */
-    void addConnection(NBEdge* from, NBEdge* to, int fromLane, int toLane, int linkIndex, bool reconstruct = true);
+    void addConnection(NBEdge* from, NBEdge* to, int fromLane, int toLane, int linkIndex, int linkIndex2, bool reconstruct = true);
 
 
     /** @brief removes the given connection from the traffic light

@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A list of object types which may be displayed within the gui
 // each type has an associated string which will be prefefixed to an object id
@@ -98,6 +97,8 @@ enum GUIGlObjectType {
     GLO_ACCESS = 119,
     /// @brief a TAZ
     GLO_TAZ = 120,
+    /// @brief a segment of an overhead line
+    GLO_OVERHEAD_WIRE_SEGMENT = 121,
 
     /// @brief reserved GLO type to pack shapes
     GLO_SHAPE = 200,

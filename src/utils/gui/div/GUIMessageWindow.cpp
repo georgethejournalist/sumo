@@ -12,7 +12,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    Tue, 25 Nov 2003
-/// @version $Id$
 ///
 // A logging window for the gui
 /****************************************************************************/
@@ -120,6 +119,8 @@ GUIMessageWindow::getActiveStringObject(const FXString& text, const FXint pos, c
                 type = "containerStop";
             } else if (type == "chargingstation") {
                 type = "chargingStation";
+            } else if (type == "overheadwiresegment") {
+                type = "overheadWireSegment";
             } else if (type == "parkingarea") {
                 type = "parkingArea";
             }

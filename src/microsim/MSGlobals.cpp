@@ -12,7 +12,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    late summer 2003
-/// @version $Id$
 ///
 // Some static variables for faster access
 /****************************************************************************/
@@ -53,6 +52,8 @@ bool MSGlobals::gMesoOvertaking;
 double MSGlobals::gMesoTLSPenalty;
 SUMOTime MSGlobals::gMesoMinorPenalty;
 MELoop* MSGlobals::gMesoNet;
+
+bool MSGlobals::gOverheadWireSolver;
 
 bool MSGlobals::gSemiImplicitEulerUpdate;
 

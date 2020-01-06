@@ -10,7 +10,6 @@
 /// @file    MEVehicle.cpp
 /// @author  Daniel Krajzewicz
 /// @date    Tue, May 2005
-/// @version $Id$
 ///
 // A vehicle from the mesoscopic point of view
 /****************************************************************************/
@@ -38,7 +37,7 @@
 #include <microsim/MSVehicleType.h>
 #include <microsim/MSLink.h>
 #include <microsim/MSVehicleControl.h>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/devices/MSDevice.h>
 #include "MELoop.h"
 #include "MEVehicle.h"
@@ -415,6 +414,9 @@ MEVehicle::updateDetectors(SUMOTime currentTime, const bool isLeave, const MSMov
             }
 #endif
             ++rem;
+            if (reason == MSMoveReminder::NOTIFICATION_JUNCTION || reason == MSMoveReminder::NOTIFICATION_TELEPORT) {
+                myOdometer += getEdge()->getLength();
+            }
         } else {
 #ifdef _DEBUG
             if (myTraceMoveReminders) {
@@ -429,6 +431,10 @@ MEVehicle::updateDetectors(SUMOTime currentTime, const bool isLeave, const MSMov
 
 void
 MEVehicle::saveState(OutputDevice& out) {
+    if (mySegment != nullptr && MESegment::isInvalid(mySegment)) {
+        // segment is vaporization target, do not write this vehicle
+        return;
+    }
     MSBaseVehicle::saveState(out);
     assert(mySegment == 0 || *myCurrEdge == &mySegment->getEdge());
     std::vector<SUMOTime> internals;

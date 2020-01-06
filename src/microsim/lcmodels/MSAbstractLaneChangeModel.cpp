@@ -15,7 +15,6 @@
 /// @author  Jakob Erdmann
 /// @author  Leonhard Luecken
 /// @date    Fri, 29.04.2005
-/// @version $Id$
 ///
 // Interface for lane-change models
 /****************************************************************************/
@@ -101,6 +100,7 @@ MSAbstractLaneChangeModel::MSAbstractLaneChangeModel(MSVehicle& v, const LaneCha
     myCanceledStateCenter(LCA_NONE),
     myCanceledStateLeft(LCA_NONE),
     mySpeedLat(0),
+    myAccelerationLat(0),
     myCommittedSpeed(0),
     myLaneChangeCompletion(1.0),
     myLaneChangeDirection(0),
@@ -312,7 +312,9 @@ MSAbstractLaneChangeModel::primaryLaneChanged(MSLane* source, MSLane* target, in
     if (&source->getEdge() != &target->getEdge()) {
         changedToOpposite();
 #ifdef DEBUG_OPPOSITE
-        if (debugVehicle())  std::cout << SIMTIME << " veh=" << myVehicle.getID() << " primaryLaneChanged nowOpposite=" << myAmOpposite << "\n";
+        if (debugVehicle()) {
+            std::cout << SIMTIME << " veh=" << myVehicle.getID() << " primaryLaneChanged nowOpposite=" << myAmOpposite << "\n";
+        }
 #endif
         myVehicle.setTentativeLaneAndPosition(target, source->getOppositePos(myVehicle.getPositionOnLane()), -myVehicle.getLateralPositionOnLane());
         target->forceVehicleInsertion(&myVehicle, myVehicle.getPositionOnLane(), MSMoveReminder::NOTIFICATION_LANE_CHANGE, myVehicle.getLateralPositionOnLane());
@@ -384,13 +386,18 @@ MSAbstractLaneChangeModel::getAssumedDecelForLaneChangeDuration() const {
     throw ProcessError("Method getAssumedDecelForLaneChangeDuration() not implemented by model " + toString(myModel));
 }
 
+void
+MSAbstractLaneChangeModel::setSpeedLat(double speedLat) {
+    myAccelerationLat = SPEED2ACCEL(speedLat - mySpeedLat);
+    mySpeedLat = speedLat;
+}
 
 bool
 MSAbstractLaneChangeModel::updateCompletion() {
     const bool pastBefore = pastMidpoint();
     // maneuverDist is not updated in the context of continuous lane changing but represents the full LC distance
     double maneuverDist = getManeuverDist();
-    mySpeedLat = computeSpeedLat(0, maneuverDist);
+    setSpeedLat(computeSpeedLat(0, maneuverDist));
     myLaneChangeCompletion += (SPEED2DIST(mySpeedLat) / myManeuverDist);
     return !pastBefore && pastMidpoint();
 }
@@ -408,7 +415,9 @@ MSAbstractLaneChangeModel::endLaneChangeManeuver(const MSMoveReminder::Notificat
     if (myAmOpposite && reason != MSMoveReminder::NOTIFICATION_LANE_CHANGE) {
         // aborted maneuver
 #ifdef DEBUG_OPPOSITE
-        if (debugVehicle())  std::cout << SIMTIME << " veh=" << myVehicle.getID() << " aborted maneuver (no longer opposite)\n";
+        if (debugVehicle()) {
+            std::cout << SIMTIME << " veh=" << myVehicle.getID() << " aborted maneuver (no longer opposite)\n";
+        }
 #endif
         changedToOpposite();
     }

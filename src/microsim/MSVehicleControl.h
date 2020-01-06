@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Wed, 10. Dec 2003
-/// @version $Id$
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
@@ -593,6 +592,9 @@ private:
 
     /// @brief Whether the default pedestrian type was already used or can still be replaced
     bool myDefaultPedTypeMayBeDeleted;
+
+    /// @brief Whether the default container type was already used or can still be replaced
+    bool myDefaultContainerTypeMayBeDeleted;
 
     /// @brief Whether the default bicycle type was already used or can still be replaced
     bool myDefaultBikeTypeMayBeDeleted;

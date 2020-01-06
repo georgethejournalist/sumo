@@ -10,7 +10,6 @@
 /// @file    GNERerouterInterval.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jan 2017
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -33,7 +32,7 @@
 
 GNERerouterInterval::GNERerouterInterval(GNERerouterDialog* rerouterDialog) :
     GNEAdditional(rerouterDialog->getEditedAdditional(), rerouterDialog->getEditedAdditional()->getViewNet(), GLO_REROUTER, SUMO_TAG_INTERVAL, "", false,
-        {}, {}, {}, {rerouterDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}) {
+{}, {}, {}, {rerouterDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}) {
     // fill reroute interval with default values
     setDefaultValues();
 }
@@ -41,9 +40,9 @@ GNERerouterInterval::GNERerouterInterval(GNERerouterDialog* rerouterDialog) :
 
 GNERerouterInterval::GNERerouterInterval(GNEAdditional* rerouterParent, SUMOTime begin, SUMOTime end) :
     GNEAdditional(rerouterParent, rerouterParent->getViewNet(), GLO_REROUTER, SUMO_TAG_INTERVAL, "", false,
-        {}, {}, {}, {rerouterParent}, {}, {}, {}, {}, {}, {}),
-    myBegin(begin),
-    myEnd(end) {
+{}, {}, {}, {rerouterParent}, {}, {}, {}, {}, {}, {}),
+myBegin(begin),
+myEnd(end) {
 }
 
 
@@ -69,17 +68,17 @@ GNERerouterInterval::updateGeometry() {
 
 Position
 GNERerouterInterval::getPositionInView() const {
-    return getAdditionalParents().at(0)->getPositionInView();
+    return getParentAdditionals().at(0)->getPositionInView();
 }
 
 
 Boundary
 GNERerouterInterval::getCenteringBoundary() const {
-    return getAdditionalParents().at(0)->getCenteringBoundary();
+    return getParentAdditionals().at(0)->getCenteringBoundary();
 }
 
 
-void 
+void
 GNERerouterInterval::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -87,7 +86,7 @@ GNERerouterInterval::splitEdgeGeometry(const double /*splitPosition*/, const GNE
 
 std::string
 GNERerouterInterval::getParentName() const {
-    return getAdditionalParents().at(0)->getID();
+    return getParentAdditionals().at(0)->getID();
 }
 
 
@@ -107,7 +106,7 @@ GNERerouterInterval::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_END:
             return time2string(myEnd);
         case GNE_ATTR_PARENT:
-            return getAdditionalParents().at(0)->getID();
+            return getParentAdditionals().at(0)->getID();
         case GNE_ATTR_PARAMETERS:
             return getParametersStr();
         default:
@@ -116,7 +115,7 @@ GNERerouterInterval::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNERerouterInterval::getAttributeDouble(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_BEGIN:
@@ -139,7 +138,7 @@ GNERerouterInterval::setAttribute(SumoXMLAttr key, const std::string& value, GNE
             // change ID of Rerouter Interval
             undoList->p_add(new GNEChange_Attribute(this, myViewNet->getNet(), key, value));
             // Change Ids of all Rerouter children
-            for (auto i : getAdditionalChildren()) {
+            for (auto i : getChildAdditionals()) {
                 i->setAttribute(SUMO_ATTR_ID, generateChildID(i->getTagProperty().getTag()), undoList);
             }
             break;
@@ -172,7 +171,7 @@ GNERerouterInterval::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNERerouterInterval::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }

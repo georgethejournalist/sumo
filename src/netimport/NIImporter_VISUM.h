@@ -11,7 +11,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
 /// @date    Fri, 19 Jul 2002
-/// @version $Id$
 ///
 // A VISUM network importer
 /****************************************************************************/
@@ -415,6 +414,7 @@ private:
 
     /// @brief Parses ANBINDUNG
     void parse_Connectors();
+    void parse_Connectors_legacy();
 
     /// @brief Parses ABBIEGEBEZIEHUNG/ABBIEGER
     void parse_Turns();
@@ -542,7 +542,28 @@ protected:
         VISUM_FROMNODE,
         VISUM_TONODE,
         VISUM_TYPE,
+        VISUM_TYP,
+        VISUM_ID,
+        VISUM_CODE,
         VISUM_DISTRICT_CONNECTION,
+        VISUM_SOURCE_DISTRICT,
+        VISUM_FROMNODENO,
+        VISUM_DIRECTION,
+        VISUM_SURFACEID,
+        VISUM_FACEID,
+        VISUM_FROMPOINTID,
+        VISUM_TOPOINTID,
+        VISUM_EDGE,
+        VISUM_VIANODENO,
+        VISUM_NUMLANES,
+        VISUM_TURN,
+        VISUM_INDEX,
+        VISUM_LINKPOLY,
+        VISUM_SURFACEITEM,
+        VISUM_FACEITEM,
+        VISUM_EDGEID,
+        VISUM_ORIGIN,
+        VISUM_DESTINATION,
         VISUM_NO // must be the last one
     };
 
@@ -559,4 +580,3 @@ protected:
 #endif
 
 /****************************************************************************/
-

@@ -11,7 +11,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // Base class for objects which have an id.
 /****************************************************************************/
@@ -82,7 +81,7 @@ public:
     /** @brief resets the id
      * @param[in] newID The new id of this object
      */
-    void setID(const std::string& newID) {
+    virtual void setID(const std::string& newID) {
         myID = newID;
     }
 
@@ -93,24 +92,18 @@ public:
     class StoringVisitor {
     public:
         /// @brief Contructor
-        StoringVisitor(std::set<const Named*>& objects) : myIDs(nullptr), myObjects(&objects) {}
-        StoringVisitor(std::set<std::string>& objects) : myIDs(&objects), myObjects(nullptr) {}
+        StoringVisitor(std::set<const Named*>& objects) : myObjects(objects) {}
 
         /// @brief Destructor
         ~StoringVisitor() {}
 
         /// @brief Adds the given object to the container
         void add(const Named* const o) const {
-            if (myObjects == nullptr) {
-                myIDs->insert(o->getID());
-            } else {
-                myObjects->insert(o);
-            }
+            myObjects.insert(o);
         }
 
         /// @brief The container
-        std::set<std::string>* myIDs;
-        std::set<const Named*>* myObjects;
+        std::set<const Named*>& myObjects;
 
     private:
         /// @brief invalidated copy constructor

@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    09.05.2011
-/// @version $Id$
 ///
 // Sets and checks options for netbuild
 /****************************************************************************/
@@ -99,6 +98,12 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.doRegister("numerical-ids", new Option_Bool(false));
     oc.addDescription("numerical-ids", "Processing", "Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers");
 
+    oc.doRegister("numerical-ids.node-start", new Option_Integer(std::numeric_limits<int>::max()));
+    oc.addDescription("numerical-ids.node-start", "Processing", "Remaps IDs of nodes to integers starting at INT");
+
+    oc.doRegister("numerical-ids.edge-start", new Option_Integer(std::numeric_limits<int>::max()));
+    oc.addDescription("numerical-ids.edge-start", "Processing", "Remaps IDs of edges to integers starting at INT");
+
     /// @todo not working for netgen
     oc.doRegister("reserved-ids", new Option_FileName());
     oc.addDescription("reserved-ids", "Processing", "Ensures that generated ids do not included any of the typed IDs from FILE (SUMO-GUI selection file format)");
@@ -120,6 +125,9 @@ NBFrame::fillOptions(bool forNetgen) {
 
     oc.doRegister("no-turnarounds.except-deadend", new Option_Bool(false));
     oc.addDescription("no-turnarounds.except-deadend", "Junctions", "Disables building turnarounds except at dead end junctions");
+
+    oc.doRegister("no-turnarounds.except-turnlane", new Option_Bool(false));
+    oc.addDescription("no-turnarounds.except-turnlane", "Junctions", "Disables building turnarounds except at at junctions with a dedicated turning lane");
 
     oc.doRegister("no-left-connections", new Option_Bool(false));
     oc.addDescription("no-left-connections", "Junctions", "Disables building connections to left");
@@ -193,6 +201,9 @@ NBFrame::fillOptions(bool forNetgen) {
 
         oc.doRegister("railway.topology.all-bidi", new Option_Bool(false));
         oc.addDescription("railway.topology.all-bidi", "Railway", "Make all rails usable in both direction");
+
+        oc.doRegister("railway.topology.all-bidi.input-file", new Option_FileName());
+        oc.addDescription("railway.topology.all-bidi.input-file", "Railway", "Make all rails edge ids from FILE usable in both direction");
 
         oc.doRegister("railway.access-distance", new Option_Float(150.f));
         oc.addDescription("railway.access-distance", "Railway", "The search radius for finding suitable road accesses for rail stops");
@@ -639,6 +650,9 @@ NBFrame::checkOptions() {
     }
     if (oc.isDefault("railway.topology.repair") && oc.getBool("railway.topology.repair.connect-straight")) {
         oc.set("railway.topology.repair", "true");
+    }
+    if (oc.isDefault("railway.topology.all-bidi") && !oc.isDefault("railway.topology.all-bidi.input-file")) {
+        oc.set("railway.topology.all-bidi", "true");
     }
     return ok;
 }

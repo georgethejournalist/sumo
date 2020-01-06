@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Gregor Laemmel
 /// @date    Tue, 20 Nov 2001
-/// @version $Id$
 ///
 // Sets and checks options for netimport
 /****************************************************************************/
@@ -283,7 +282,7 @@ NIFrame::fillOptions(bool forNetedit) {
     oc.addSynonyme("visum.connectors-lane-number", "visum.connector-laneno", true);
     oc.addDescription("visum.connectors-lane-number", "Formats", "Sets connector lane number");
 
-    oc.doRegister("visum.no-connectors", new Option_Bool(false));
+    oc.doRegister("visum.no-connectors", new Option_Bool(true));
     oc.addDescription("visum.no-connectors", "Formats", "Excludes connectors");
 
     oc.doRegister("visum.recompute-lane-number", new Option_Bool(false));
@@ -360,6 +359,10 @@ NIFrame::checkOptions() {
         if (oc.isWriteable("geometry.max-grade.fix")) {
             // changed default since we wish to preserve the network as far as possible
             oc.set("geometry.max-grade.fix", "false");
+        }
+        if (oc.isWriteable("geometry.min-radius.fix.railways")) {
+            // changed default since we wish to preserve the network as far as possible
+            oc.set("geometry.min-radius.fix.railways", "false");
         }
     }
     if (!oc.isSet("type-files")) {

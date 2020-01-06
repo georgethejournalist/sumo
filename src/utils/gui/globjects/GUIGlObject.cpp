@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Laura Bieker
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // Base class for all objects that may be displayed within the openGL-gui
 /****************************************************************************/
@@ -62,6 +61,7 @@ StringBijection<GUIGlObjectType>::Entry GUIGlObject::GUIGlObjectTypeNamesInitial
     {"taz",                 GLO_TAZ},
     {"containerStop",       GLO_CONTAINER_STOP},
     {"chargingStation",     GLO_CHARGING_STATION},
+    {"overheadWireSegment", GLO_OVERHEAD_WIRE_SEGMENT},
     {"parkingArea",         GLO_PARKING_AREA},
     {"parkingSpace",        GLO_PARKING_SPACE},
     {"e1Detector",          GLO_E1DETECTOR},

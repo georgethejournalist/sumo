@@ -13,7 +13,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Mon, 12 Mar 2001
-/// @version $Id$
 ///
 // The car-following model and parameter
 /****************************************************************************/
@@ -582,6 +581,7 @@ private:
     /// @brief Indicator whether the user was already warned once about an action step length
     ///        larger than the desired time headway.
     bool myWarnedActionStepLengthTauOnce;
+    bool myWarnedActionStepLengthBallisticOnce;
 
     /// @brief the running index
     const int myIndex;

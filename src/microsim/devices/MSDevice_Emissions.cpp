@@ -12,7 +12,6 @@
 /// @author  Laura Bieker
 /// @author  Michael Behrisch
 /// @date    Fri, 30.01.2009
-/// @version $Id$
 ///
 // A device which collects vehicular emissions
 /****************************************************************************/
@@ -22,13 +21,13 @@
 // ===========================================================================
 #include <config.h>
 
-#include "MSDevice_Emissions.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicleControl.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/emissions/PollutantsInterface.h>
 #include <utils/iodevices/OutputDevice.h>
+#include "MSDevice_Emissions.h"
 
 
 // ===========================================================================
@@ -70,45 +69,46 @@ MSDevice_Emissions::notifyMove(SUMOTrafficObject& veh, double /*oldPos*/, double
     const SUMOEmissionClass c = veh.getVehicleType().getEmissionClass();
     const double a = veh.getAcceleration();
     const double slope = veh.getSlope();
-    myEmissions.addScaled(PollutantsInterface::computeAll(c, newSpeed, a, slope), TS);
+    myEmissions.addScaled(PollutantsInterface::computeAll(c, newSpeed, a, slope,
+                          static_cast<const SUMOVehicle&>(veh).getEmissionParameters()), TS);
     return true;
 }
 
 
 void
 MSDevice_Emissions::notifyMoveInternal(const SUMOTrafficObject& veh,
-                                      const double /* frontOnLane */,
-                                      const double timeOnLane,
-                                      const double /* meanSpeedFrontOnLane */,
-                                      const double meanSpeedVehicleOnLane,
-                                      const double /* travelledDistanceFrontOnLane */,
-                                      const double /* travelledDistanceVehicleOnLane */,
-                                      const double /* meanLengthOnLane */) {
+                                       const double /* frontOnLane */,
+                                       const double timeOnLane,
+                                       const double /* meanSpeedFrontOnLane */,
+                                       const double meanSpeedVehicleOnLane,
+                                       const double /* travelledDistanceFrontOnLane */,
+                                       const double /* travelledDistanceVehicleOnLane */,
+                                       const double /* meanLengthOnLane */) {
 
     // called by meso (see MSMeanData_Emissions::MSLaneMeanDataValues::notifyMoveInternal)
     const double a = veh.getAcceleration();
     myEmissions.addScaled(PollutantsInterface::computeAll(veh.getVehicleType().getEmissionClass(),
-                          meanSpeedVehicleOnLane, a, veh.getSlope()), timeOnLane);
+                          meanSpeedVehicleOnLane, a, veh.getSlope(),
+                          static_cast<const SUMOVehicle&>(veh).getEmissionParameters()), timeOnLane);
 }
 
 
 
 void
-MSDevice_Emissions::generateOutput() const {
-    if (OptionsCont::getOptions().isSet("tripinfo-output")) {
-        OutputDevice& os = OutputDevice::getDeviceByOption("tripinfo-output");
-        (os.openTag("emissions") <<
-         " CO_abs=\"" << OutputDevice::realString(myEmissions.CO, 6) <<
-         "\" CO2_abs=\"" << OutputDevice::realString(myEmissions.CO2, 6) <<
-         "\" HC_abs=\"" << OutputDevice::realString(myEmissions.HC, 6) <<
-         "\" PMx_abs=\"" << OutputDevice::realString(myEmissions.PMx, 6) <<
-         "\" NOx_abs=\"" << OutputDevice::realString(myEmissions.NOx, 6) <<
-         "\" fuel_abs=\"" << OutputDevice::realString(myEmissions.fuel, 6) <<
-         "\" electricity_abs=\"" << OutputDevice::realString(myEmissions.electricity, 6) <<
-         "\"").closeTag();
+MSDevice_Emissions::generateOutput(OutputDevice* tripinfoOut) const {
+    if (tripinfoOut != nullptr) {
+        const int precision = MAX2(6, gPrecision);
+        tripinfoOut->openTag("emissions");
+        tripinfoOut->writeAttr("CO_abs", OutputDevice::realString(myEmissions.CO, precision));
+        tripinfoOut->writeAttr("CO2_abs", OutputDevice::realString(myEmissions.CO2, precision));
+        tripinfoOut->writeAttr("HC_abs", OutputDevice::realString(myEmissions.HC, precision));
+        tripinfoOut->writeAttr("PMx_abs", OutputDevice::realString(myEmissions.PMx, precision));
+        tripinfoOut->writeAttr("NOx_abs", OutputDevice::realString(myEmissions.NOx, precision));
+        tripinfoOut->writeAttr("fuel_abs", OutputDevice::realString(myEmissions.fuel, precision));
+        tripinfoOut->writeAttr("electricity_abs", OutputDevice::realString(myEmissions.electricity, precision));
+        tripinfoOut->closeTag();
     }
 }
-
 
 
 /****************************************************************************/

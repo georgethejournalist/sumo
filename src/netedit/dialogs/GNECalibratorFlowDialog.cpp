@@ -10,7 +10,6 @@
 /// @file    GNECalibratorFlowDialog.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    March 2017
-/// @version $Id$
 ///
 // Dialog for edit calibrator flows
 /****************************************************************************/
@@ -56,7 +55,7 @@ GNECalibratorFlowDialog::GNECalibratorFlowDialog(GNEAdditional* editedCalibrator
     myInvalidAttr(SUMO_ATTR_VEHSPERHOUR) {
     // change default header
     std::string typeOfOperation = updatingElement ? "Edit " + myEditedAdditional->getTagStr() + " of " : "Create " + myEditedAdditional->getTagStr() + " for ";
-    changeAdditionalDialogHeader(typeOfOperation + myEditedAdditional->getAdditionalParents().at(0)->getTagStr() + " '" + myEditedAdditional->getAdditionalParents().at(0)->getID() + "'");
+    changeAdditionalDialogHeader(typeOfOperation + myEditedAdditional->getParentAdditionals().at(0)->getTagStr() + " '" + myEditedAdditional->getParentAdditionals().at(0)->getID() + "'");
 
     // Create auxiliar frames for tables
     FXHorizontalFrame* columns = new FXHorizontalFrame(myContentFrame, GUIDesignUniformHorizontalFrame);
@@ -160,7 +159,7 @@ long
 GNECalibratorFlowDialog::onCmdAccept(FXObject*, FXSelector, void*) {
     std::string operation1 = myUpdatingElement ? ("updating") : ("creating");
     std::string operation2 = myUpdatingElement ? ("updated") : ("created");
-    std::string parentTagString = myEditedAdditional->getAdditionalParents().at(0)->getTagStr();
+    std::string parentTagString = myEditedAdditional->getParentAdditionals().at(0)->getTagStr();
     std::string tagString = myEditedAdditional->getTagStr();
     if (myCalibratorFlowValid == false) {
         // write warning if netedit is running in testing mode
@@ -174,7 +173,7 @@ GNECalibratorFlowDialog::onCmdAccept(FXObject*, FXSelector, void*) {
         // write warning if netedit is running in testing mode
         WRITE_DEBUG("Closed FXMessageBox of type 'warning' with 'OK'");
         return 0;
-    } else if (!myEditedAdditional->getAdditionalParents().at(0)->checkAdditionalChildrenOverlapping()) {
+    } else if (!myEditedAdditional->getParentAdditionals().at(0)->checkChildAdditionalsOverlapping()) {
         // write warning if netedit is running in testing mode
         WRITE_DEBUG("Opening FXMessageBox of type 'warning'");
         // open warning dialog box

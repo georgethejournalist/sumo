@@ -14,7 +14,6 @@
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
 /// @date    Fri, 08.10.2013
-/// @version $Id$
 ///
 // A lane change model developed by D. Krajzewicz, J. Erdmann et al. between 2004 and 2013
 /****************************************************************************/
@@ -252,9 +251,11 @@ protected:
 
     // @brief willingness to undercut longitudinal safe gaps
     double myAssertive;
+    // allow overtaking right even though it is prohibited
+    double myOvertakeRightParam;
 
-    const double myOvertakeRightParam; // allow overtaking right even though it is prohibited
-    const double myExperimentalParam1; // for feature testing
+    // for feature testing
+    const double myExperimentalParam1;
 
     //@}
 

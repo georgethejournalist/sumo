@@ -15,7 +15,6 @@
 /// @author  Michael Behrisch
 /// @author  Felix Brack
 /// @date    Mon, 9 Jul 2001
-/// @version $Id$
 ///
 // The XML-Handler for network loading
 /****************************************************************************/
@@ -42,6 +41,7 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSJunction.h>
 #include <microsim/MSJunctionLogic.h>
+#include <microsim/MSStoppingPlace.h>
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/common/UtilExceptions.h>
@@ -175,6 +175,18 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_CHARGING_STATION:
                 myTriggerBuilder.parseAndBuildChargingStation(myNet, attrs);
                 myLastParameterised.push_back(myTriggerBuilder.getCurrentStop());
+                break;
+            case SUMO_TAG_OVERHEAD_WIRE_SEGMENT:
+                myTriggerBuilder.parseAndBuildOverheadWireSegment(myNet, attrs);
+                break;
+            case SUMO_TAG_OVERHEAD_WIRE_SECTION:
+                myTriggerBuilder.parseAndBuildOverheadWireSection(myNet, attrs);
+                break;
+            case SUMO_TAG_TRACTION_SUBSTATION:
+                myTriggerBuilder.parseAndBuildTractionSubstation(myNet, attrs);
+                break;
+            case SUMO_TAG_OVERHEAD_WIRE_CLAMP:
+                myTriggerBuilder.parseAndBuildOverheadWireClamp(myNet, attrs);
                 break;
             case SUMO_TAG_VTYPEPROBE:
                 addVTypeProbeDetector(attrs);
@@ -729,9 +741,9 @@ NLHandler::addPhase(const SUMOSAXAttributes& attrs) {
     // if the traffic light is an actuated traffic light, try to get
     //  the minimum and maximum durations
     const SUMOTime minDuration = attrs.getOptSUMOTimeReporting(
-                               SUMO_ATTR_MINDURATION, myJunctionControlBuilder.getActiveKey().c_str(), ok, duration);
+                                     SUMO_ATTR_MINDURATION, myJunctionControlBuilder.getActiveKey().c_str(), ok, duration);
     const SUMOTime maxDuration = attrs.getOptSUMOTimeReporting(
-                               SUMO_ATTR_MAXDURATION, myJunctionControlBuilder.getActiveKey().c_str(), ok, duration);
+                                     SUMO_ATTR_MAXDURATION, myJunctionControlBuilder.getActiveKey().c_str(), ok, duration);
 
 
     const std::vector<int> nextPhases = attrs.getOptIntVector(SUMO_ATTR_NEXT, nullptr, ok);

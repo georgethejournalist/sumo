@@ -13,7 +13,6 @@
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
-/// @version $Id$
 ///
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
@@ -836,9 +835,9 @@ NBEdgeCont::recheckLanes() {
 
 
 void
-NBEdgeCont::appendTurnarounds(bool noTLSControlled, bool onlyDeadends, bool noGeometryLike) {
+NBEdgeCont::appendTurnarounds(bool noTLSControlled, bool onlyDeadends, bool onlyTurnlane, bool noGeometryLike) {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
-        (*i).second->appendTurnaround(noTLSControlled, onlyDeadends, noGeometryLike, true);
+        (*i).second->appendTurnaround(noTLSControlled, onlyDeadends, onlyTurnlane, noGeometryLike, true);
     }
 }
 
@@ -846,7 +845,7 @@ NBEdgeCont::appendTurnarounds(bool noTLSControlled, bool onlyDeadends, bool noGe
 void
 NBEdgeCont::appendTurnarounds(const std::set<std::string>& ids, bool noTLSControlled) {
     for (std::set<std::string>::const_iterator it = ids.begin(); it != ids.end(); it++) {
-        myEdges[*it]->appendTurnaround(noTLSControlled, false, false, false);
+        myEdges[*it]->appendTurnaround(noTLSControlled, false, false, false, false);
     }
 }
 
@@ -1169,8 +1168,8 @@ NBEdgeCont::guessRoundabouts() {
     for (EdgeCont::const_iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         NBEdge* e = (*i).second;
         NBNode* const to = e->getToNode();
-        if (e->getTurnDestination() == nullptr 
-                && to->getConnectionTo(e->getFromNode()) == nullptr 
+        if (e->getTurnDestination() == nullptr
+                && to->getConnectionTo(e->getFromNode()) == nullptr
                 && loadedRoundaboutEdges.count(e) == 0
                 && (e->getPermissions() & valid) != 0) {
             candidates.insert(e);
@@ -1195,7 +1194,7 @@ NBEdgeCont::guessRoundabouts() {
 #ifdef DEBUG_GUESS_ROUNDABOUT
         gDebugFlag1 = false;
 #endif
-        do { 
+        do {
 #ifdef DEBUG_GUESS_ROUNDABOUT
             if (e->getID() == DEBUG_EDGE_ID || gDebugFlag1) {
                 std::cout << " e=" << e->getID() << " loopEdges=" << toString(loopEdges) << "\n";
@@ -1207,14 +1206,20 @@ NBEdgeCont::guessRoundabouts() {
             if (e->getToNode()->getType() == NODETYPE_RIGHT_BEFORE_LEFT && !e->getToNode()->typeWasGuessed()) {
                 doLoop = false;
 #ifdef DEBUG_GUESS_ROUNDABOUT
-                if (gDebugFlag1) std::cout << " rbl\n"; gDebugFlag1 = false;
+                if (gDebugFlag1) {
+                    std::cout << " rbl\n";
+                }
+                gDebugFlag1 = false;
 #endif
                 break;
             }
             if (edges.size() < 2) {
                 doLoop = false;
 #ifdef DEBUG_GUESS_ROUNDABOUT
-                if (gDebugFlag1) std::cout << " deadend\n"; gDebugFlag1 = false;
+                if (gDebugFlag1) {
+                    std::cout << " deadend\n";
+                }
+                gDebugFlag1 = false;
 #endif
                 break;
             }
@@ -1222,7 +1227,10 @@ NBEdgeCont::guessRoundabouts() {
                 // do not follow turn-arounds while in a (tentative) loop
                 doLoop = false;
 #ifdef DEBUG_GUESS_ROUNDABOUT
-                if (gDebugFlag1) std::cout << " turn\n"; gDebugFlag1 = false;
+                if (gDebugFlag1) {
+                    std::cout << " turn\n";
+                }
+                gDebugFlag1 = false;
 #endif
                 break;
             }
@@ -1237,7 +1245,10 @@ NBEdgeCont::guessRoundabouts() {
                 // no usable continuation edge found
                 doLoop = false;
 #ifdef DEBUG_GUESS_ROUNDABOUT
-                if (gDebugFlag1) std::cout << " noContinuation\n"; gDebugFlag1 = false;
+                if (gDebugFlag1) {
+                    std::cout << " noContinuation\n";
+                }
+                gDebugFlag1 = false;
 #endif
                 break;
             }
@@ -1246,21 +1257,26 @@ NBEdgeCont::guessRoundabouts() {
             double angle = fabs(NBHelpers::relAngle(e->getAngleAtNode(e->getToNode()), left->getAngleAtNode(e->getToNode())));
             double nextAngle = nextLeft == e ? 180 : fabs(NBHelpers::relAngle(e->getAngleAtNode(e->getToNode()), nextLeft->getAngleAtNode(e->getToNode())));
 #ifdef DEBUG_GUESS_ROUNDABOUT
-            if (gDebugFlag1) std::cout << "   angle=" << angle << " nextAngle=" << nextAngle << "\n";
+            if (gDebugFlag1) {
+                std::cout << "   angle=" << angle << " nextAngle=" << nextAngle << "\n";
+            }
 #endif
-            if (angle >= 120 
-                    || (angle >= 90 && 
+            if (angle >= 120
+                    || (angle >= 90 &&
                         // if the edges are long or the junction shape is small we should expect roundness (low angles)
-                        (MAX2(e->getLength(), left->getLength()) > 5 
+                        (MAX2(e->getLength(), left->getLength()) > 5
                          || e->getLaneShape(0).back().distanceTo2D(left->getLaneShape(0).front()) < 10
                          // there should be no straigher edge further left
                          || (nextAngle < 45)
-                         ))) {
+                        ))) {
                 // roundabouts do not have sharp turns (or they wouldn't be called 'round')
                 // however, if the roundabout is very small then most of the roundness may be in the junction so the angle may be as high as 120
                 doLoop = false;
 #ifdef DEBUG_GUESS_ROUNDABOUT
-                if (gDebugFlag1) std::cout << " angle=" << angle << "\n"; gDebugFlag1 = false;
+                if (gDebugFlag1) {
+                    std::cout << " angle=" << angle << "\n";
+                }
+                gDebugFlag1 = false;
 #endif
                 break;
             }
@@ -1284,7 +1300,10 @@ NBEdgeCont::guessRoundabouts() {
                 if (attachments < 3) {
                     doLoop = false;
 #ifdef DEBUG_GUESS_ROUNDABOUT
-                    if (gDebugFlag1) std::cout << " attachments=" << attachments << "\n"; gDebugFlag1 = false;
+                    if (gDebugFlag1) {
+                        std::cout << " attachments=" << attachments << "\n";
+                    }
+                    gDebugFlag1 = false;
 #endif
                 }
                 break;
@@ -1457,7 +1476,13 @@ NBEdgeCont::guessSpecialLanes(SUMOVehicleClass svc, double width, double minSpee
 
 int
 NBEdgeCont::remapIDs(bool numericaIDs, bool reservedIDs, const std::string& prefix, NBPTStopCont& sc) {
-    std::vector<std::string> avoid = getAllNames();
+    bool startGiven = !OptionsCont::getOptions().isDefault("numerical-ids.edge-start");
+    std::vector<std::string> avoid;
+    if (startGiven) {
+        avoid.push_back(toString(OptionsCont::getOptions().getInt("numerical-ids.edge-start") - 1));
+    } else {
+        avoid = getAllNames();
+    }
     std::set<std::string> reserve;
     if (reservedIDs) {
         NBHelpers::loadPrefixedIDsFomFile(OptionsCont::getOptions().getString("reserved-ids"), "edge:", reserve);
@@ -1466,6 +1491,10 @@ NBEdgeCont::remapIDs(bool numericaIDs, bool reservedIDs, const std::string& pref
     IDSupplier idSupplier("", avoid);
     std::set<NBEdge*, ComparatorIdLess> toChange;
     for (EdgeCont::iterator it = myEdges.begin(); it != myEdges.end(); it++) {
+        if (startGiven) {
+            toChange.insert(it->second);
+            continue;
+        }
         if (numericaIDs) {
             try {
                 StringUtils::toLong(it->first);
@@ -1484,10 +1513,11 @@ NBEdgeCont::remapIDs(bool numericaIDs, bool reservedIDs, const std::string& pref
     }
 
     const bool origNames = OptionsCont::getOptions().getBool("output.original-names");
-    for (std::set<NBEdge*, ComparatorIdLess>::iterator it = toChange.begin(); it != toChange.end(); ++it) {
-        NBEdge* edge = *it;
+    for (NBEdge* edge : toChange) {
+        myEdges.erase(edge->getID());
+    }
+    for (NBEdge* edge : toChange) {
         const std::string origID = edge->getID();
-        myEdges.erase(origID);
         if (origNames) {
             edge->setOrigID(origID);
         }

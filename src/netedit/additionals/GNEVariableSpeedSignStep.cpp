@@ -10,7 +10,6 @@
 /// @file    GNEVariableSpeedSignStep.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Apr 2017
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -34,12 +33,12 @@
 
 GNEVariableSpeedSignStep::GNEVariableSpeedSignStep(GNEVariableSpeedSignDialog* variableSpeedSignDialog) :
     GNEAdditional(variableSpeedSignDialog->getEditedAdditional(), variableSpeedSignDialog->getEditedAdditional()->getViewNet(), GLO_VSS, SUMO_TAG_STEP, "", false,
-        {}, {}, {}, {variableSpeedSignDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}) {
+{}, {}, {}, {variableSpeedSignDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}) {
     // fill VSS Step with default values
     setDefaultValues();
     // set time Attribute manually
-    if (getAdditionalParents().at(0)->getAdditionalChildren().size() > 0) {
-        myTime = getAdditionalParents().at(0)->getAdditionalChildren().back()->getAttributeDouble(SUMO_ATTR_TIME) + 1;
+    if (getParentAdditionals().at(0)->getChildAdditionals().size() > 0) {
+        myTime = getParentAdditionals().at(0)->getChildAdditionals().back()->getAttributeDouble(SUMO_ATTR_TIME) + 1;
     } else {
         myTime = 0;
     }
@@ -48,9 +47,9 @@ GNEVariableSpeedSignStep::GNEVariableSpeedSignStep(GNEVariableSpeedSignDialog* v
 
 GNEVariableSpeedSignStep::GNEVariableSpeedSignStep(GNEAdditional* variableSpeedSignParent, double time, double speed) :
     GNEAdditional(variableSpeedSignParent, variableSpeedSignParent->getViewNet(), GLO_VSS, SUMO_TAG_STEP, "", false,
-        {}, {}, {}, {variableSpeedSignParent}, {}, {}, {}, {}, {}, {}),
-    myTime(time),
-    mySpeed(speed) {
+{}, {}, {}, {variableSpeedSignParent}, {}, {}, {}, {}, {}, {}),
+myTime(time),
+mySpeed(speed) {
 }
 
 
@@ -83,17 +82,17 @@ GNEVariableSpeedSignStep::updateGeometry() {
 
 Position
 GNEVariableSpeedSignStep::getPositionInView() const {
-    return getAdditionalParents().at(0)->getPositionInView();
+    return getParentAdditionals().at(0)->getPositionInView();
 }
 
 
 Boundary
 GNEVariableSpeedSignStep::getCenteringBoundary() const {
-    return getAdditionalParents().at(0)->getCenteringBoundary();
+    return getParentAdditionals().at(0)->getCenteringBoundary();
 }
 
 
-void 
+void
 GNEVariableSpeedSignStep::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -101,7 +100,7 @@ GNEVariableSpeedSignStep::splitEdgeGeometry(const double /*splitPosition*/, cons
 
 std::string
 GNEVariableSpeedSignStep::getParentName() const {
-    return getAdditionalParents().at(0)->getID();
+    return getParentAdditionals().at(0)->getID();
 }
 
 
@@ -121,7 +120,7 @@ GNEVariableSpeedSignStep::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_SPEED:
             return toString(mySpeed);
         case GNE_ATTR_PARENT:
-            return getAdditionalParents().at(0)->getID();
+            return getParentAdditionals().at(0)->getID();
         case GNE_ATTR_PARAMETERS:
             return getParametersStr();
         default:
@@ -130,7 +129,7 @@ GNEVariableSpeedSignStep::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNEVariableSpeedSignStep::getAttributeDouble(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_TIME:
@@ -174,7 +173,7 @@ GNEVariableSpeedSignStep::isValid(SumoXMLAttr key, const std::string& value) {
                 }
                 // check that there isn't duplicate times
                 int counter = 0;
-                for (auto i : getAdditionalParents().at(0)->getAdditionalChildren()) {
+                for (auto i : getParentAdditionals().at(0)->getChildAdditionals()) {
                     if (i->getAttributeDouble(SUMO_ATTR_TIME) == newTime) {
                         counter++;
                     }
@@ -193,7 +192,7 @@ GNEVariableSpeedSignStep::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNEVariableSpeedSignStep::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }

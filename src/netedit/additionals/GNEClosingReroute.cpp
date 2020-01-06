@@ -10,7 +10,6 @@
 /// @file    GNEClosingReroute.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jan 2017
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -36,8 +35,8 @@
 
 GNEClosingReroute::GNEClosingReroute(GNERerouterIntervalDialog* rerouterIntervalDialog) :
     GNEAdditional(rerouterIntervalDialog->getEditedAdditional(), rerouterIntervalDialog->getEditedAdditional()->getViewNet(), GLO_CALIBRATOR, SUMO_TAG_CLOSING_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}),
-    myClosedEdge(rerouterIntervalDialog->getEditedAdditional()->getAdditionalParents().at(0)->getEdgeChildren().at(0)) {
+{}, {}, {}, {rerouterIntervalDialog->getEditedAdditional()}, {}, {}, {}, {}, {}, {}),
+myClosedEdge(rerouterIntervalDialog->getEditedAdditional()->getParentAdditionals().at(0)->getChildEdges().at(0)) {
     // fill closing reroute interval with default values
     setDefaultValues();
 }
@@ -45,9 +44,9 @@ GNEClosingReroute::GNEClosingReroute(GNERerouterIntervalDialog* rerouterInterval
 
 GNEClosingReroute::GNEClosingReroute(GNEAdditional* rerouterIntervalParent, GNEEdge* closedEdge, SVCPermissions permissions) :
     GNEAdditional(rerouterIntervalParent, rerouterIntervalParent->getViewNet(), GLO_CALIBRATOR, SUMO_TAG_CLOSING_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {}, {}, {}),
-    myClosedEdge(closedEdge),
-    myPermissions(permissions) {
+{}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {}, {}, {}),
+myClosedEdge(closedEdge),
+myPermissions(permissions) {
 }
 
 
@@ -74,7 +73,7 @@ GNEClosingReroute::updateGeometry() {
 
 Position
 GNEClosingReroute::getPositionInView() const {
-    return getAdditionalParents().at(0)->getPositionInView();
+    return getParentAdditionals().at(0)->getPositionInView();
 }
 
 
@@ -84,7 +83,7 @@ GNEClosingReroute::getCenteringBoundary() const {
 }
 
 
-void 
+void
 GNEClosingReroute::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -92,7 +91,7 @@ GNEClosingReroute::splitEdgeGeometry(const double /*splitPosition*/, const GNENe
 
 std::string
 GNEClosingReroute::getParentName() const {
-    return getAdditionalParents().at(0)->getID();
+    return getParentAdditionals().at(0)->getID();
 }
 
 
@@ -114,7 +113,7 @@ GNEClosingReroute::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_DISALLOW:
             return getVehicleClassNames(invertPermissions(myPermissions));
         case GNE_ATTR_PARENT:
-            return getAdditionalParents().at(0)->getID();
+            return getParentAdditionals().at(0)->getID();
         case GNE_ATTR_PARAMETERS:
             return getParametersStr();
         default:
@@ -123,7 +122,7 @@ GNEClosingReroute::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNEClosingReroute::getAttributeDouble(SumoXMLAttr key) const {
     throw InvalidArgument(getTagStr() + " doesn't have a double attribute of type '" + toString(key) + "'");
 }
@@ -167,7 +166,7 @@ GNEClosingReroute::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNEClosingReroute::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }

@@ -13,7 +13,6 @@
 /// @author  Jakob Erdmann
 /// @author  Laura Bieker
 /// @date    01.06.2017
-/// @version $Id$
 ///
 // A device for emergency vehicle. The behaviour of other traffic participants will be triggered with this device.
 // For example building a rescue lane.
@@ -232,13 +231,12 @@ MSDevice_Bluelight::notifyLeave(SUMOTrafficObject& veh, double /*lastPos*/, MSMo
 
 
 void
-MSDevice_Bluelight::generateOutput() const {
-    if (OptionsCont::getOptions().isSet("tripinfo-output")) {
-        OutputDevice& os = OutputDevice::getDeviceByOption("tripinfo-output");
-        os.openTag("example_device");
-        os.writeAttr("customValue1", toString(myCustomValue1));
-        os.writeAttr("customValue2", toString(myCustomValue2));
-        os.closeTag();
+MSDevice_Bluelight::generateOutput(OutputDevice* tripinfoOut) const {
+    if (tripinfoOut != nullptr) {
+        tripinfoOut->openTag("example_device");
+        tripinfoOut->writeAttr("customValue1", toString(myCustomValue1));
+        tripinfoOut->writeAttr("customValue2", toString(myCustomValue2));
+        tripinfoOut->closeTag();
     }
 }
 

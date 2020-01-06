@@ -14,7 +14,6 @@
 /// @author  Walter Bamberger
 /// @author  Laura Bieker
 /// @date    2006-01-24
-/// @version $Id$
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
@@ -355,6 +354,7 @@ extern bool noVehicles(SVCPermissions permissions);
 extern const std::string DEFAULT_VTYPE_ID;
 extern const std::string DEFAULT_PEDTYPE_ID;
 extern const std::string DEFAULT_BIKETYPE_ID;
+extern const std::string DEFAULT_CONTAINERTYPE_ID;
 
 extern const double DEFAULT_VEH_PROB; // !!! does this belong here?
 

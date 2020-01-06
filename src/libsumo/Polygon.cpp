@@ -10,7 +10,6 @@
 /// @file    Polygon.cpp
 /// @author  Gregor L\"ammel
 /// @date    15.03.2017
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -22,7 +21,7 @@
 #include <microsim/MSNet.h>
 #include <microsim/MSEventControl.h>
 #include <microsim/MSVehicleControl.h>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/MSDynamicShapeUpdater.h>
 #include <libsumo/TraCIConstants.h>
 #include <utils/shapes/SUMOPolygon.h>

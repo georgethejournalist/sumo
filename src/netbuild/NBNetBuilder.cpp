@@ -15,7 +15,6 @@
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
 /// @date    20 Nov 2001
-/// @version $Id$
 ///
 // Instance responsible for building networks
 /****************************************************************************/
@@ -147,8 +146,8 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     } else if (oc.exists("railway.topology.repair") && oc.getBool("railway.topology.repair")) {
         // correct railway angles for angle-based connectivity heuristic
         myEdgeCont.checkGeometries(0,
-                oc.getFloat("geometry.min-radius"), false,
-                oc.getBool("geometry.min-radius.fix.railways"),true);
+                                   oc.getFloat("geometry.min-radius"), false,
+                                   oc.getBool("geometry.min-radius.fix.railways"), true);
         NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
         NBRailwayTopologyAnalyzer::repairTopology(*this);
     }
@@ -438,7 +437,11 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     //
     before = PROGRESS_BEGIN_TIME_MESSAGE("Processing turnarounds");
     if (!oc.getBool("no-turnarounds")) {
-        myEdgeCont.appendTurnarounds(oc.getBool("no-turnarounds.tls"), oc.getBool("no-turnarounds.except-deadend"), oc.getBool("no-turnarounds.geometry"));
+        myEdgeCont.appendTurnarounds(
+                oc.getBool("no-turnarounds.tls"),
+                oc.getBool("no-turnarounds.except-deadend"),
+                oc.getBool("no-turnarounds.except-turnlane"),
+                oc.getBool("no-turnarounds.geometry"));
     } else {
         myEdgeCont.appendTurnarounds(explicitTurnarounds, oc.getBool("no-turnarounds.tls"));
     }
@@ -677,7 +680,7 @@ NBNetBuilder::transformCoordinates(PositionVector& from, bool includeInBoundary,
     return ok;
 }
 
-int 
+int
 NBNetBuilder::addGeometrySegments(PositionVector& from, const PositionVector& cartesian, const double maxLength) {
     // check lengths and insert new points where needed (in the original
     // coordinate system)

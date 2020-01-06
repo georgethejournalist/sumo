@@ -10,7 +10,6 @@
 /// @file    GNECrossing.cpp
 /// @author  Jakob Erdmann
 /// @date    June 2011
-/// @version $Id$
 ///
 // A class for visualizing Inner Lanes (used when editing traffic lights)
 /****************************************************************************/
@@ -60,7 +59,7 @@ const PositionVector&
 GNECrossing::getCrossingShape() const {
     auto crossing = myParentJunction->getNBNode()->getCrossing(myCrossingEdges);
     if (crossing) {
-        return (crossing->customShape.size() > 0)? crossing->customShape : crossing->shape;
+        return (crossing->customShape.size() > 0) ? crossing->customShape : crossing->shape;
     } else {
         throw ProcessError("Crossing doesn't exist");
     }
@@ -233,7 +232,21 @@ GNECrossing::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
 
 Boundary
 GNECrossing::getCenteringBoundary() const {
-    throw ProcessError("Crossings doesn't have a boundary");
+    Boundary b;
+    auto crossing = myParentJunction->getNBNode()->getCrossing(myCrossingEdges);
+    if (crossing) {
+        if (crossing->customShape.size() > 0) {
+            b = crossing->customShape.getBoxBoundary();
+        } else if (crossing->shape.size() > 0) {
+            b = crossing->shape.getBoxBoundary();
+        } else {
+            return myParentJunction->getCenteringBoundary();
+        }
+        b.grow(10);
+        return b;
+    }
+    // in other case return boundary of parent junction
+    return myParentJunction->getCenteringBoundary();
 }
 
 
@@ -294,7 +307,7 @@ GNECrossing::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList
 }
 
 
-bool 
+bool
 GNECrossing::isAttributeEnabled(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_ID:

@@ -11,7 +11,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
 /// @date    Mon, 13.12.2005
-/// @version $Id$
 ///
 // A lane area vehicles can halt at
 /****************************************************************************/
@@ -29,7 +28,7 @@
 #include <microsim/MSVehicleType.h>
 #include <microsim/MSNet.h>
 #include "MSLane.h"
-#include "MSTransportable.h"
+#include <microsim/transportables/MSTransportable.h>
 #include "MSStoppingPlace.h"
 
 // ===========================================================================

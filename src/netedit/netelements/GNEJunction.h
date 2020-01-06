@@ -10,7 +10,6 @@
 /// @file    GNEJunction.h
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // A class for visualizing and editing junctions in netedit (adapted from
 // GUIJunctionWrapper)
@@ -56,11 +55,11 @@ public:
     static const double BUBBLE_RADIUS;
 
     /**@brief Constructor
-     * @param[in] nbn The represented node
      * @param[in] net The net to inform about gui updates
+     * @param[in] nbn The represented node
      * @param[in] loaded Whether the junction was loaded from a file
      */
-    GNEJunction(NBNode& nbn, GNENet* net, bool loaded = false);
+    GNEJunction(GNENet* net, NBNode* nbn, bool loaded = false);
 
     /// @brief Destructor
     ~GNEJunction();
@@ -242,14 +241,14 @@ public:
     bool isLogicValid();
 
     /// @brief get GNECrossing if exist, and if not create it if create is enabled
-    GNECrossing* retrieveGNECrossing(NBNode::Crossing* crossing, bool createIfNoExist = true);
+    GNECrossing* retrieveGNECrossing(NBNode::Crossing* NBNodeCrossing, bool createIfNoExist = true);
 
     /// @brief mark connections as deprecated
     void markConnectionsDeprecated(bool includingNeighbours);
 
 private:
     /// @brief A reference to the represented junction
-    NBNode& myNBNode;
+    NBNode* myNBNode;
 
     /// @brief vector with the GNEEdges vinculated with this junction
     std::vector<GNEEdge*> myGNEEdges;
@@ -287,6 +286,9 @@ private:
 
     /// @brief draw junction childs
     void drawJunctionChilds(const GUIVisualizationSettings& s) const;
+
+    /// @brief draw demand elements childs
+    void drawDemandElements(const GUIVisualizationSettings& s, const GNEEdge* edge) const;
 
     /// @brief method for setting the attribute and nothing else (used in GNEChange_Attribute)
     void setAttribute(SumoXMLAttr key, const std::string& value);

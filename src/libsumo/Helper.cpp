@@ -12,7 +12,6 @@
 /// @author  Robert Hilbrich
 /// @author  Leonhard Luecken
 /// @date    15.09.2017
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -22,18 +21,19 @@
 // ===========================================================================
 #include <config.h>
 
+#include <cstring>
 #include <utils/geom/GeomHelper.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicleControl.h>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/MSEdgeControl.h>
 #include <microsim/MSInsertionControl.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
-#include <microsim/MSTransportable.h>
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSTransportable.h>
+#include <microsim/transportables/MSPerson.h>
 #include <libsumo/TraCIDefs.h>
 #include <libsumo/Edge.h>
 #include <libsumo/InductionLoop.h>
@@ -66,7 +66,7 @@ LaneStoringVisitor::add(const MSLane* const l) const {
             const MSLane::VehCont& vehs = l->getVehiclesSecure();
             for (MSLane::VehCont::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                 if (myShape.distance2D((*j)->getPosition()) <= myRange) {
-                    myIDs.insert((*j)->getID());
+                    myObjects.insert(*j);
                 }
             }
             l->releaseVehicles();
@@ -77,7 +77,7 @@ LaneStoringVisitor::add(const MSLane* const l) const {
             std::vector<MSTransportable*> persons = l->getEdge().getSortedPersons(MSNet::getInstance()->getCurrentTimeStep(), true);
             for (auto p : persons) {
                 if (myShape.distance2D(p->getPosition()) <= myRange) {
-                    myIDs.insert(p->getID());
+                    myObjects.insert(p);
                 }
             }
             l->releaseVehicles();
@@ -85,13 +85,13 @@ LaneStoringVisitor::add(const MSLane* const l) const {
         break;
         case libsumo::CMD_GET_EDGE_VARIABLE: {
             if (myShape.size() != 1 || l->getShape().distance2D(myShape[0]) <= myRange) {
-                myIDs.insert(l->getEdge().getID());
+                myObjects.insert(&l->getEdge());
             }
         }
         break;
         case libsumo::CMD_GET_LANE_VARIABLE: {
             if (myShape.size() != 1 || l->getShape().distance2D(myShape[0]) <= myRange) {
-                myIDs.insert(l->getID());
+                myObjects.insert(l);
             }
         }
         break;
@@ -106,6 +106,7 @@ namespace libsumo {
 // static member initializations
 // ===========================================================================
 std::vector<Subscription> Helper::mySubscriptions;
+Subscription* Helper::myLastContextSubscription = nullptr;
 std::map<int, std::shared_ptr<VariableWrapper> > Helper::myWrapper;
 Helper::VehicleStateListener Helper::myVehicleStateListener;
 std::map<int, NamedRTree*> Helper::myObjects;
@@ -120,24 +121,40 @@ std::map<std::string, MSPerson*> Helper::myRemoteControlledPersons;
 void
 Helper::subscribe(const int commandId, const std::string& id, const std::vector<int>& variables,
                   const double beginTime, const double endTime, const int contextDomain, const double range) {
+    myLastContextSubscription = nullptr;
     if (variables.empty()) {
         for (std::vector<libsumo::Subscription>::iterator j = mySubscriptions.begin(); j != mySubscriptions.end();) {
-            if (j->id == id && j->commandId == commandId && (contextDomain < 0 || j->contextDomain == contextDomain)) {
+            if (j->id == id && j->commandId == commandId && j->contextDomain == contextDomain) {
                 j = mySubscriptions.erase(j);
             } else {
                 ++j;
             }
         }
+        return;
     }
-    std::vector<std::vector<unsigned char> > parameters;
+    std::vector<std::vector<unsigned char> > parameters(variables.size());
     const SUMOTime begin = beginTime == INVALID_DOUBLE_VALUE ? 0 : TIME2STEPS(beginTime);
     const SUMOTime end = endTime == INVALID_DOUBLE_VALUE || endTime > STEPS2TIME(SUMOTime_MAX) ? SUMOTime_MAX : TIME2STEPS(endTime);
     libsumo::Subscription s(commandId, id, variables, parameters, begin, end, contextDomain, range);
+    if (s.variables.size() == 1 && s.variables.front() == -1) {
+        s.variables.clear();
+    }
     handleSingleSubscription(s);
     libsumo::Subscription* modifiedSubscription = nullptr;
-    if (needNewSubscription(s, mySubscriptions, modifiedSubscription)) {
-        mySubscriptions.push_back(s);
+    needNewSubscription(s, mySubscriptions, modifiedSubscription);
+    if (modifiedSubscription->isVehicleToVehicleContextSubscription()) {
+        // Set last modified vehicle context subscription active for filter modifications
+        myLastContextSubscription = modifiedSubscription;
     }
+}
+
+
+void
+Helper::addSubscriptionParam(double param) {
+    std::vector<unsigned char> dest(sizeof(param));
+    std::memcpy(dest.data(), &param, sizeof(param));
+    mySubscriptions.back().parameters.pop_back();
+    mySubscriptions.back().parameters.emplace_back(dest);
 }
 
 
@@ -145,6 +162,18 @@ void
 Helper::handleSubscriptions(const SUMOTime t) {
     for (auto& wrapper : myWrapper) {
         wrapper.second->clear();
+    }
+    for (std::vector<libsumo::Subscription>::iterator i = mySubscriptions.begin(); i != mySubscriptions.end();) {
+        const libsumo::Subscription& s = *i;
+        const bool isArrivedVehicle = (s.commandId == CMD_SUBSCRIBE_VEHICLE_VARIABLE || s.commandId == CMD_SUBSCRIBE_VEHICLE_CONTEXT)
+                                      && (find(getVehicleStateChanges(MSNet::VEHICLE_STATE_ARRIVED).begin(), getVehicleStateChanges(MSNet::VEHICLE_STATE_ARRIVED).end(), s.id) != getVehicleStateChanges(MSNet::VEHICLE_STATE_ARRIVED).end());
+        const bool isArrivedPerson = (s.commandId == libsumo::CMD_SUBSCRIBE_PERSON_VARIABLE || s.commandId == libsumo::CMD_SUBSCRIBE_PERSON_CONTEXT)
+                                     && MSNet::getInstance()->getPersonControl().get(s.id) == nullptr;
+        if (s.endTime < t || isArrivedVehicle || isArrivedPerson) {
+            i = mySubscriptions.erase(i);
+            continue;
+        }
+        ++i;
     }
     for (const libsumo::Subscription& s : mySubscriptions) {
         if (s.beginTime <= t) {
@@ -173,6 +202,8 @@ Helper::needNewSubscription(libsumo::Subscription& s, std::vector<Subscription>&
             return false;
         }
     }
+    subscriptions.push_back(s);
+    modifiedSubscription = &subscriptions.back();
     return true;
 }
 
@@ -180,6 +211,18 @@ Helper::needNewSubscription(libsumo::Subscription& s, std::vector<Subscription>&
 void
 Helper::clearSubscriptions() {
     mySubscriptions.clear();
+    myLastContextSubscription = nullptr;
+}
+
+
+Subscription*
+Helper::addSubscriptionFilter(SubscriptionFilterType filter) {
+    if (myLastContextSubscription != nullptr) {
+        myLastContextSubscription->activeFilters |= filter;
+    } else {
+        WRITE_WARNING("addSubscriptionFilter: No previous vehicle context subscription exists to apply the context filter.");
+    }
+    return myLastContextSubscription;
 }
 
 
@@ -191,7 +234,7 @@ Helper::handleSingleSubscription(const Subscription& s) {
         if ((s.activeFilters & SUBS_FILTER_NO_RTREE) == 0) {
             PositionVector shape;
             findObjectShape(s.commandId, s.id, shape);
-            collectObjectsInRange(s.contextDomain, shape, s.range, objIDs);
+            collectObjectIDsInRange(s.contextDomain, shape, s.range, objIDs);
         }
         applySubscriptionFilters(s, objIDs);
     } else {
@@ -220,19 +263,27 @@ Helper::handleSingleSubscription(const Subscription& s) {
     std::shared_ptr<VariableWrapper> handler = wrapper->second;
     VariableWrapper* container = handler.get();
     if (s.contextDomain > 0) {
-        handler->setContext(s.id);
         auto containerWrapper = myWrapper.find(s.commandId + 0x20);
         if (containerWrapper == myWrapper.end()) {
             throw TraCIException("Unsupported domain specified");
         }
         container = containerWrapper->second.get();
+        container->setContext(s.id);
     } else {
-        handler->setContext("");
+        container->setContext("");
     }
     for (const std::string& objID : objIDs) {
         if (!s.variables.empty()) {
+            std::vector<std::vector<unsigned char> >::const_iterator k = s.parameters.begin();
             for (const int variable : s.variables) {
+                if (!k->empty()) {
+                    container->setParams(&*k);
+                }
                 handler->handle(objID, variable, container);
+                if (!k->empty()) {
+                    container->setParams(nullptr);
+                }
+                ++k;
             }
         } else {
             if (s.contextDomain == 0 && getCommandId == libsumo::CMD_GET_VEHICLE_VARIABLE) {
@@ -246,6 +297,7 @@ Helper::handleSingleSubscription(const Subscription& s) {
         }
     }
 }
+
 
 
 void
@@ -357,11 +409,11 @@ Helper::convertCartesianToRoadMap(const Position& pos, const SUMOVehicleClass vC
     const Boundary& netBounds = GeoConvHelper::getFinal().getConvBoundary();
     const double maxRange = MAX2(1001., netBounds.getWidth() + netBounds.getHeight() + netBounds.distanceTo2D(pos));
     while (range < maxRange) {
-        std::set<std::string> laneIds;
-        collectObjectsInRange(libsumo::CMD_GET_LANE_VARIABLE, shape, range, laneIds);
+        std::set<const Named*> lanes;
+        collectObjectsInRange(libsumo::CMD_GET_LANE_VARIABLE, shape, range, lanes);
         double minDistance = std::numeric_limits<double>::max();
-        for (const std::string& laneID : laneIds) {
-            MSLane* const lane = MSLane::dictionary(laneID);
+        for (const Named* named : lanes) {
+            MSLane* lane = const_cast<MSLane*>(dynamic_cast<const MSLane*>(named));
             if (lane->allowsVehicleClass(vClass)) {
                 // @todo this may be a place where 3D is required but 2D is used
                 const double newDistance = lane->getShape().distance2D(pos);
@@ -466,9 +518,17 @@ Helper::findObjectShape(int domain, const std::string& id, PositionVector& shape
     }
 }
 
+void
+Helper::collectObjectIDsInRange(int domain, const PositionVector& shape, double range, std::set<std::string>& into) {
+    std::set<const Named*> objects;
+    collectObjectsInRange(domain, shape, range, objects);
+    for (const Named* obj : objects) {
+        into.insert(obj->getID());
+    }
+}
 
 void
-Helper::collectObjectsInRange(int domain, const PositionVector& shape, double range, std::set<std::string>& into) {
+Helper::collectObjectsInRange(int domain, const PositionVector& shape, double range, std::set<const Named*>& into) {
     // build the look-up tree if not yet existing
     if (myObjects.find(domain) == myObjects.end()) {
         switch (domain) {
@@ -555,9 +615,9 @@ Helper::applySubscriptionFilters(const Subscription& s, std::set<std::string>& o
     // TODO: Treat case, where ego vehicle is currently on opposite lane
 
     std::set<const MSVehicle*> vehs;
-    if ((s.activeFilters & SUBS_FILTER_NO_RTREE) != 0) {
-        // Set defaults for upstream and downstream distances
-        double downstreamDist = s.range, upstreamDist = s.range;
+    if (s.activeFilters & SUBS_FILTER_NO_RTREE) {
+        // Set defaults for upstream/downstream/lateral distances
+        double downstreamDist = s.range, upstreamDist = s.range, lateralDist = s.range;
         if (s.activeFilters & SUBS_FILTER_DOWNSTREAM_DIST) {
             // Specifies maximal downstream distance for vehicles in context subscription result
             downstreamDist = s.filterDownstreamDist;
@@ -565,6 +625,10 @@ Helper::applySubscriptionFilters(const Subscription& s, std::set<std::string>& o
         if (s.activeFilters & SUBS_FILTER_UPSTREAM_DIST) {
             // Specifies maximal downstream distance for vehicles in context subscription result
             upstreamDist = s.filterUpstreamDist;
+        }
+        if (s.activeFilters & SUBS_FILTER_LATERAL_DIST) {
+            // Specifies maximal lateral distance for vehicles in context subscription result
+            lateralDist = s.filterLateralDist;
         }
         MSVehicle* v = getVehicle(s.id);
         if (!v->isOnRoad()) {
@@ -590,6 +654,7 @@ Helper::applySubscriptionFilters(const Subscription& s, std::set<std::string>& o
         std::cout << "Filter lanes: " << toString(filterLanes) << std::endl;
         std::cout << "Downstream distance: " << downstreamDist << std::endl;
         std::cout << "Upstream distance: " << upstreamDist << std::endl;
+        std::cout << "Lateral distance: " << lateralDist << std::endl;
 #endif
 
         if ((s.activeFilters & SUBS_FILTER_MANEUVER) != 0) {
@@ -681,8 +746,36 @@ Helper::applySubscriptionFilters(const Subscription& s, std::set<std::string>& o
                 }
             }
 #endif
+        } else if (s.activeFilters & SUBS_FILTER_LATERAL_DIST) {
+            assert(vehs.size() == 0);
+            assert(objIDs.size() == 0);
+
+            // collect all vehicles within maximum range of interest to get an upper bound
+            PositionVector vehShape;
+            findObjectShape(s.commandId, s.id, vehShape);
+            double range = MAX3(downstreamDist, upstreamDist, lateralDist);
+            collectObjectIDsInRange(s.contextDomain, vehShape, range, objIDs);
+
+#ifdef DEBUG_SURROUNDING
+            std::cout << "FILTER_LATERAL_DIST: collected object IDs (range " << range << "):" << std::endl;
+            for (std::string i : objIDs) {
+                std::cout << i << std::endl;
+            }
+#endif
+
+#ifdef DEBUG_SURROUNDING
+            std::cout << "FILTER_LATERAL_DIST: myLane is '" << v->getLane()->getID() << "'" << std::endl;
+#endif
+            // 1st pass: downstream
+            applySubscriptionFilterLateralDistanceSinglePass(objIDs, vehs, v->getUpcomingLanesUntil(downstreamDist), lateralDist,
+                                                             downstreamDist, v->getPositionOnLane(), true);
+            // 2nd pass: upstream
+            applySubscriptionFilterLateralDistanceSinglePass(objIDs, vehs, v->getPastLanesUntil(upstreamDist), lateralDist,
+                                                             upstreamDist, v->getPositionOnLane(), false);
+
+            objIDs.clear();
         } else {
-            // No maneuver filters requested, but only lanes filter (directly, or indirectly by specifying downstream or upstream distance)
+            // No maneuver or lateral distance filters requested, but only lanes filter (directly, or indirectly by specifying downstream or upstream distance)
             assert(filterLanes.size() > 0);
             // This is to remember the lanes checked in the driving direction of the vehicle (their opposites can be added in a second pass)
             auto checkedLanesInDrivingDir = std::make_shared<LaneCoverageInfo>();
@@ -872,6 +965,45 @@ Helper::applySubscriptionFilterFieldOfVision(const Subscription& s, std::set<std
 }
 
 void
+Helper::applySubscriptionFilterLateralDistanceSinglePass(std::set<std::string>& objIDs, std::set<const MSVehicle*>& vehs, const std::vector<const MSLane*>& lanes, double lateralDist, double streamDist, double posOnLane, bool isDownstream) {
+    double distRemaining = streamDist;
+    bool isFirstLane = true;
+    for (const MSLane* lane : lanes) {
+#ifdef DEBUG_SURROUNDING
+        std::cout << "FILTER_LATERAL_DIST: current lane " << (isDownstream ? "down" : "up") << " is '" << lane->getID() << "', length " << lane->getLength()
+                  << ", pos " << pos << ", distRemaining " << distRemaining << std::endl;
+#endif
+        PositionVector laneShape = lane->getShape();
+        if (isFirstLane) {
+            double geometryPos = lane->interpolateLanePosToGeometryPos(posOnLane);
+            auto pair = laneShape.splitAt(geometryPos, false);
+            laneShape = isDownstream ? pair.second : pair.first;
+            isFirstLane = false;
+        }
+        double laneLength = lane->interpolateGeometryPosToLanePos(laneShape.length());
+        if (distRemaining - laneLength < 0.) {
+            double geometryPos = lane->interpolateLanePosToGeometryPos(isDownstream ? distRemaining : laneLength - distRemaining);
+            auto pair = laneShape.splitAt(geometryPos, false);
+            laneShape = isDownstream ? pair.first : pair.second;
+        }
+        distRemaining -= laneLength;
+
+        // check remaining objects' distances to this lane
+        auto i = objIDs.begin();
+        while (i != objIDs.end()) {
+            MSVehicle* veh = getVehicle(*i);
+            double minPerpendicularDist = laneShape.distance2D(veh->getPosition(), true);
+            if ((minPerpendicularDist != GeomHelper::INVALID_OFFSET) && (minPerpendicularDist <= lateralDist)) {
+                vehs.insert(veh);
+                i = objIDs.erase(i);
+            } else {
+                ++i;
+            }
+        }
+    }
+}
+
+void
 Helper::setRemoteControlled(MSVehicle* v, Position xyPos, MSLane* l, double pos, double posLat, double angle,
                             int edgeOffset, ConstMSEdgeVector route, SUMOTime t) {
     myRemoteControlledVehicles[v->getID()] = v;
@@ -914,15 +1046,15 @@ Helper::moveToXYMap(const Position& pos, double maxRouteDistance, bool mayLeaveN
                     double& bestDistance, MSLane** lane, double& lanePos, int& routeOffset, ConstMSEdgeVector& edges) {
     // collect edges around the vehicle/person
     const MSEdge* const currentRouteEdge = currentRoute[routePosition];
-    std::set<std::string> into;
+    std::set<const Named*> into;
     PositionVector shape;
     shape.push_back(pos);
     collectObjectsInRange(libsumo::CMD_GET_EDGE_VARIABLE, shape, maxRouteDistance, into);
     double maxDist = 0;
     std::map<MSLane*, LaneUtility> lane2utility;
     // compute utility for all candidate edges
-    for (std::set<std::string>::const_iterator j = into.begin(); j != into.end(); ++j) {
-        const MSEdge* const e = MSEdge::dictionary(*j);
+    for (const Named* namedEdge : into) {
+        const MSEdge* e = dynamic_cast<const MSEdge*>(namedEdge);
         const MSEdge* prevEdge = nullptr;
         const MSEdge* nextEdge = nullptr;
         bool onRoute = false;
@@ -995,7 +1127,7 @@ Helper::moveToXYMap(const Position& pos, double maxRouteDistance, bool mayLeaveN
             // add some slack to avoid issues from tiny gaps between consecutive lanes
             const double slack = POSITION_EPS;
             PositionVector laneShape = l->getShape();
-			laneShape.extrapolate2D(slack);
+            laneShape.extrapolate2D(slack);
             double off = laneShape.nearest_offset_to_point2D(pos, true);
             if (off != GeomHelper::INVALID_OFFSET) {
                 perpendicularDist = laneShape.distance2D(pos, true);
@@ -1215,6 +1347,12 @@ Helper::SubscriptionWrapper::SubscriptionWrapper(VariableWrapper::SubscriptionHa
 void
 Helper::SubscriptionWrapper::setContext(const std::string& refID) {
     myActiveResults = refID == "" ? &myResults : &myContextResults[refID];
+}
+
+
+void
+Helper::SubscriptionWrapper::setParams(const std::vector<unsigned char>* params) {
+    myParams = params;
 }
 
 

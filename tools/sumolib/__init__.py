@@ -12,7 +12,6 @@
 # @author  Jakob Erdmann
 # @author  Michael Behrisch
 # @date    2011-06-23
-# @version $Id$
 
 from __future__ import absolute_import
 import os
@@ -22,7 +21,7 @@ from xml.sax import parseString, handler
 from optparse import OptionParser, OptionGroup, Option
 
 from . import files, net, output, sensors, shapes  # noqa
-from . import color, geomhelper, miscutils, options, route  # noqa
+from . import color, geomhelper, miscutils, options, route, version  # noqa
 from .xml import writeHeader as writeXMLHeader  # noqa
 # the visualization submodule is not imported to avoid an explicit matplotlib dependency
 

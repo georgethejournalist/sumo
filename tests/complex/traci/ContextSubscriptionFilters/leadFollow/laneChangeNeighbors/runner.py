@@ -11,7 +11,6 @@
 # @author  Daniel Krajzewicz
 # @author  Michael Behrisch
 # @date    2012-10-19
-# @version $Id$
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -55,7 +54,7 @@ def runSingle(traciEndTime, viewRange, objID):
                                            viewRange, [traci.constants.VAR_POSITION])
             sys.stdout.flush()
 
-            traci.vehicle.addSubscriptionFilterLCManeuver(None)
+            traci.vehicle.addSubscriptionFilterLCManeuver()
             # advice all vehicle not to change lanes
             for vehID in traci.vehicle.getIDList():
                 traci.vehicle.changeLane(vehID, traci.vehicle.getLaneIndex(vehID), 111)

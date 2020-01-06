@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Wed, 13.06.2012
-/// @version $Id$
 ///
 // GUI-version of the person control for building gui persons
 /****************************************************************************/
@@ -34,7 +33,7 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUITransportableControl::GUITransportableControl() {}
+GUITransportableControl::GUITransportableControl(const bool isPerson) : MSTransportableControl(isPerson) {}
 
 
 GUITransportableControl::~GUITransportableControl() {
@@ -59,7 +58,7 @@ void
 GUITransportableControl::insertPersonIDs(std::vector<GUIGlID>& into) {
     into.reserve(myTransportables.size());
     for (std::map<std::string, MSTransportable*>::const_iterator it = myTransportables.begin(); it != myTransportables.end(); ++it) {
-        if (it->second->getCurrentStageType() != MSTransportable::WAITING_FOR_DEPART) {
+        if (it->second->getCurrentStageType() != MSStageType::WAITING_FOR_DEPART) {
             into.push_back(static_cast<const GUIPerson*>(it->second)->getGlID());
         }
     }

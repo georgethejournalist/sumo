@@ -10,7 +10,6 @@
 /// @file    GNEChange_Additional.h
 /// @author  Pablo Alvarez Lopez
 /// @date    Nov 2015
-/// @version $Id$
 ///
 // A network change in which a additional element is created or deleted
 /****************************************************************************/
@@ -76,35 +75,35 @@ private:
      */
     GNEAdditional* myAdditional;
 
-    /// @brief reference to vector of edge parents
-    const std::vector<GNEEdge*>& myEdgeParents;
+    /// @brief reference to vector of parent edges
+    const std::vector<GNEEdge*>& myParentEdges;
 
-    /// @brief reference to vector of lane parents
-    const std::vector<GNELane*>& myLaneParents;
+    /// @brief reference to vector of parent lanes
+    const std::vector<GNELane*>& myParentLanes;
 
-    /// @brief reference to vector of shape parents
-    const std::vector<GNEShape*>& myShapeParents;
+    /// @brief reference to vector of parent shapes
+    const std::vector<GNEShape*>& myParentShapes;
 
-    /// @brief reference to vector of additional parents
-    const std::vector<GNEAdditional*>& myAdditionalParents;
+    /// @brief reference to vector of parent additionals
+    const std::vector<GNEAdditional*>& myParentAdditionals;
 
-    /// @brief reference to vector of demand element parents
-    const std::vector<GNEDemandElement*>& myDemandElementParents;
+    /// @brief reference to vector of parent demand elements
+    const std::vector<GNEDemandElement*>& myParentDemandElements;
 
-    /// @brief reference to vector of edge children
-    const std::vector<GNEEdge*>& myEdgeChildren;
+    /// @brief reference to vector of child edges
+    const std::vector<GNEEdge*>& myChildEdges;
 
-    /// @brief reference to vector of lane children
-    const std::vector<GNELane*>& myLaneChildren;
+    /// @brief reference to vector of child lanes
+    const std::vector<GNELane*>& myChildLanes;
 
-    /// @brief reference to vector of shape children
-    const std::vector<GNEShape*>& myShapeChildren;
+    /// @brief reference to vector of child shapes
+    const std::vector<GNEShape*>& myChildShapes;
 
-    /// @brief reference to vector of additional children
-    const std::vector<GNEAdditional*>& myAdditionalChildren;
+    /// @brief reference to vector of child additional
+    const std::vector<GNEAdditional*>& myChildAdditionals;
 
-    /// @brief reference to vector of demand element children
-    const std::vector<GNEDemandElement*>& myDemandElementChildren;
+    /// @brief reference to vector of child demand elements
+    const std::vector<GNEDemandElement*>& myChildDemandElements;
 };
 
 #endif

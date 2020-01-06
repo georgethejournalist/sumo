@@ -10,7 +10,6 @@
 /// @file    GNEPerson.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    May 2019
-/// @version $Id$
 ///
 // Representation of persons in NETEDIT
 /****************************************************************************/
@@ -205,7 +204,7 @@ GNEPerson::writeDemandElement(OutputDevice& device) const {
     // obtain tag depending if tagProperty has a synonym
     SumoXMLTag synonymTag = myTagProperty.hasTagSynonym() ? myTagProperty.getTagSynonym() : myTagProperty.getTag();
     // attribute VType musn't be written if is DEFAULT_PEDTYPE_ID
-    if (getDemandElementParents().at(0)->getID() == DEFAULT_PEDTYPE_ID) {
+    if (getParentDemandElements().at(0)->getID() == DEFAULT_PEDTYPE_ID) {
         // unset VType parameter
         parametersSet &= ~VEHPARS_VTYPE_SET;
         // write person attributes (VType will not be written)
@@ -214,7 +213,7 @@ GNEPerson::writeDemandElement(OutputDevice& device) const {
         parametersSet |= VEHPARS_VTYPE_SET;
     } else {
         // write person attributes, including VType
-        write(device, OptionsCont::getOptions(), synonymTag, getDemandElementParents().at(0)->getID());
+        write(device, OptionsCont::getOptions(), synonymTag, getParentDemandElements().at(0)->getID());
     }
     // write specific flow attributes
     if (myTagProperty.getTag() == SUMO_TAG_PERSONFLOW) {
@@ -237,8 +236,8 @@ GNEPerson::writeDemandElement(OutputDevice& device) const {
     }
     // write parameters
     writeParams(device);
-    // write demand element children associated to this person (Rides, Walks...)
-    for (const auto& i : getDemandElementChildren()) {
+    // write child demand elements associated to this person (Rides, Walks...)
+    for (const auto& i : getChildDemandElements()) {
         i->writeDemandElement(device);
     }
     // close person tag
@@ -268,19 +267,19 @@ GNEPerson::fixDemandElementProblem() {
 
 GNEEdge*
 GNEPerson::getFromEdge() const {
-    return getDemandElementChildren().front()->getFromEdge();
+    return getChildDemandElements().front()->getFromEdge();
 }
 
 
 GNEEdge*
 GNEPerson::getToEdge() const {
-    return getDemandElementChildren().front()->getToEdge();
+    return getChildDemandElements().front()->getToEdge();
 }
 
 
 SUMOVehicleClass
 GNEPerson::getVClass() const {
-    return getDemandElementParents().front()->getVClass();
+    return getParentDemandElements().front()->getVClass();
 }
 
 
@@ -317,28 +316,28 @@ GNEPerson::commitGeometryMoving(GNEUndoList*) {
 void
 GNEPerson::updateGeometry() {
     // only update geometry of childrens
-    for (const auto& i : getDemandElementChildren()) {
+    for (const auto& i : getChildDemandElements()) {
         i->updateGeometry();
     }
 }
 
 
-void 
+void
 GNEPerson::updatePartialGeometry(const GNEEdge* edge) {
     // only update partial geometry of childrens
-    for (const auto& i : getDemandElementChildren()) {
+    for (const auto& i : getChildDemandElements()) {
         i->updatePartialGeometry(edge);
     }
 }
 
 
-void 
+void
 GNEPerson::computePath() {
     // nothing to compute
 }
 
 
-void 
+void
 GNEPerson::invalidatePath() {
     // nothing to invalidate
 }
@@ -347,13 +346,13 @@ GNEPerson::invalidatePath() {
 Position
 GNEPerson::getPositionInView() const {
     // Position in view depend of first child element
-    if (getDemandElementChildren().size() > 0) {
-        if (getDemandElementChildren().at(0)->getTagProperty().isPersonStop()) {
-            return getDemandElementChildren().at(0)->getDemandElementGeometry().getShape().getLineCenter();
+    if (getChildDemandElements().size() > 0) {
+        if (getChildDemandElements().at(0)->getTagProperty().isPersonStop()) {
+            return getChildDemandElements().at(0)->getDemandElementGeometry().getShape().getLineCenter();
         } else {
             // obtain lane (special case for rides)
-            SUMOVehicleClass vClassEdgeFrom = getDemandElementChildren().front()->getTagProperty().isRide() ? SVC_PASSENGER : SVC_PEDESTRIAN;
-            GNELane* lane = getDemandElementChildren().at(0)->getEdgeParents().at(0)->getLaneByAllowedVClass(vClassEdgeFrom);
+            SUMOVehicleClass vClassEdgeFrom = getChildDemandElements().front()->getTagProperty().isRide() ? SVC_PASSENGER : SVC_PEDESTRIAN;
+            GNELane* lane = getChildDemandElements().at(0)->getParentEdges().at(0)->getLaneByAllowedVClass(vClassEdgeFrom);
             // return position in view depending of lane
             if (lane->getLaneShape().length() < 2.5) {
                 return lane->getLaneShape().front();
@@ -386,8 +385,8 @@ GNEPerson::getParentName() const {
 Boundary
 GNEPerson::getCenteringBoundary() const {
     Boundary personBoundary;
-    if (getDemandElementChildren().size() > 0) {
-        personBoundary.add(getDemandElementChildren().front()->getCenteringBoundary());
+    if (getChildDemandElements().size() > 0) {
+        personBoundary.add(getChildDemandElements().front()->getCenteringBoundary());
     } else {
         personBoundary = Boundary(-0.1, -0.1, 0.1, 0.1);
     }
@@ -396,7 +395,7 @@ GNEPerson::getCenteringBoundary() const {
 }
 
 
-void 
+void
 GNEPerson::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -410,7 +409,7 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
         drawPerson = false;
     } else if (!myViewNet->getDemandViewOptions().showNonInspectedDemandElements(this)) {
         drawPerson = false;
-    } else if (getDemandElementChildren().empty()) {
+    } else if (getChildDemandElements().empty()) {
         drawPerson = false;
     }
     // continue if person can be drawn
@@ -418,24 +417,24 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
         // obtain exaggeration (and add the special personExaggeration)
         const double exaggeration = s.personSize.getExaggeration(s, this, 80) + s.detailSettings.personExaggeration;
         // obtain width and length
-        const double length = getDemandElementParents().at(0)->getAttributeDouble(SUMO_ATTR_LENGTH);
-        const double width = getDemandElementParents().at(0)->getAttributeDouble(SUMO_ATTR_WIDTH);
+        const double length = getParentDemandElements().at(0)->getAttributeDouble(SUMO_ATTR_LENGTH);
+        const double width = getParentDemandElements().at(0)->getAttributeDouble(SUMO_ATTR_WIDTH);
         // obtain diameter around person (used to calculate distance bewteen cursor and person)
-        const double distanceSquared = pow(exaggeration*std::max(length, width), 2);
+        const double distanceSquared = pow(exaggeration * std::max(length, width), 2);
         // obtain img file
-        const std::string file = getDemandElementParents().at(0)->getAttribute(SUMO_ATTR_IMGFILE);
+        const std::string file = getParentDemandElements().at(0)->getAttribute(SUMO_ATTR_IMGFILE);
         Position personPosition;
         // obtain position depending of first PersonPlan child
-        if (getDemandElementChildren().front()->getTagProperty().isPersonStop()) {
+        if (getChildDemandElements().front()->getTagProperty().isPersonStop()) {
             // obtain position of stop center
-            personPosition = getDemandElementChildren().front()->getPositionInView();
+            personPosition = getChildDemandElements().front()->getPositionInView();
         } else {
             // obtain position of first edge
-            personPosition = getDemandElementChildren().front()->getDemandElementSegmentGeometry().getFirstPosition();
+            personPosition = getChildDemandElements().front()->getDemandElementSegmentGeometry().getFirstPosition();
         }
         // check that position is valid and person can be drawn
-        if ((personPosition != Position::INVALID) && 
-            !(s.drawForPositionSelection && (personPosition.distanceSquaredTo(myViewNet->getPositionInformation()) > distanceSquared))) {
+        if ((personPosition != Position::INVALID) &&
+                !(s.drawForPositionSelection && (personPosition.distanceSquaredTo(myViewNet->getPositionInformation()) > distanceSquared))) {
             // push GL ID
             glPushName(getGlID());
             // push draw matrix
@@ -513,7 +512,7 @@ GNEPerson::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_ID:
             return getDemandElementID();
         case SUMO_ATTR_TYPE:
-            return getDemandElementParents().at(0)->getID();
+            return getParentDemandElements().at(0)->getID();
         case SUMO_ATTR_COLOR:
             if (wasSet(VEHPARS_COLOR_SET)) {
                 return toString(color);
@@ -737,9 +736,9 @@ GNEPerson::getHierarchyName() const {
         if (myViewNet->getNet()->getViewNet()->getDottedAC() &&
                 myViewNet->getNet()->getViewNet()->getDottedAC()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
             // check if edge correspond to a "from", "to" or "via" edge
-            if (getEdgeParents().front() == myViewNet->getNet()->getViewNet()->getDottedAC()) {
+            if (getParentEdges().front() == myViewNet->getNet()->getViewNet()->getDottedAC()) {
                 return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (from)";
-            } else if (getEdgeParents().front() == myViewNet->getNet()->getViewNet()->getDottedAC()) {
+            } else if (getParentEdges().front() == myViewNet->getNet()->getViewNet()->getDottedAC()) {
                 return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (to)";
             } else {
                 // iterate over via
@@ -841,7 +840,7 @@ GNEPerson::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeDemandElementID(value);
             break;
         case SUMO_ATTR_TYPE:
-            changeDemandElementParent(this, value, 0);
+            replaceParentDemandElement(this, value, 0);
             // set manually vtypeID (needed for saving)
             vtypeid = value;
             break;

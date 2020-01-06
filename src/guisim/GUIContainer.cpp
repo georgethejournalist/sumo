@@ -11,7 +11,6 @@
 /// @author  Melanie Weber
 /// @author  Andreas Kendziorra
 /// @date    Wed, 01.08.2014
-/// @version $Id$
 ///
 // A MSContainer extended by some values for usage within the gui
 /****************************************************************************/
@@ -25,8 +24,6 @@
 #include <cmath>
 #include <vector>
 #include <string>
-#include <microsim/MSContainer.h>
-#include <microsim/MSCModel_NonInteracting.h>
 #include <microsim/logging/CastingFunctionBinding.h>
 #include <microsim/logging/FunctionBinding.h>
 #include <microsim/MSVehicleControl.h>
@@ -122,7 +119,7 @@ GUIContainer::GUIContainerPopupMenu::onCmdStopTrack(FXObject*, FXSelector, void*
  * GUIContainer - methods
  * ----------------------------------------------------------------------- */
 GUIContainer::GUIContainer(const SUMOVehicleParameter* pars, MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan) :
-    MSContainer(pars, vtype, plan),
+    MSTransportable(pars, vtype, plan, false),
     GUIGlObject(GLO_CONTAINER, pars->id) {
 }
 
@@ -215,11 +212,13 @@ GUIContainer::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
     Position p1 = getPosition();
-    if (getCurrentStageType() == DRIVING && !isWaiting4Vehicle()) {
-        p1 = myPositionInVehicle;
+    double angle = getAngle();
+    if (getCurrentStageType() == MSStageType::DRIVING && !isWaiting4Vehicle()) {
+        p1 = myPositionInVehicle.pos;
+        angle = myPositionInVehicle.angle;
     }
     glTranslated(p1.x(), p1.y(), getType());
-    glRotated(90, 0, 0, 1);
+    glRotated(RAD2DEG(angle), 0, 0, 1);
     // set container color
     setColor(s);
     // scale
@@ -368,47 +367,46 @@ GUIContainer::getColorValue(const GUIVisualizationSettings& /* s */, int activeS
 double
 GUIContainer::getEdgePos() const {
     FXMutexLock locker(myLock);
-    return MSContainer::getEdgePos();
+    return MSTransportable::getEdgePos();
 }
 
 
 Position
 GUIContainer::getPosition() const {
     FXMutexLock locker(myLock);
-    if (getCurrentStageType() == WAITING && getEdge()->getPermissions() == SVC_SHIP) {
+    if (getCurrentStageType() == MSStageType::WAITING && getEdge()->getPermissions() == SVC_SHIP) {
         MSLane* lane = getEdge()->getLanes().front();   //the most right lane of the water way
         PositionVector laneShape = lane->getShape();
         return laneShape.positionAtOffset2D(getEdgePos(), WATER_WAY_OFFSET);
     }
-    return MSContainer::getPosition();
+    return MSTransportable::getPosition();
 }
 
 
 double
 GUIContainer::getAngle() const {
     FXMutexLock locker(myLock);
-    return MSContainer::getAngle();
+    return MSTransportable::getAngle();
 }
 
 
 double
 GUIContainer::getWaitingSeconds() const {
     FXMutexLock locker(myLock);
-    return MSContainer::getWaitingSeconds();
+    return MSTransportable::getWaitingSeconds();
 }
 
 
 double
 GUIContainer::getSpeed() const {
     FXMutexLock locker(myLock);
-    return MSContainer::getSpeed();
+    return MSTransportable::getSpeed();
 }
 
 
 void
 GUIContainer::drawAction_drawAsPoly(const GUIVisualizationSettings& /* s */) const {
     // draw pedestrian shape
-    glRotated(RAD2DEG(getAngle() + M_PI / 2.), 0, 0, 1);
     glScaled(getVehicleType().getLength(), getVehicleType().getWidth(), 1);
     glBegin(GL_QUADS);
     glVertex2d(0, 0.5);

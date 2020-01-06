@@ -15,7 +15,6 @@
 /// @author  Laura Bieker
 /// @author  Leonhard Luecken
 /// @date    Tue, 20 Nov 2001
-/// @version $Id$
 ///
 // Methods for the representation of a single edge
 /****************************************************************************/
@@ -95,6 +94,7 @@ NBEdge::Connection::Connection(int fromLane_, NBEdge* toEdge_, int toLane_) :
     toEdge(toEdge_),
     toLane(toLane_),
     tlLinkIndex(-1),
+    tlLinkIndex2(-1),
     mayDefinitelyPass(false),
     keepClear(true),
     contPos(UNSPECIFIED_CONTPOS),
@@ -114,6 +114,7 @@ NBEdge::Connection::Connection(int fromLane_, NBEdge* toEdge_, int toLane_, bool
     toEdge(toEdge_),
     toLane(toLane_),
     tlLinkIndex(-1),
+    tlLinkIndex2(-1),
     mayDefinitelyPass(mayDefinitelyPass_),
     keepClear(keepClear_),
     contPos(contPos_),
@@ -125,7 +126,7 @@ NBEdge::Connection::Connection(int fromLane_, NBEdge* toEdge_, int toLane_, bool
     vmax(UNSPECIFIED_SPEED),
     haveVia(haveVia_),
     internalLaneIndex(UNSPECIFIED_INTERNAL_LANE_INDEX),
-    uncontrolled(uncontrolled_) 
+    uncontrolled(uncontrolled_)
 { }
 
 
@@ -893,16 +894,23 @@ NBEdge::setLaneSpreadFunction(LaneSpreadFunction spread) {
 void
 NBEdge::addGeometryPoint(int index, const Position& p) {
     if (index >= 0) {
-        myGeom.insert_noDoublePos(myGeom.begin() + index, p);
+        myGeom.insert(myGeom.begin() + index, p);
     } else {
-        myGeom.insert_noDoublePos(myGeom.end() + index, p);
+        myGeom.insert(myGeom.end() + index, p);
     }
 }
 
 
 void
 NBEdge::reduceGeometry(const double minDist) {
-    myGeom.removeDoublePoints(minDist, true);
+    if (isBidiRail() && getID() < myPossibleTurnDestination->getID()) {
+        // ensure symmetrical removal
+        PositionVector reverse = myGeom.reverse();
+        reverse.removeDoublePoints(minDist, true);
+        myGeom = reverse.reverse();
+    } else {
+        myGeom.removeDoublePoints(minDist, true);
+    }
 }
 
 
@@ -1314,7 +1322,7 @@ NBEdge::removeFromConnections(NBEdge* toEdge, int fromLane, int toLane, bool try
 
 
 bool
-NBEdge::removeFromConnections(const NBEdge::Connection &connectionToRemove) {
+NBEdge::removeFromConnections(const NBEdge::Connection& connectionToRemove) {
     // iterate over connections
     for (auto i = myConnections.begin(); i !=  myConnections.end(); i++) {
         if ((i->toEdge == connectionToRemove.toEdge) && (i->fromLane == connectionToRemove.fromLane) && (i->toLane == connectionToRemove.toLane)) {
@@ -2687,7 +2695,7 @@ NBEdge::prepareEdgePriorities(const EdgeVector* outgoing, const std::vector<int>
 
 
 void
-NBEdge::appendTurnaround(bool noTLSControlled, bool onlyDeadends, bool noGeometryLike, bool checkPermissions) {
+NBEdge::appendTurnaround(bool noTLSControlled, bool onlyDeadends, bool onlyTurnlane, bool noGeometryLike, bool checkPermissions) {
     // do nothing if no turnaround is known
     if (myTurnDestination == nullptr || myTo->getType() == NODETYPE_RAIL_CROSSING) {
         return;
@@ -2711,6 +2719,13 @@ NBEdge::appendTurnaround(bool noTLSControlled, bool onlyDeadends, bool noGeometr
         return;
     }
     const int fromLane = (int)myLanes.size() - 1;
+    if (onlyTurnlane) {
+        for (const Connection& c : getConnectionsFromLane(fromLane)) {
+            if (myTo->getDirection(this, c.toEdge) != LINKDIR_LEFT) {
+                return;
+            }
+        }
+    }
     const int toLane = (int)myTurnDestination->getNumLanes() - 1;
     if (checkPermissions) {
         if ((getPermissions(fromLane) & myTurnDestination->getPermissions(toLane)) == 0) {
@@ -2818,6 +2833,7 @@ NBEdge::setControllingTLInformation(const NBConnection& c, const std::string& tl
     NBEdge* toEdge = c.getTo();
     const int toLane = c.getToLane();
     const int tlIndex = c.getTLIndex();
+    const int tlIndex2 = c.getTLIndex2();
     // check whether the connection was not set as not to be controled previously
     if (!mayBeTLSControlled(fromLane, toEdge, toLane)) {
         return false;
@@ -2837,6 +2853,7 @@ NBEdge::setControllingTLInformation(const NBConnection& c, const std::string& tl
             // set the information about the tl
             connection.tlID = tlID;
             connection.tlLinkIndex = tlIndex;
+            connection.tlLinkIndex2 = tlIndex2;
             return true;
         }
     }
@@ -2857,6 +2874,7 @@ NBEdge::setControllingTLInformation(const NBConnection& c, const std::string& tl
         if ((*i).tlID == "") {
             (*i).tlID = tlID;
             (*i).tlLinkIndex = tlIndex;
+            (*i).tlLinkIndex2 = tlIndex2;
             no++;
         } else {
             if ((*i).tlID != tlID && (*i).tlLinkIndex == tlIndex) {

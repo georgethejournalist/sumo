@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Mon, 9 Jul 2001
-/// @version $Id$
 ///
 // Parser and container for routes during their loading
 /****************************************************************************/
@@ -28,8 +27,8 @@
 #include <string>
 #include <utils/common/SUMOTime.h>
 #include <utils/vehicle/SUMORouteHandler.h>
-#include <microsim/pedestrians/MSPerson.h>
-#include "MSContainer.h"
+#include <microsim/transportables/MSPerson.h>
+#include <microsim/transportables/MSTransportable.h>
 #include "MSVehicle.h"
 
 
@@ -166,7 +165,7 @@ protected:
     void parseWalkPositions(const SUMOSAXAttributes& attrs, const std::string& personID,
                             const MSEdge* fromEdge, const MSEdge*& toEdge,
                             double& departPos, double& arrivalPos, MSStoppingPlace*& bs,
-                            const MSTransportable::Stage* const lastStage, bool& ok);
+                            const MSStage* const lastStage, bool& ok);
 
 protected:
     /// @brief The current route

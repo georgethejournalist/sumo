@@ -10,7 +10,6 @@
 /// @file    Person.h
 /// @author  Leonhard Luecken
 /// @date    15.09.2017
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -27,7 +26,7 @@
 #include <libsumo/TraCIDefs.h>
 #include <libsumo/VehicleType.h>
 #include <libsumo/TraCIConstants.h>
-#include <microsim/MSTransportable.h>
+#include <microsim/transportables/MSTransportable.h>
 
 
 // ===========================================================================
@@ -100,7 +99,7 @@ public:
 
 private:
     static MSPerson* getPerson(const std::string& id);
-    static MSTransportable::Stage* convertTraCIStage(const TraCIStage& stage, const std::string personID);
+    static MSStage* convertTraCIStage(const TraCIStage& stage, const std::string personID);
 
 private:
     static SubscriptionResults mySubscriptionResults;

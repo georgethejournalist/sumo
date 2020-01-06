@@ -11,7 +11,6 @@
 /// @author  Tamas Kurczveil
 /// @author  Pablo Alvarez Lopez
 /// @date    20-12-13
-/// @version $Id$
 ///
 // The Battery parameters for the vehicle
 /****************************************************************************/
@@ -162,6 +161,11 @@ public:
     /// @brief Increase myVehicleStopped
     void increaseVehicleStoppedTimer();
 
+    /// @brief retrieve parameters for the energy consumption model
+    const std::map<int, double>& getEnergyParams() const {
+        return myParam;
+    }
+
 protected:
     /// @brief Parameter, The actual vehicles's Battery Capacity in kWh, [myActualBatteryCapacity <= myMaximumBatteryCapacity]
     double myActualBatteryCapacity;
@@ -195,6 +199,9 @@ protected:
 
     /// @brief Parameter, Pointer to current charging station in which vehicle is placed (by default is NULL)
     MSChargingStation* myActChargingStation;
+
+    /// @brief Parameter, Pointer to charging station neighbouring with myActChargingStation in which vehicle was placed previously (by default is NULL), i.e. auxiliar pointer for disabling charging vehicle from previous (not current) ChargingStation (if there is no gap between two different chargingStations)
+    MSChargingStation* myPreviousNeighbouringChargingStation;
 
     /// @brief Parameter, Energy charged in each timestep
     double myEnergyCharged;

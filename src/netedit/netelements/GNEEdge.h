@@ -10,7 +10,6 @@
 /// @file    GNEEdge.h
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // A road/street connecting two junctions (netedit-version, adapted from GUIEdge)
 // Basically a container for an NBEdge with drawing and editing capabilities
@@ -312,14 +311,14 @@ public:
     /// @brief draw partial person plan
     void drawPartialPersonPlan(const GUIVisualizationSettings& s, const GNEDemandElement* personPlan, const GNEJunction* junction) const;
 
-    /// @brief add path element (Only used by GNEHierarchicalElementParents::changeRouteEdges)
+    /// @brief add path element (Only used by GNEHierarchicalParentElements::changeRouteEdges)
     void addPathElement(GNEDemandElement* pathElementChild);
 
-    /// @brief remove path element (Only used by GNEHierarchicalElementParents::changeRouteEdges)
+    /// @brief remove path element (Only used by GNEHierarchicalParentElements::changeRouteEdges)
     void removePathElement(GNEDemandElement* pathElementChild);
 
     /// @brief invalidate path element childs
-    void invalidatePathElementChildrens();
+    void invalidatePathChildElementss();
 
 protected:
     /// @brief the underlying NBEdge
@@ -396,6 +395,9 @@ private:
 
     /// @brief draw Rerouter symbols
     void drawRerouterSymbol(const GUIVisualizationSettings& s, GNEAdditional* rerouter) const;
+
+    /// @brief draw demand elements
+    void drawDemandElements(const GUIVisualizationSettings& s) const;
 
     /// @brief invalidated copy constructor
     GNEEdge(const GNEEdge& s) = delete;

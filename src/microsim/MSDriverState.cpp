@@ -12,7 +12,6 @@
 /// @author  Andreas Kendziorra
 /// @author  Michael Behrisch
 /// @date    Thu, 12 Jun 2014
-/// @version $Id$
 ///
 // The common superclass for modelling transportable objects like persons and containers
 /****************************************************************************/
@@ -28,7 +27,7 @@
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOTime.h>
 //#include <microsim/MSVehicle.h>
-#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/transportables/MSPerson.h>
 //#include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
 //#include <microsim/MSGlobals.h>

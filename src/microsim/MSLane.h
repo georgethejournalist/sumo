@@ -17,7 +17,6 @@
 /// @author  Mario Krumnow
 /// @author  Leonhard Luecken
 /// @date    Mon, 12 Mar 2001
-/// @version $Id$
 ///
 // Representation of a lane in the micro simulation
 /****************************************************************************/
@@ -63,6 +62,7 @@ class MSVehicleTransfer;
 class MSVehicleControl;
 class OutputDevice;
 class MSLeaderInfo;
+
 
 // ===========================================================================
 // type definitions
@@ -934,7 +934,7 @@ public:
 
     /// @brief Returns all upcoming junctions within given range along the given (non-internal) continuation lanes measured from given position
     std::vector<const MSJunction*> getUpcomingJunctions(double pos, double range, const std::vector<MSLane*>& contLanes) const;
-    /// @brief Returns all upcoming junctions within given range along the given (non-internal) continuation lanes measured from given position
+    /// @brief Returns all upcoming links within given range along the given (non-internal) continuation lanes measured from given position
     std::vector<const MSLink*> getUpcomingLinks(double pos, double range, const std::vector<MSLane*>& contLanes) const;
 
     /** @brief get the most likely precedecessor lane (sorted using by_connections_to_sorter).
@@ -972,6 +972,9 @@ public:
 
     /// @brief get the list of outgoing lanes
     const std::vector<std::pair<const MSLane*, const MSEdge*> > getOutgoingViaLanes() const;
+
+    /// @brief get the list of all direct (disregarding internal predecessors) non-internal predecessor lanes of this lane
+    std::vector<const MSLane*> getNormalIncomingLanes() const;
 
     /// @name Current state retrieval
     //@{
@@ -1192,6 +1195,12 @@ public:
     void visit(const LaneStoringVisitor& cont) const {
         cont.add(this);
     }
+
+    /// @brief whether the lane has pedestrians on it
+    bool hasPedestrians() const;
+
+    /// This is just a wrapper around MSPModel::nextBlocking. You should always check using hasPedestrians before calling this method.
+    std::pair<const MSPerson*, double> nextBlocking(double minPos, double minRight, double maxLeft, double stopTime = 0) const;
 
     static void initCollisionOptions(const OptionsCont& oc);
 

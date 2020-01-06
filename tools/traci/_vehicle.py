@@ -17,7 +17,6 @@
 # @author  Daniel Krajzewicz
 # @author  Leonhard Luecken
 # @date    2011-03-09
-# @version $Id$
 
 from __future__ import absolute_import
 import struct
@@ -32,15 +31,13 @@ def _readBestLanes(result):
     result.read("!iB")
     nbLanes = result.read("!i")[0]  # Length
     lanes = []
-    for i in range(nbLanes):
+    for _ in range(nbLanes):
         result.read("!B")
         laneID = result.readString()
         length, occupation, offset = result.read("!BdBdBb")[1::2]
         allowsContinuation = bool(result.read("!BB")[1])
-        nextLanesNo = result.read("!Bi")[1]
-        nextLanes = []
-        for j in range(nextLanesNo):
-            nextLanes.append(result.readString())
+        numNextLanes = result.read("!Bi")[1]
+        nextLanes = [result.readString() for __ in range(numNextLanes)]
         lanes.append((laneID, length, occupation, offset, allowsContinuation, tuple(nextLanes)))
     return tuple(lanes)
 
@@ -59,20 +56,20 @@ def _readNeighbors(result):
     """ result has structure:
     byte(TYPE_COMPOUND) | length(neighList) | Per list entry: string(vehID) | double(dist)
     """
-    N = result.readInt()  # length of the vehicle list
+    num = result.readInt()  # length of the vehicle list
     neighs = []
-    for i in range(N):
+    for _ in range(num):
         vehID = result.readString()
         dist = result.readDouble()
         neighs.append((vehID, dist))
-    return neighs
+    return tuple(neighs)
 
 
 def _readNextTLS(result):
     result.read("!iB")  # numCompounds, TYPE_INT
     numTLS = result.read("!i")[0]
     nextTLS = []
-    for i in range(numTLS):
+    for _ in range(numTLS):
         result.read("!B")
         tlsID = result.readString()
         tlsIndex, dist, state = result.read("!BiBdBB")[1::2]
@@ -84,7 +81,7 @@ def _readNextStops(result):
     result.read("!iB")  # numCompounds, TYPE_INT
     numStops = result.read("!i")[0]
     nextStop = []
-    for i in range(numStops):
+    for _ in range(numStops):
         result.read("!B")
         lane = result.readString()
         result.read("!B")
@@ -1637,8 +1634,7 @@ class VehicleDomain(Domain):
         Subscribe to one or more object values of the given domain around the
         given objectID in a given radius
         """
-        Domain.subscribeContext(
-            self, objectID, domain, dist, varIDs, begin, end)
+        Domain.subscribeContext(self, objectID, domain, dist, varIDs, begin, end)
 
     def addSubscriptionFilterLanes(self, lanes, noOpposite=False, downstreamDist=None, upstreamDist=None):
         """addSubscriptionFilterLanes(list(integer), bool, double, double) -> None
@@ -1692,7 +1688,7 @@ class VehicleDomain(Domain):
         if upstreamDist is not None:
             self.addSubscriptionFilterUpstreamDistance(upstreamDist)
 
-    def addSubscriptionFilterLCManeuver(self, direction, noOpposite=False, downstreamDist=None, upstreamDist=None):
+    def addSubscriptionFilterLCManeuver(self, direction=None, noOpposite=False, downstreamDist=None, upstreamDist=None):
         """addSubscriptionFilterLCManeuver(int) -> None
 
         Restricts vehicles returned by the last modified vehicle context subscription to neighbor and ego-lane leader
@@ -1761,3 +1757,15 @@ class VehicleDomain(Domain):
         to vehicles within field of vision with given opening angle
         """
         self._connection._addSubscriptionFilter(tc.FILTER_TYPE_FIELD_OF_VISION, openingAngle)
+
+    def addSubscriptionFilterLateralDistance(self, lateralDist, downstreamDist=None, upstreamDist=None):
+        """addSubscriptionFilterLateralDist(double, double, double) -> None
+
+        Adds a lateral distance filter to the last modified vehicle context subscription (call it just after subscribing).
+        downstreamDist and upstreamDist specify the longitudinal range of the search for surrounding vehicles along the ego vehicle's route.
+        """
+        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_LATERAL_DIST, lateralDist)
+        if downstreamDist is not None:
+            self.addSubscriptionFilterDownstreamDistance(downstreamDist)
+        if upstreamDist is not None:
+            self.addSubscriptionFilterUpstreamDistance(upstreamDist)

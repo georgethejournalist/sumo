@@ -10,7 +10,6 @@
 # @file    generateContinuousRerouters.py
 # @author  Jakob Erdmann
 # @date    2019-11-23
-# @version $Id$  # noqa
 
 """
 This script generates rerrouters ahead of every intersection with routes to each of
@@ -48,7 +47,7 @@ def get_options(args=None):
         parser.print_help()
         sys.exit(1)
 
-    options.turnDefaults = map(float, options.turnDefaults.split(','))
+    options.turnDefaults = list(map(float, options.turnDefaults.split(',')))
     if len(options.turnDefaults) not in [3, 4]:
         sys.exit("turn-defaults must be defined as 3 or 4  numbers")
     if len(options.turnDefaults) == 3:
@@ -114,7 +113,7 @@ def main(options):
                         incomingRoutes[edges[-1]].add(edgeIDs)
 
     with open(options.outfile, 'w') as outf:
-        outf.write('<additional>\n')
+        sumolib.writeXMLHeader(outf, "$Id$", "additional")  # noqa
         for junction in net.getNodes():
             if len(junction.getOutgoing()) > 1:
                 routes = []

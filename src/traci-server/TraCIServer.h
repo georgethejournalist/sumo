@@ -18,7 +18,6 @@
 /// @author  Michael Behrisch
 /// @author  Leonhard Luecken
 /// @date    2007/10/24
-/// @version $Id$
 ///
 // TraCI server used to control sumo by a remote TraCI client
 /****************************************************************************/
@@ -422,7 +421,11 @@ private:
      * @param[in] openingAngle The opening angle of the circle sector
      */
     void addSubscriptionFilterFieldOfVision(double openingAngle);
-    bool isVehicleToVehicleContextSubscription(const libsumo::Subscription& s);
+    /** @brief Filter only vehicles within the given lateral distance
+     *
+     * @param[in] dist The lateral distance
+     */
+    void addSubscriptionFilterLateralDistance(double dist);
 
     bool findObjectShape(int domain, const std::string& id, PositionVector& shape);
 

@@ -12,7 +12,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @date    Tue, 17 Feb 2009
-/// @version $Id$
 ///
 // Abstract base class for vehicle representations
 /****************************************************************************/
@@ -61,6 +60,9 @@ typedef std::vector<const MSEdge*> ConstMSEdgeVector;
 class SUMOVehicle : public SUMOTrafficObject {
 public:
     typedef long long int NumericalID;
+
+    /// @brief Constructor
+    SUMOVehicle(const std::string& id) : SUMOTrafficObject(id) {}
 
     /// @brief Destructor
     virtual ~SUMOVehicle() {}
@@ -141,6 +143,12 @@ public:
      */
     virtual const SUMOVehicleParameter& getParameter() const = 0;
 
+    /** @brief Returns the vehicle's emission model parameter
+     *
+     * @return The vehicle's emission parameters
+     */
+    virtual const std::map<int, double>* getEmissionParameters() const = 0;
+
     /** @brief Replaces the vehicle's parameter
      */
     virtual void replaceParameter(const SUMOVehicleParameter* newParameter) = 0;
@@ -208,21 +216,14 @@ public:
      */
     virtual int getNumberReroutes() const = 0;
 
-    /** @brief Adds a person to this vehicle
-     *
-     * May do nothing since persons are not supported by default
-     *
-     * @param[in] person The person to add
-     */
-    virtual void addPerson(MSTransportable* person) = 0;
+    /// @brief whether the given transportable is allowed to board this vehicle
+    virtual bool allowsBoarding(MSTransportable* t) const = 0;
 
-    /** @brief Adds a container to this vehicle
+    /** @brief Adds a person or container to this vehicle
      *
-     * May do nothing since containers are not supported by default
-     *
-     * @param[in] container The container to add
+     * @param[in] transportable The person/container to add
      */
-    virtual void addContainer(MSTransportable* container) = 0;
+    virtual void addTransportable(MSTransportable* transportable) = 0;
 
     /** @brief Returns the number of persons
      * @return The number of passengers on-board

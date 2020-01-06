@@ -10,7 +10,6 @@
 /// @file    GNEDeleteFrame.h
 /// @author  Pablo Alvarez Lopez
 /// @date    Dec 2016
-/// @version $Id$
 ///
 // The Widget for remove network-elements
 /****************************************************************************/
@@ -113,17 +112,17 @@ protected:
         /// @brief constructor (for demandElements)
         SubordinatedElements(const GNEDemandElement* demandElement);
 
-        /// @brief additional parents
-        int additionalParents;
+        /// @brief parent additionals
+        int parentAdditionals;
 
-        /// @brief additional children
-        int additionalChildren;
+        /// @brief child additional
+        int childAdditionals;
 
-        /// @brief demand element parents
-        int demandElementParents;
+        /// @brief parent demand elements
+        int parentDemandElements;
 
-        /// @brief demand element children
-        int demandElementChildren;
+        /// @brief child demand elements
+        int childDemandElements;
 
     private:
         /// @brief add operator

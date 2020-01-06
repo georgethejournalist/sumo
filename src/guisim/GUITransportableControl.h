@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Wed, 13.06.2012
-/// @version $Id$
 ///
 // GUI-version of the transportable control for building gui persons and containers
 /****************************************************************************/
@@ -26,7 +25,7 @@
 #include <config.h>
 
 #include <vector>
-#include <microsim/MSTransportableControl.h>
+#include <microsim/transportables/MSTransportableControl.h>
 
 
 // ===========================================================================
@@ -38,7 +37,7 @@
 class GUITransportableControl : public MSTransportableControl {
 public:
     /// constructor
-    GUITransportableControl();
+    GUITransportableControl(const bool isPerson);
 
 
     /// destructor

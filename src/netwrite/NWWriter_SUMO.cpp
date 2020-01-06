@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Leonhard Luecken
 /// @date    Tue, 04.05.2011
-/// @version $Id$
 ///
 // Exporter writing networks using the SUMO format
 /****************************************************************************/
@@ -212,10 +211,11 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     writeRoundabouts(device, ec.getRoundabouts(), ec);
 
     // write the districts
-    for (std::map<std::string, NBDistrict*>::const_iterator i = dc.begin(); i != dc.end(); i++) {
-        writeDistrict(device, *(*i).second);
-    }
-    if (dc.size() != 0) {
+    if (dc.size() != 0 && oc.isDefault("taz-output")) {
+        WRITE_WARNING("Embedding TAZ-data inside the network is deprecated. Use option --taz-output instead");
+        for (std::map<std::string, NBDistrict*>::const_iterator i = dc.begin(); i != dc.end(); i++) {
+            writeDistrict(device, *(*i).second);
+        }
         device.lf();
     }
     device.close();
@@ -329,7 +329,7 @@ NWWriter_SUMO::writeInternalEdges(OutputDevice& into, const NBEdgeCont& ec, cons
                                                              0, (*i)->getTurnDestination(true), 0);
                             into.writeAttr(SUMO_ATTR_BIDI, bidiCon.id);
                         } catch (ProcessError&) {
-                            std::cout << " could not find bidi-connection\n";
+                            WRITE_WARNINGF("Could not find bidi-connection for edge '%'", edgeID)
                         }
                     }
                     // open a new edge
@@ -362,7 +362,7 @@ NWWriter_SUMO::writeInternalEdges(OutputDevice& into, const NBEdgeCont& ec, cons
                     into.openTag(SUMO_TAG_EDGE);
                     into.writeAttr(SUMO_ATTR_ID, (*k).viaID);
                     into.writeAttr(SUMO_ATTR_FUNCTION, EDGEFUNC_INTERNAL);
-                    SVCPermissions permissions = ((*k).permissions != SVC_UNSPECIFIED)? (*k).permissions : successor.permissions;
+                    SVCPermissions permissions = ((*k).permissions != SVC_UNSPECIFIED) ? (*k).permissions : successor.permissions;
                     writeLane(into, (*k).viaID + "_0", (*k).vmax, permissions, successor.preferred,
                               NBEdge::UNSPECIFIED_OFFSET, NBEdge::UNSPECIFIED_OFFSET,
                               std::map<int, double>(), successor.width, (*k).viaShape, &(*k),
@@ -760,6 +760,9 @@ NWWriter_SUMO::writeConnection(OutputDevice& into, const NBEdge& from, const NBE
         if (c.tlID != "") {
             into.writeAttr(SUMO_ATTR_TLID, c.tlID);
             into.writeAttr(SUMO_ATTR_TLLINKINDEX, c.tlLinkIndex);
+            if (c.tlLinkIndex2 >= 0) {
+                into.writeAttr(SUMO_ATTR_TLLINKINDEX2, c.tlLinkIndex2);
+            }
         }
         if (style == SUMONET) {
             // write the direction information
@@ -790,8 +793,14 @@ NWWriter_SUMO::writeInternalConnections(OutputDevice& into, const NBNode& n) {
             LinkDirection dir = n.getDirection(from, c.toEdge, lefthand);
             assert(c.toEdge != 0);
             if (c.haveVia) {
-                // internal split
-                writeInternalConnection(into, c.id, c.toEdge->getID(), c.internalLaneIndex, c.toLane, c.viaID + "_0", dir);
+                // internal split with optional signal
+                std::string tlID = "";
+                int linkIndex2 = NBConnection::InvalidTlIndex;
+                if (c.tlLinkIndex2 != NBConnection::InvalidTlIndex) {
+                    linkIndex2 = c.tlLinkIndex2;
+                    tlID = c.tlID;
+                }
+                writeInternalConnection(into, c.id, c.toEdge->getID(), c.internalLaneIndex, c.toLane, c.viaID + "_0", dir, tlID, linkIndex2);
                 writeInternalConnection(into, c.viaID, c.toEdge->getID(), 0, c.toLane, "", dir);
             } else {
                 // no internal split

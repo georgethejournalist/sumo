@@ -11,7 +11,6 @@
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
 /// @date    Fri, 30.01.2009
-/// @version $Id$
 ///
 // A device which collects vehicular emissions
 /****************************************************************************/
@@ -109,7 +108,7 @@ public:
      * @exception IOError not yet implemented
      * @see MSDevice::tripInfoOutput
      */
-    void generateOutput() const;
+    void generateOutput(OutputDevice* tripinfoOut) const;
 
 
     /// @brief Destructor.
@@ -127,7 +126,6 @@ protected:
                             const double travelledDistanceFrontOnLane,
                             const double travelledDistanceVehicleOnLane,
                             const double meanLengthOnLane);
-
 
 private:
     /** @brief Constructor

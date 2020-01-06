@@ -10,7 +10,6 @@
 /// @file    GNEVaporizer.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2016
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -37,9 +36,11 @@
 // ===========================================================================
 
 GNEVaporizer::GNEVaporizer(GNEViewNet* viewNet, GNEEdge* edge, SUMOTime begin, SUMOTime end, const std::string& name) :
-    GNEAdditional(edge->getID(), viewNet, GLO_VAPORIZER, SUMO_TAG_VAPORIZER, name, false, {edge}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
-    myBegin(begin),
-    myEnd(end) {
+    GNEAdditional(edge->getID(), viewNet, GLO_VAPORIZER, SUMO_TAG_VAPORIZER, name, false, {
+    edge
+}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+myBegin(begin),
+myEnd(end) {
 }
 
 
@@ -50,11 +51,11 @@ GNEVaporizer::~GNEVaporizer() {
 void
 GNEVaporizer::updateGeometry() {
     // get lanes of edge
-    GNELane* firstLane = getEdgeParents().front()->getLanes().at(0);
+    GNELane* firstLane = getParentEdges().front()->getLanes().at(0);
 
-    // Get shape of lane parent
+    // Get shape of parent lane
     const double offset = firstLane->getLaneShape().length() < 2.5 ? firstLane->getLaneShape().length() : 2.5;
-    
+
     // update geometry
     myAdditionalGeometry.updateGeometryPosition(firstLane, offset);
 
@@ -71,11 +72,11 @@ GNEVaporizer::updateGeometry() {
 
 Position
 GNEVaporizer::getPositionInView() const {
-    if (getEdgeParents().front()->getLanes().front()->getLaneShape().length() < 2.5) {
-        return getEdgeParents().front()->getLanes().front()->getLaneShape().front();
+    if (getParentEdges().front()->getLanes().front()->getLaneShape().length() < 2.5) {
+        return getParentEdges().front()->getLanes().front()->getLaneShape().front();
     } else {
-        Position A = getEdgeParents().front()->getLanes().front()->getLaneShape().positionAtOffset(2.5);
-        Position B = getEdgeParents().front()->getLanes().back()->getLaneShape().positionAtOffset(2.5);
+        Position A = getParentEdges().front()->getLanes().front()->getLaneShape().positionAtOffset(2.5);
+        Position B = getParentEdges().front()->getLanes().back()->getLaneShape().positionAtOffset(2.5);
 
         // return Middle point
         return Position((A.x() + B.x()) / 2, (A.y() + B.y()) / 2);
@@ -89,7 +90,7 @@ GNEVaporizer::getCenteringBoundary() const {
 }
 
 
-void 
+void
 GNEVaporizer::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -109,7 +110,7 @@ GNEVaporizer::commitGeometryMoving(GNEUndoList*) {
 
 std::string
 GNEVaporizer::getParentName() const {
-    return getEdgeParents().front()->getMicrosimID();
+    return getParentEdges().front()->getMicrosimID();
 }
 
 
@@ -120,7 +121,7 @@ GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
     // first check if additional has to be drawn
     if (s.drawAdditionals(exaggeration)) {
         // get values
-        const int numberOfLanes = int(getEdgeParents().front()->getLanes().size());
+        const int numberOfLanes = int(getParentEdges().front()->getLanes().size());
         const double width = (double) 2.0 * s.scale;
         // begin draw
         glPushName(getGlID());
@@ -220,7 +221,7 @@ GNEVaporizer::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNEVaporizer::getAttributeDouble(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_BEGIN:
@@ -288,7 +289,7 @@ GNEVaporizer::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNEVaporizer::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }
@@ -315,7 +316,7 @@ GNEVaporizer::setAttribute(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_ID:
         case SUMO_ATTR_EDGE:
             changeAdditionalID(value);
-            changeEdgeParents(this, value);
+            replaceParentEdges(this, value);
             break;
         case SUMO_ATTR_BEGIN:
             myBegin = parse<SUMOTime>(value);

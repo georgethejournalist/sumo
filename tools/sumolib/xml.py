@@ -11,10 +11,10 @@
 # @author  Michael Behrisch
 # @author  Jakob Erdmann
 # @date    2011-06-23
-# @version $Id$
 
 from __future__ import print_function
 from __future__ import absolute_import
+import os
 import sys
 import re
 import datetime
@@ -27,6 +27,8 @@ from collections import namedtuple, OrderedDict
 from keyword import iskeyword
 from functools import reduce
 import xml.sax.saxutils
+
+from . import version
 
 DEFAULT_ATTR_CONVERSIONS = {
     # shape-like
@@ -360,7 +362,8 @@ def parse_fast_nested(xmlfile, element_name, attrnames, element_name2, attrnames
                     record = Record(*m.groups())
 
 
-def writeHeader(outf, script, root=None, schemaPath=None):
+def writeHeader(outf, script=None, root=None, schemaPath=None):
+    script = os.path.basename(sys.argv[0]) + " " + version.gitDescribe()
     outf.write("""<?xml version="1.0" encoding="UTF-8"?>
 <!-- generated on %s by %s
   options: %s

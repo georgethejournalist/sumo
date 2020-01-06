@@ -10,7 +10,6 @@
 /// @file    GNEChange_Lane.h
 /// @author  Jakob Erdmann
 /// @date    April 2011
-/// @version $Id$
 ///
 // A network change in which a single lane is created or deleted
 /****************************************************************************/
@@ -89,23 +88,23 @@ private:
     /// @bried whether to recompute connection when adding a new lane
     bool myRecomputeConnections;
 
-    /// @brief vector of shape parents
-    std::vector<GNEShape*> myShapeParents;
+    /// @brief vector of parent shapes
+    std::vector<GNEShape*> myParentShapes;
 
-    /// @brief vector of additional parents
-    std::vector<GNEAdditional*> myAdditionalParents;
+    /// @brief vector of parent additionals
+    std::vector<GNEAdditional*> myParentAdditionals;
 
-    /// @brief vector of demand element parents
-    std::vector<GNEDemandElement*> myDemandElementParents;
+    /// @brief vector of parent demand elements
+    std::vector<GNEDemandElement*> myParentDemandElements;
 
-    /// @brief vector of shape children
-    std::vector<GNEShape*> myShapeChildren;
+    /// @brief vector of child shapes
+    std::vector<GNEShape*> myChildShapes;
 
-    /// @brief vector of additional children
-    std::vector<GNEAdditional*> myAdditionalChildren;
+    /// @brief vector of child additional
+    std::vector<GNEAdditional*> myChildAdditionals;
 
-    /// @brief vector of demand element children
-    std::vector<GNEDemandElement*> myDemandElementChildren;
+    /// @brief vector of child demand elements
+    std::vector<GNEDemandElement*> myChildDemandElements;
 };
 
 #endif

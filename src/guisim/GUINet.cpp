@@ -13,7 +13,6 @@
 /// @author  Michael Behrisch
 /// @author  Laura Bieker
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A MSNet extended by some values for usage within the gui
 /****************************************************************************/
@@ -42,7 +41,7 @@
 #include <microsim/MSJunction.h>
 #include <microsim/output/MSDetectorControl.h>
 #include <microsim/MSEdge.h>
-#include <microsim/pedestrians/MSPModel.h>
+#include <microsim/transportables/MSPModel.h>
 #include <microsim/MSInsertionControl.h>
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
@@ -119,7 +118,7 @@ GUINet::getBoundary() const {
 MSTransportableControl&
 GUINet::getPersonControl() {
     if (myPersonControl == nullptr) {
-        myPersonControl = new GUITransportableControl();
+        myPersonControl = new GUITransportableControl(true);
     }
     return *myPersonControl;
 }
@@ -128,7 +127,7 @@ GUINet::getPersonControl() {
 MSTransportableControl&
 GUINet::getContainerControl() {
     if (myContainerControl == nullptr) {
-        myContainerControl = new GUITransportableControl();
+        myContainerControl = new GUITransportableControl(false);
     }
     return *myContainerControl;
 }

@@ -10,7 +10,6 @@
 /// @file    GNEDetectorE3.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Nov 2015
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -36,12 +35,12 @@
 
 GNEDetectorE3::GNEDetectorE3(const std::string& id, GNEViewNet* viewNet, Position pos, SUMOTime freq, const std::string& filename, const std::string& vehicleTypes, const std::string& name, SUMOTime timeThreshold, double speedThreshold, bool blockMovement) :
     GNEAdditional(id, viewNet, GLO_E3DETECTOR, SUMO_TAG_E3DETECTOR, name, blockMovement, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
-        myPosition(pos),
-        myFreq(freq),
-        myFilename(filename),
-        myVehicleTypes(vehicleTypes),
-        myTimeThreshold(timeThreshold),
-    mySpeedThreshold(speedThreshold) {
+              myPosition(pos),
+              myFreq(freq),
+              myFilename(filename),
+              myVehicleTypes(vehicleTypes),
+              myTimeThreshold(timeThreshold),
+mySpeedThreshold(speedThreshold) {
 }
 
 
@@ -84,7 +83,7 @@ GNEDetectorE3::getCenteringBoundary() const {
 }
 
 
-void 
+void
 GNEDetectorE3::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -202,7 +201,7 @@ GNEDetectorE3::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNEDetectorE3::getAttributeDouble(SumoXMLAttr key) const {
     throw InvalidArgument(getTagStr() + " doesn't have a double attribute of type '" + toString(key) + "'");
 }
@@ -218,7 +217,7 @@ GNEDetectorE3::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoLi
             // change ID of Entry
             undoList->p_add(new GNEChange_Attribute(this, myViewNet->getNet(), key, value));
             // Change Ids of all Entry/Exits children
-            for (auto i : getAdditionalChildren()) {
+            for (auto i : getChildAdditionals()) {
                 i->setAttribute(SUMO_ATTR_ID, generateChildID(i->getTagProperty().getTag()), undoList);
             }
             break;
@@ -277,11 +276,11 @@ GNEDetectorE3::isValid(SumoXMLAttr key, const std::string& value) {
 
 
 bool
-GNEDetectorE3::checkAdditionalChildRestriction() const {
+GNEDetectorE3::checkChildAdditionalRestriction() const {
     int numEntrys = 0;
     int numExits = 0;
     // iterate over additional chidls and obtain number of entrys and exits
-    for (auto i : getAdditionalChildren()) {
+    for (auto i : getChildAdditionals()) {
         if (i->getTagProperty().getTag() == SUMO_TAG_DET_ENTRY) {
             numEntrys++;
         } else if (i->getTagProperty().getTag() == SUMO_TAG_DET_EXIT) {
@@ -300,7 +299,7 @@ GNEDetectorE3::checkAdditionalChildRestriction() const {
 }
 
 
-bool 
+bool
 GNEDetectorE3::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }
@@ -319,7 +318,7 @@ GNEDetectorE3::getHierarchyName() const {
 
 
 void
-GNEDetectorE3::updateAdditionalParent() {
+GNEDetectorE3::updateParentAdditional() {
     myChildConnections.update();
 }
 

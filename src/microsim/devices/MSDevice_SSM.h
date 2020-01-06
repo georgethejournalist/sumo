@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Leonhard Luecken
 /// @date    11.06.2013
-/// @version $Id$
 ///
 // An SSM-device logs encounters / conflicts of the carrying vehicle with other surrounding vehicles.
 // XXX: Preliminary implementation. Use with care. Especially rerouting vehicles could be problematic.
@@ -486,7 +485,7 @@ public:
      * @exception IOError not yet implemented
      * @see MSDevice::generateOutput
      */
-    void generateOutput() const;
+    void generateOutput(OutputDevice* tripinfoOut) const;
 
 
 
@@ -678,8 +677,9 @@ private:
      * @param sep separator for values in string
      * @return String concatenation of the vector entries
      */
-    static std::string makeStringWithNAs(std::vector<double> v, double NA, std::string sep = " ");
-    static std::string makeStringWithNAs(std::vector<double> v, std::vector<double> NAs, std::string sep = " ");
+    static std::string makeStringWithNAs(const std::vector<double>& v, const double NA);
+    static std::string makeStringWithNAs(const std::vector<double>& v, const std::vector<double>& NAs);
+    static std::string makeStringWithNAs(const PositionVector& v, const double precision);
 
     /// @name parameter load helpers (introduced for readability of buildVehicleDevices())
     /// @{

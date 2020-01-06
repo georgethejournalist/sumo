@@ -10,7 +10,6 @@
 /// @file    GNETAZ.h
 /// @author  Pablo Alvarez Lopez
 /// @date    Oct 2018
-/// @version $Id$
 ///
 //
 /****************************************************************************/
@@ -46,7 +45,7 @@ public:
     ~GNETAZ();
 
     /// @brief get TAZ shape
-    const PositionVector &getTAZShape() const;
+    const PositionVector& getTAZShape() const;
 
     /// @name Functions related with geometry of element
     /// @{
@@ -163,7 +162,7 @@ public:
     /// @}
 
     /// @brief update TAZ after add or remove a Source/sink, or change their weight
-    void updateAdditionalParent();
+    void updateParentAdditional();
 
 protected:
     /// @brief TAZ Color

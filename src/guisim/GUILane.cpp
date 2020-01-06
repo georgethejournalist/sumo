@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // Representation of a lane in the micro simulation (gui-version)
 /****************************************************************************/
@@ -331,7 +330,14 @@ GUILane::drawLinkRule(const GUIVisualizationSettings& s, const GUINet& net, MSLi
     const Position& f = shape[-2];
     const double rot = RAD2DEG(atan2((end.x() - f.x()), (f.y() - end.y())));
     if (link == nullptr) {
-        GLHelper::setColor(GUIVisualizationSettings::getLinkColor(LINKSTATE_DEADEND));
+        if (myEdge->getNumSuccessors() == 0 && myEdge->getToJunction()->getOutgoing().size() > 0
+                && (myEdge->getPermissions() & ~SVC_PEDESTRIAN) != 0
+                && (myEdge->getToJunction()->getOutgoing().size() > 1 || 
+                    myEdge->getToJunction()->getOutgoing().front()->getToJunction() != myEdge->getFromJunction())) {
+            GLHelper::setColor(GUIVisualizationColorSettings::SUMO_color_DEADEND_SHOW);
+        } else {
+            GLHelper::setColor(GUIVisualizationSettings::getLinkColor(LINKSTATE_DEADEND));
+        }
         glPushMatrix();
         glTranslated(end.x(), end.y(), 0);
         glRotated(rot, 0, 0, 1);

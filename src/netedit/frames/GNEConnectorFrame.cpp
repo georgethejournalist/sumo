@@ -10,7 +10,6 @@
 /// @file    GNEConnectorFrame.cpp
 /// @author  Jakob Erdmann
 /// @date    May 2011
-/// @version $Id$
 ///
 // The Widget for modifying lane-to-lane connections
 /****************************************************************************/
@@ -130,7 +129,7 @@ GNEConnectorFrame::ConnectionModifications::onCmdSaveModifications(FXObject*, FX
     if (myConnectorFrameParent->myCurrentEditedLane != 0) {
         // check if routes has to be protected
         if (myProtectRoutesCheckBox->isEnabled() && (myProtectRoutesCheckBox->getCheck() == TRUE)) {
-            for (const auto& i : myConnectorFrameParent->myCurrentEditedLane->getParentEdge()->getDemandElementChildren()) {
+            for (const auto& i : myConnectorFrameParent->myCurrentEditedLane->getParentEdge()->getChildDemandElements()) {
                 if (!i->isDemandElementValid()) {
                     FXMessageBox::warning(getApp(), MBOX_OK,
                                           "Error saving connection operations", "%s",

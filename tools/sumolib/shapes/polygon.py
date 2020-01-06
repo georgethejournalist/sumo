@@ -11,7 +11,6 @@
 # @author  Melanie Knocke
 # @author  Michael Behrisch
 # @date    2012-12-04
-# @version $Id$
 
 from __future__ import absolute_import
 
@@ -29,7 +28,6 @@ def getBoundingBox(shape):
         xmax = max(xmax, p[0])
         ymin = min(ymin, p[1])
         ymax = max(ymax, p[1])
-    assert(xmin != xmax or ymin != ymax)
     return xmin, ymin, xmax, ymax
 
 

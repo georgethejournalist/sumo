@@ -14,7 +14,6 @@
 /// @author  Michael Behrisch
 /// @author  Andreas Gaubatz
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // A view on the simulation; this view is a microscopic one
 /****************************************************************************/
@@ -42,6 +41,7 @@
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSJunctionControl.h>
+#include <microsim/MSStoppingPlace.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
 #include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
 #include <utils/common/RGBColor.h>

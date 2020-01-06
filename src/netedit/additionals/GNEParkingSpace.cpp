@@ -10,7 +10,6 @@
 /// @file    GNEParkingSpace.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Feb 2018
-/// @version $Id$
 ///
 // A lane area vehicles can halt at (GNE version)
 /****************************************************************************/
@@ -35,10 +34,10 @@
 
 GNEParkingSpace::GNEParkingSpace(GNEViewNet* viewNet, GNEAdditional* parkingAreaParent, const Position& pos, double width, double length, double angle, bool blockMovement) :
     GNEAdditional(parkingAreaParent, viewNet, GLO_PARKING_SPACE, SUMO_TAG_PARKING_SPACE, "", blockMovement, {}, {}, {}, {parkingAreaParent}, {}, {}, {}, {}, {}, {}),
-    myPosition(pos),
-    myWidth(width),
-    myLength(length),
-    myAngle(angle) {
+              myPosition(pos),
+              myWidth(width),
+              myLength(length),
+myAngle(angle) {
 }
 
 
@@ -100,7 +99,7 @@ GNEParkingSpace::getCenteringBoundary() const {
 }
 
 
-void 
+void
 GNEParkingSpace::splitEdgeGeometry(const double /*splitPosition*/, const GNENetElement* /*originalElement*/, const GNENetElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
 }
@@ -108,7 +107,7 @@ GNEParkingSpace::splitEdgeGeometry(const double /*splitPosition*/, const GNENetE
 
 std::string
 GNEParkingSpace::getParentName() const {
-    return getAdditionalParents().at(0)->getMicrosimID();
+    return getParentAdditionals().at(0)->getMicrosimID();
 }
 
 
@@ -178,7 +177,7 @@ GNEParkingSpace::getAttribute(SumoXMLAttr key) const {
         case GNE_ATTR_BLOCK_MOVEMENT:
             return toString(myBlockMovement);
         case GNE_ATTR_PARENT:
-            return getAdditionalParents().at(0)->getID();
+            return getParentAdditionals().at(0)->getID();
         case GNE_ATTR_SELECTED:
             return toString(isAttributeCarrierSelected());
         case GNE_ATTR_PARAMETERS:
@@ -189,7 +188,7 @@ GNEParkingSpace::getAttribute(SumoXMLAttr key) const {
 }
 
 
-double 
+double
 GNEParkingSpace::getAttributeDouble(SumoXMLAttr key) const {
     throw InvalidArgument(getTagStr() + " doesn't have a double attribute of type '" + toString(key) + "'");
 }
@@ -245,7 +244,7 @@ GNEParkingSpace::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNEParkingSpace::isAttributeEnabled(SumoXMLAttr /* key */) const {
     return true;
 }
@@ -296,7 +295,7 @@ GNEParkingSpace::setAttribute(SumoXMLAttr key, const std::string& value) {
             myBlockMovement = parse<bool>(value);
             break;
         case GNE_ATTR_PARENT:
-            changeAdditionalParent(this, value, 0);
+            replaceParentAdditional(this, value, 0);
             break;
         case GNE_ATTR_SELECTED:
             if (parse<bool>(value)) {

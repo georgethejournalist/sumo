@@ -10,7 +10,6 @@
 /// @file    GNENetElement.h
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2016
-/// @version $Id$
 ///
 // A abstract class for net elements
 /****************************************************************************/
@@ -23,8 +22,8 @@
 // ===========================================================================
 #include <config.h>
 
-#include <netedit/GNEHierarchicalElementParents.h>
-#include <netedit/GNEHierarchicalElementChildren.h>
+#include <netedit/GNEHierarchicalParentElements.h>
+#include <netedit/GNEHierarchicalChildElements.h>
 #include <netedit/GNEGeometry.h>
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/geom/PositionVector.h>
@@ -41,7 +40,7 @@ class GNEDemandElement;
 // class definitions
 // ===========================================================================
 
-class GNENetElement : public GUIGlObject, public GNEAttributeCarrier, public GNEHierarchicalElementParents, public GNEHierarchicalElementChildren {
+class GNENetElement : public GUIGlObject, public GNEAttributeCarrier, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements {
 
 public:
     /**@brief Constructor.

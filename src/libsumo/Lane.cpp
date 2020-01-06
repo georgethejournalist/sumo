@@ -15,7 +15,6 @@
 /// @author  Robert Hilbrich
 /// @author  Leonhard Luecken
 /// @date    30.05.2012
-/// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
@@ -300,6 +299,12 @@ Lane::getInternalFoes(const std::string& laneID) {
         }
     }
     return foeIDs;
+}
+
+
+void
+Lane::setAllowed(std::string laneID, std::string allowedClass) {
+    setAllowed(laneID, std::vector<std::string>({allowedClass}));
 }
 
 

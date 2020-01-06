@@ -14,7 +14,6 @@
 # @author  Daniel Krajzewicz
 # @author  Jakob Erdmann
 # @date    2008-10-09
-# @version $Id$
 
 from __future__ import print_function
 from __future__ import absolute_import
@@ -261,8 +260,7 @@ class Connection:
             assert(params is None)
             length = 1 + 1 + 1  # length + CMD + FILTER_ID
             self._string += struct.pack("!BBB", length, command, filterType)
-        elif filterType in (tc.FILTER_TYPE_DOWNSTREAM_DIST, tc.FILTER_TYPE_UPSTREAM_DIST,
-                            tc.FILTER_TYPE_FIELD_OF_VISION):
+        elif filterType in (tc.FILTER_TYPE_DOWNSTREAM_DIST, tc.FILTER_TYPE_UPSTREAM_DIST, tc.FILTER_TYPE_FIELD_OF_VISION, tc.FILTER_TYPE_LATERAL_DIST):
             # filter with float parameter
             assert(type(params) is float)
             length = 1 + 1 + 1 + 1 + 8  # length + CMD + FILTER_ID + floattype + float

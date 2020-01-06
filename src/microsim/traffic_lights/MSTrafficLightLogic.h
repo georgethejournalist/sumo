@@ -14,7 +14,6 @@
 /// @author  Michael Behrisch
 /// @author  Friedemann Wesner
 /// @date    Sept 2002
-/// @version $Id$
 ///
 // The parent class for traffic light logics
 /****************************************************************************/
@@ -153,7 +152,7 @@ public:
 
     /// @brief called when switching programs
     virtual void activateProgram();
-    virtual void deactivateProgram(); 
+    virtual void deactivateProgram();
 
     /** @brief Applies the current signal states to controlled links
      * @param[in] t The current time
@@ -343,6 +342,11 @@ public:
 
     /// @brief whether this logic is selected in the GUI
     bool isSelected() const;
+
+    /// @brief whether this logic is the active program
+    bool isActive() const {
+        return myAmActive;
+    }
 
 protected:
     /**

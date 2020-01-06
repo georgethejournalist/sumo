@@ -12,7 +12,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    11.06.2013
-/// @version $Id$
 ///
 // A device which stands as an implementation example and which outputs movereminder calls
 /****************************************************************************/
@@ -87,6 +86,10 @@ MSDevice_Example::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
     }
 }
 
+void
+MSDevice_Example::cleanup() {
+    // cleaning up global state (if any)
+}
 
 // ---------------------------------------------------------------------------
 // MSDevice_Example-methods
@@ -136,13 +139,12 @@ MSDevice_Example::notifyLeave(SUMOTrafficObject& veh, double /*lastPos*/, MSMove
 
 
 void
-MSDevice_Example::generateOutput() const {
-    if (OptionsCont::getOptions().isSet("tripinfo-output")) {
-        OutputDevice& os = OutputDevice::getDeviceByOption("tripinfo-output");
-        os.openTag("example_device");
-        os.writeAttr("customValue1", toString(myCustomValue1));
-        os.writeAttr("customValue2", toString(myCustomValue2));
-        os.closeTag();
+MSDevice_Example::generateOutput(OutputDevice* tripinfoOut) const {
+    if (tripinfoOut != nullptr) {
+        tripinfoOut->openTag("example_device");
+        tripinfoOut->writeAttr("customValue1", toString(myCustomValue1));
+        tripinfoOut->writeAttr("customValue2", toString(myCustomValue2));
+        tripinfoOut->closeTag();
     }
 }
 

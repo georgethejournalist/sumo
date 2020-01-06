@@ -12,7 +12,6 @@
 # @author  Jakob Erdmann
 # @author  Laura Bieker
 # @date    2008
-# @version $Id$
 
 """
 Does the nightly git pull on the windows server and the visual
@@ -33,8 +32,10 @@ import shutil
 import sys
 
 import status
-import version
 import wix
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sumolib  # noqa
 
 BINARIES = ("activitygen", "emissionsDrivingCycle", "emissionsMap",
             "dfrouter", "duarouter", "jtrrouter", "marouter",
@@ -56,7 +57,7 @@ def repositoryUpdate(options, log):
         subprocess.call(["git", "pull"], stdout=log, stderr=subprocess.STDOUT)
         subprocess.call(["git", "submodule", "update"], stdout=log, stderr=subprocess.STDOUT)
         if gitrev == "":
-            gitrev = version.gitDescribe()
+            gitrev = sumolib.version.gitDescribe()
     os.chdir(cwd)
     return gitrev
 
@@ -231,6 +232,7 @@ for platform in (["x64"] if options.x64only else ["Win32", "x64"]):
                     nameInZip = os.path.join(includeDir, "libsumo", base)
                     if base != "Helper.h":
                         zipf.write(f, nameInZip)
+                zipf.write(os.path.join(buildDir, "src", "version.h"), os.path.join(includeDir, "version.h"))
                 zipf.close()
                 if options.suffix == "":
                     # installers only for the vanilla build

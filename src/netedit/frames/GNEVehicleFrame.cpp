@@ -10,7 +10,6 @@
 /// @file    GNEVehicleFrame.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jan 2018
-/// @version $Id$
 ///
 // The Widget for add Vehicles/Flows/Trips/etc. elements
 /****************************************************************************/
@@ -171,7 +170,7 @@ GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsU
             if ((objectsUnderCursor.getDemandElementFront()->getTagProperty().getTag() == SUMO_TAG_ROUTE) &&
                     (valuesMap.count(SUMO_ATTR_DEPARTLANE) > 0) && GNEAttributeCarrier::canParse<double>(valuesMap[SUMO_ATTR_DEPARTLANE])) {
                 double departLane = GNEAttributeCarrier::parse<double>(valuesMap[SUMO_ATTR_DEPARTLANE]);
-                if (departLane >= objectsUnderCursor.getDemandElementFront()->getEdgeParents().front()->getLanes().size()) {
+                if (departLane >= objectsUnderCursor.getDemandElementFront()->getParentEdges().front()->getLanes().size()) {
                     myViewNet->setStatusBarText("Invalid " + toString(SUMO_ATTR_DEPARTLANE));
                     return false;
                 }
@@ -193,7 +192,7 @@ GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsU
                 // declare SUMOSAXAttributesImpl_Cached to convert valuesMap into SUMOSAXAttributes
                 SUMOSAXAttributesImpl_Cached SUMOSAXAttrs(valuesMap, getPredefinedTagsMML(), toString(vehicleTag));
                 // obtain vehicle parameters in vehicleParameters
-                SUMOVehicleParameter* vehicleParameters = SUMOVehicleParserHelper::parseVehicleAttributes(SUMOSAXAttrs, false);
+                SUMOVehicleParameter* vehicleParameters = SUMOVehicleParserHelper::parseVehicleAttributes(vehicleTag, SUMOSAXAttrs, false);
                 // check if vehicle was sucesfully created)
                 if (vehicleParameters) {
                     // check if we're creating a vehicle over a existent route or over a embedded route
@@ -311,7 +310,7 @@ GNEVehicleFrame::edgePathCreated() {
         valuesMap[SUMO_ATTR_TYPE] = myVTypeSelector->getCurrentDemandElement()->getID();
         // extract via attribute
         std::vector<GNEEdge*> viaEdges;
-        for (int i = 1; i < ((int)myEdgePathCreator->getClickedEdges().size()-1); i++) {
+        for (int i = 1; i < ((int)myEdgePathCreator->getClickedEdges().size() - 1); i++) {
             viaEdges.push_back(myEdgePathCreator->getClickedEdges().at(i));
         }
         // check if we're creating a trip or flow
@@ -323,7 +322,7 @@ GNEVehicleFrame::edgePathCreated() {
             // declare SUMOSAXAttributesImpl_Cached to convert valuesMap into SUMOSAXAttributes
             SUMOSAXAttributesImpl_Cached SUMOSAXAttrs(valuesMap, getPredefinedTagsMML(), toString(vehicleTag));
             // obtain trip parameters
-            SUMOVehicleParameter* tripParameters = SUMOVehicleParserHelper::parseVehicleAttributes(SUMOSAXAttrs, false);
+            SUMOVehicleParameter* tripParameters = SUMOVehicleParserHelper::parseVehicleAttributes(vehicleTag, SUMOSAXAttrs, false);
             // build trip in GNERouteHandler
             GNERouteHandler::buildTrip(myViewNet, true, *tripParameters, myEdgePathCreator->getClickedEdges().front(), myEdgePathCreator->getClickedEdges().back(), viaEdges);
             // delete tripParameters

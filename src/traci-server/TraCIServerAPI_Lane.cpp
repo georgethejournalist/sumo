@@ -15,7 +15,6 @@
 /// @author  Mario Krumnow
 /// @author  Leonhard Luecken
 /// @date    07.05.2009
-/// @version $Id$
 ///
 // APIs for getting/setting lane values via TraCI
 /****************************************************************************/
@@ -31,7 +30,7 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicle.h>
-#include <microsim/MSTransportable.h>
+#include <microsim/transportables/MSTransportable.h>
 #include <libsumo/Lane.h>
 #include <libsumo/TraCIConstants.h>
 #include "TraCIServer.h"

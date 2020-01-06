@@ -10,7 +10,6 @@
 /// @file    GNELane.cpp
 /// @author  Jakob Erdmann
 /// @date    Feb 2011
-/// @version $Id$
 ///
 // A class for visualizing Lane geometry (adapted from GNELaneWrapper)
 /****************************************************************************/
@@ -113,27 +112,27 @@ GNELane::updateGeometry() {
     // update connections
     myLane2laneConnections.updateLane2laneConnection();
     // update shapes parents associated with this lane
-    for (auto i : getShapeParents()) {
+    for (auto i : getParentShapes()) {
         i->updateGeometry();
     }
-    // update shape children associated with this lane
-    for (auto i : getShapeChildren()) {
+    // update child shapes associated with this lane
+    for (auto i : getChildShapes()) {
         i->updateGeometry();
     }
     // update additionals children associated with this lane
-    for (auto i : getAdditionalParents()) {
+    for (auto i : getParentAdditionals()) {
         i->updateGeometry();
     }
     // update additionals parents associated with this lane
-    for (auto i : getAdditionalChildren()) {
+    for (auto i : getChildAdditionals()) {
         i->updateGeometry();
     }
     // partial update demand elements parents associated with this lane
-    for (auto i : getDemandElementParents()) {
+    for (auto i : getParentDemandElements()) {
         i->updatePartialGeometry(myParentEdge);
     }
     // partial update demand elements children associated with this lane
-    for (auto i : getDemandElementChildren()) {
+    for (auto i : getChildDemandElements()) {
         i->updatePartialGeometry(myParentEdge);
     }
     // In Move mode, connections aren't updated
@@ -351,7 +350,7 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
     const RGBColor color = setLaneColor(s);
     // start drawing lane checking whether it is not too small
     const double selectionScale = isAttributeCarrierSelected() || myParentEdge->isAttributeCarrierSelected() ? s.selectionScale : 1;
-    double exaggeration = selectionScale * s.laneWidthExaggeration; // * s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
+    const double exaggeration = selectionScale * s.laneWidthExaggeration; // * s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
     // XXX apply usefull scale values
     //exaggeration *= s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
     // recognize full transparency and simply don't draw
@@ -372,18 +371,18 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         // Pop Lane Name
         glPopName();
         // draw parents
-        for (const auto& i : getAdditionalParents()) {
+        for (const auto& i : getParentAdditionals()) {
             if (i->getTagProperty().getTag() == SUMO_TAG_VSS) {
                 // draw VSS Symbol
                 drawVSSSymbol(s, i);
             }
         }
-        // draw shape children
-        for (const auto& i : getShapeChildren()) {
-            i->drawGL(s);
+        // draw child shapes
+        for (const auto& POILane : getChildShapes()) {
+            POILane->drawGL(s);
         }
-        // draw additional children
-        for (const auto& additional : getAdditionalChildren()) {
+        // draw child additional
+        for (const auto& additional : getChildAdditionals()) {
             //draw partial E2 detectors
             if (additional->getTagProperty().getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
                 drawPartialE2DetectorPlan(s, additional, nullptr);
@@ -392,8 +391,8 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
                 additional->drawGL(s);
             }
         }
-        // draw demand element children
-        for (const auto& i : getDemandElementChildren()) {
+        // draw child demand elements
+        for (const auto& i : getChildDemandElements()) {
             if (!i->getTagProperty().isPlacedInRTree()) {
                 i->drawGL(s);
             }
@@ -450,7 +449,7 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         // Pop draw matrix 1
         glPopMatrix();
         // only draw details depending of the scale and if isn't being drawn for selecting
-        if ((s.scale >= 10) && !s.drawForRectangleSelection) {
+        if ((s.scale >= 10) && !s.drawForRectangleSelection && !s.drawForPositionSelection) {
             // if exaggeration is 1, draw drawMarkings
             if (s.laneShowBorders && exaggeration == 1 && !drawAsRailway(s)) {
                 drawMarkings(s, exaggeration);
@@ -477,7 +476,8 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
             }
         }
         // If there are texture of restricted lanes to draw, check if icons can be drawn
-        if (!s.drawForRectangleSelection && !s.disableLaneIcons && (myLaneRestrictedTexturePositions.size() > 0) && s.drawDetail(s.detailSettings.laneTextures, exaggeration)) {
+        if (!s.drawForRectangleSelection && !s.drawForPositionSelection && !s.disableLaneIcons && 
+            (myLaneRestrictedTexturePositions.size() > 0) && s.drawDetail(s.detailSettings.laneTextures, exaggeration)) {
             // Declare default width of icon (3)
             double iconWidth = 1;
             // Obtain width of icon, if width of lane is different
@@ -514,18 +514,18 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         // Pop Lane Name
         glPopName();
         // draw parents
-        for (const auto& i : getAdditionalParents()) {
-            if (i->getTagProperty().getTag() == SUMO_TAG_VSS) {
+        for (const auto& VSS : getParentAdditionals()) {
+            if (VSS->getTagProperty().getTag() == SUMO_TAG_VSS) {
                 // draw VSS Symbol
-                drawVSSSymbol(s, i);
+                drawVSSSymbol(s, VSS);
             }
         }
-        // draw shape children
-        for (const auto& i : getShapeChildren()) {
-            i->drawGL(s);
+        // draw child shapes
+        for (const auto& POILane : getChildShapes()) {
+            POILane->drawGL(s);
         }
-        // draw additional children
-        for (const auto& additional : getAdditionalChildren()) {
+        // draw child additional
+        for (const auto& additional : getChildAdditionals()) {
             //draw partial E2 detectors
             if (additional->getTagProperty().getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
                 drawPartialE2DetectorPlan(s, additional, nullptr);
@@ -534,8 +534,8 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
                 additional->drawGL(s);
             }
         }
-        // draw demand element children
-        for (const auto& i : getDemandElementChildren()) {
+        // draw child demand elements
+        for (const auto& i : getChildDemandElements()) {
             if (!i->getTagProperty().isPlacedInRTree()) {
                 i->drawGL(s);
             }
@@ -590,7 +590,7 @@ GNELane::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
     buildCenterPopupEntry(ret);
     // build copy names entry
     if (editMode != GNE_NMODE_TLS) {
-        new FXMenuCommand(ret, "Copy edge parent name to clipboard", nullptr, ret, MID_COPY_EDGE_NAME);
+        new FXMenuCommand(ret, "Copy parent edge name to clipboard", nullptr, ret, MID_COPY_EDGE_NAME);
         buildNameCopyPopupEntry(ret);
     }
     // build selection
@@ -812,7 +812,7 @@ GNELane::isRestricted(SUMOVehicleClass vclass) const {
 }
 
 
-const GNEGeometry::Lane2laneConnection &
+const GNEGeometry::Lane2laneConnection&
 GNELane::getLane2laneConnections() const {
     return myLane2laneConnections;
 }
@@ -919,7 +919,7 @@ GNELane::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 
-bool 
+bool
 GNELane::isAttributeEnabled(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_ID:
@@ -938,7 +938,7 @@ GNELane::setSpecialColor(const RGBColor* color, double colorValue) {
 }
 
 
-void 
+void
 GNELane::drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEAdditional* E2Detector, const GNEJunction* junction) const {
     // calculate E2Detector width
     //double E2DetectorWidth = s.addSize.getExaggeration(s, this) * s.widthSettings.E2Detector;
@@ -959,7 +959,7 @@ GNELane::drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEA
     // draw E2Detector
     if (junction) {
         // iterate over segments
-        for (const auto &segment : E2Detector->getAdditionalSegmentGeometry()) {
+        for (const auto& segment : E2Detector->getAdditionalSegmentGeometry()) {
             // draw partial segment
             if ((segment.junction == junction) && (segment.AC == E2Detector)) {
                 // Set E2Detector color (needed due drawShapeDottedContour)
@@ -974,7 +974,7 @@ GNELane::drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEA
         }
     } else {
         // iterate over segments
-        for (const auto &segment : E2Detector->getAdditionalSegmentGeometry()) {
+        for (const auto& segment : E2Detector->getAdditionalSegmentGeometry()) {
             // draw partial segment
             if ((segment.lane == this) && (segment.AC == E2Detector)) {
                 // Set E2Detector color (needed due drawShapeDottedContour)
@@ -1028,11 +1028,11 @@ GNELane::setAttribute(SumoXMLAttr key, const std::string& value) {
             edge->setAcceleration(myIndex, parse<bool>(value));
             break;
         case SUMO_ATTR_CUSTOMSHAPE: {
-            // first remove edge parent from net
+            // first remove parent edge from net
             myNet->removeGLObjectFromGrid(myParentEdge);
             // set new shape
             edge->setLaneShape(myIndex, parse<PositionVector>(value));
-            // add edge parent into net again
+            // add parent edge into net again
             myNet->addGLObjectIntoGrid(myParentEdge);
             break;
         }
@@ -1062,7 +1062,7 @@ GNELane::setLaneColor(const GUIVisualizationSettings& s) const {
         std::vector<std::string> viaEdges = parse<std::vector<std::string> >(myNet->getViewNet()->getDottedAC()->getAttribute(SUMO_ATTR_VIA));
         // iterate over viaEdges
         for (const auto& i : viaEdges) {
-            // check if edge parent is in the via edges
+            // check if parent edge is in the via edges
             if (myParentEdge->getID() == i) {
                 // set green color in GLHelper and return it
                 GLHelper::setColor(RGBColor::GREEN);
@@ -1224,7 +1224,7 @@ GNELane::drawAsRailway(const GUIVisualizationSettings& s) const {
     return isRailway(myParentEdge->getNBEdge()->getPermissions(myIndex)) && s.showRails && (!s.drawForRectangleSelection || s.spreadSuperposed);
 }
 
- 
+
 bool
 GNELane::drawAsWaterway(const GUIVisualizationSettings& s) const {
     return isWaterway(myParentEdge->getNBEdge()->getPermissions(myIndex)) && s.showRails && !s.drawForRectangleSelection; // reusing the showRails setting
@@ -1327,8 +1327,10 @@ GNELane::drawStartEndShapePoints(const GUIVisualizationSettings& s) const {
         glPushMatrix();
         glTranslated(customShape.front().x(), customShape.front().y(), GLO_JUNCTION + 0.01);
         GLHelper::drawFilledCircle(circleWidth, s.getCircleResolution());
-        glTranslated(0, 0, 0.01);
-        GLHelper::drawText("S", Position(), 0, circleWidth, RGBColor::WHITE);
+        if (!s.drawForPositionSelection) {
+            glTranslated(0, 0, 0.01);
+            GLHelper::drawText("S", Position(), 0, circleWidth, RGBColor::WHITE);
+        }
         glPopMatrix();
     }
     // draw line between Junction and point
@@ -1342,8 +1344,10 @@ GNELane::drawStartEndShapePoints(const GUIVisualizationSettings& s) const {
         glPushMatrix();
         glTranslated(customShape.back().x(), customShape.back().y(), GLO_JUNCTION + 0.01);
         GLHelper::drawFilledCircle(circleWidth, s.getCircleResolution());
-        glTranslated(0, 0, 0.01);
-        GLHelper::drawText("E", Position(), 0, circleWidth, RGBColor::WHITE);
+        if (!s.drawForPositionSelection) {
+            glTranslated(0, 0, 0.01);
+            GLHelper::drawText("E", Position(), 0, circleWidth, RGBColor::WHITE);
+        }
         glPopMatrix();
     }
     // draw line between Junction and point
@@ -1397,7 +1401,7 @@ GNELane::getGNEIncomingConnections() {
 
 std::vector<GNEConnection*>
 GNELane::getGNEOutcomingConnections() {
-    // Obtain GNEConnection of edge parent
+    // Obtain GNEConnection of parent edge
     const std::vector<GNEConnection*>& edgeConnections = myParentEdge->getGNEConnections();
     std::vector<GNEConnection*> outcomingConnections;
     // Obtain outgoing connections
@@ -1439,28 +1443,28 @@ GNELane::getLengthGeometryFactor() const {
 void
 GNELane::startGeometryMoving() {
     // Lanes don't need to save the current Centering Boundary, due they are parts of an Edge
-    // Save current centering boundary of shape children
-    for (auto i : getShapeChildren()) {
+    // Save current centering boundary of child shapes
+    for (auto i : getChildShapes()) {
         i->startGeometryMoving();
     }
     // Save current centering boundary of shapes with this lane as chid
-    for (auto i : getShapeParents()) {
+    for (auto i : getParentShapes()) {
         i->startGeometryMoving();
     }
-    // Save current centering boundary of additional children
-    for (auto i : getAdditionalChildren()) {
+    // Save current centering boundary of child additional
+    for (auto i : getChildAdditionals()) {
         i->startGeometryMoving();
     }
     // Save current centering boundary of additionals with this lane as chid
-    for (auto i : getAdditionalParents()) {
+    for (auto i : getParentAdditionals()) {
         i->startGeometryMoving();
     }
-    // Save current centering boundary of demand element children
-    for (auto i : getDemandElementChildren()) {
+    // Save current centering boundary of child demand elements
+    for (auto i : getChildDemandElements()) {
         i->startGeometryMoving();
     }
     // Save current centering boundary of demand element with this lane as chid
-    for (auto i : getDemandElementParents()) {
+    for (auto i : getParentDemandElements()) {
         i->startGeometryMoving();
     }
 }
@@ -1470,27 +1474,27 @@ void
 GNELane::endGeometryMoving() {
     // Lanes don't need to save the current Centering Boundary, due they are parts of an Edge
     // Restore centering boundary of shapes with this lane as chid
-    for (auto i : getShapeChildren()) {
+    for (auto i : getChildShapes()) {
         i->endGeometryMoving();
     }
     // Restore centering boundary of shapes with this lane as chid
-    for (auto i : getShapeParents()) {
+    for (auto i : getParentShapes()) {
         i->endGeometryMoving();
     }
     // Restore centering boundary of additionals with this lane as chid
-    for (auto i : getAdditionalChildren()) {
+    for (auto i : getChildAdditionals()) {
         i->endGeometryMoving();
     }
     // Restore centering boundary of additionals with this lane as chid
-    for (auto i : getAdditionalParents()) {
+    for (auto i : getParentAdditionals()) {
         i->endGeometryMoving();
     }
     // Restore centering boundary of demand elements with this lane as chid
-    for (auto i : getDemandElementChildren()) {
+    for (auto i : getChildDemandElements()) {
         i->endGeometryMoving();
     }
     // Restore centering boundary of demand elements with this lane as chid
-    for (auto i : getDemandElementParents()) {
+    for (auto i : getParentDemandElements()) {
         i->endGeometryMoving();
     }
 }

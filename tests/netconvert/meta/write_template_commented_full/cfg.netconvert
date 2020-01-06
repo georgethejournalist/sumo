@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Thu Nov 21 22:13:58 2019 by Eclipse SUMO netconvert Version v1_3_1+0985-d8cef81c9e
+<!-- generated on Fri Jan  3 00:45:20 2020 by Eclipse SUMO netconvert Version v1_4_0+0301-c36eaff1a1
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
@@ -154,7 +154,7 @@
         <railway.topology.output value="" type="FILE"/>
 
         <!-- Write shapes that are embedded in the network input and that are not supported by polyconvert (OpenDRIVE) -->
-        <polygon-output value="" type="FILE"/>
+        <polygon-output value="" synonymes="taz-output" type="FILE"/>
 
         <!-- Builds parameterized curves whenever the angular change  between straight segments exceeds FLOAT degrees -->
         <opendrive-output.straight-threshold value="1e-08" type="FLOAT"/>
@@ -206,6 +206,12 @@
 
         <!-- Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers -->
         <numerical-ids value="false" type="BOOL"/>
+
+        <!-- Remaps IDs of nodes to integers starting at INT -->
+        <numerical-ids.node-start value="2147483647" type="INT"/>
+
+        <!-- Remaps IDs of edges to integers starting at INT -->
+        <numerical-ids.edge-start value="2147483647" type="INT"/>
 
         <!-- Ensures that generated ids do not included any of the typed IDs from FILE (SUMO-GUI selection file format) -->
         <reserved-ids value="" type="FILE"/>
@@ -555,6 +561,9 @@
         <!-- Disables building turnarounds except at dead end junctions -->
         <no-turnarounds.except-deadend value="false" type="BOOL"/>
 
+        <!-- Disables building turnarounds except at at junctions with a dedicated turning lane -->
+        <no-turnarounds.except-turnlane value="false" type="BOOL"/>
+
         <!-- Disables building connections to left -->
         <no-left-connections value="false" type="BOOL"/>
 
@@ -665,6 +674,9 @@
 
         <!-- Make all rails usable in both direction -->
         <railway.topology.all-bidi value="false" type="BOOL"/>
+
+        <!-- Make all rails edge ids from FILE usable in both direction -->
+        <railway.topology.all-bidi.input-file value="" type="FILE"/>
 
         <!-- The search radius for finding suitable road accesses for rail stops -->
         <railway.access-distance value="150" synonymes="osm.stop-output.footway-access-distance" type="FLOAT"/>
@@ -781,7 +793,7 @@
         <visum.connectors-lane-number value="3" synonymes="visum.connector-laneno" type="INT"/>
 
         <!-- Excludes connectors -->
-        <visum.no-connectors value="false" type="BOOL"/>
+        <visum.no-connectors value="true" type="BOOL"/>
 
         <!-- Computes the number of lanes from the edges&apos; capacities -->
         <visum.recompute-lane-number value="false" synonymes="visum.recompute-laneno" type="BOOL"/>

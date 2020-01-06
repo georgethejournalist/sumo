@@ -14,7 +14,6 @@
 /// @author  Walter Bamberger
 /// @author  Laura Bieker-Walz
 /// @date    2006-01-24
-/// @version $Id$
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
@@ -153,6 +152,8 @@ const std::string DEFAULT_VTYPE_ID("DEFAULT_VEHTYPE");
 const std::string DEFAULT_PEDTYPE_ID("DEFAULT_PEDTYPE");
 
 const std::string DEFAULT_BIKETYPE_ID("DEFAULT_BIKETYPE");
+
+const std::string DEFAULT_CONTAINERTYPE_ID("DEFAULT_CONTAINERTYPE");
 
 const double DEFAULT_VEH_PROB(1.);
 

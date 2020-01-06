@@ -11,7 +11,6 @@
 # @file    launcher.py
 # @author  Jakob Erdmann
 # @date    2015-01-18
-# @version $Id$
 
 from __future__ import absolute_import
 import os
@@ -182,7 +181,7 @@ class Launcher:
 
 def parse_help(app):
     binary = os.path.join(BINDIR, app)
-    reOpt = re.compile("--([^ ]*) (\w*) (.*$)")
+    reOpt = re.compile(r"--([^ ]*) (\w*) (.*$)")
     helpstring = subprocess.check_output([binary, '--help'])
     options = []
     optName = None

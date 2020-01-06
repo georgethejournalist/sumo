@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Mon, 26.04.2004
-/// @version $Id$
 ///
 // Builds trigger objects for guisim
 /****************************************************************************/
@@ -33,6 +32,7 @@
 #include <guisim/GUIParkingArea.h>
 #include <guisim/GUICalibrator.h>
 #include <guisim/GUIChargingStation.h>
+#include <guisim/GUIOverheadWire.h>
 #include "GUITriggerBuilder.h"
 
 
@@ -114,6 +114,24 @@ GUITriggerBuilder::buildChargingStation(MSNet& net, const std::string& id, MSLan
     }
     myCurrentStop = chargingStation;
     static_cast<GUINet&>(net).getVisualisationSpeedUp().addAdditionalGLObject(chargingStation);
+}
+
+
+void
+GUITriggerBuilder::buildOverheadWireSegment(MSNet& net, const std::string& id, MSLane* lane, double frompos, double topos,
+    bool voltageSource) {
+    GUIOverheadWire* overheadWire = new GUIOverheadWire(id, *lane, frompos, topos, voltageSource);
+    if (!net.addStoppingPlace(SUMO_TAG_OVERHEAD_WIRE_SEGMENT, overheadWire)) {
+        delete overheadWire;
+        throw InvalidArgument("Could not build overheadWireSegment '" + id + "'; probably declared twice.");
+    }
+    static_cast<GUINet&>(net).getVisualisationSpeedUp().addAdditionalGLObject(overheadWire);
+}
+
+void
+GUITriggerBuilder::buildOverheadWireClamp(MSNet& net, const std::string& id, MSLane* lane_start, MSLane* lane_end) {
+    GUIOverheadWireClamp* overheadWireClamp = new GUIOverheadWireClamp(id, *lane_start, *lane_end);
+    static_cast<GUINet&>(net).getVisualisationSpeedUp().addAdditionalGLObject(overheadWireClamp);
 }
 
 

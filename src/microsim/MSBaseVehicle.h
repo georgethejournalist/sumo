@@ -12,7 +12,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    Mon, 8 Nov 2010
-/// @version $Id$
 ///
 // A base class for vehicle implementations
 /****************************************************************************/
@@ -80,14 +79,20 @@ public:
         return true;
     }
 
-    /// Returns the name of the vehicle
-    const std::string& getID() const;
+    /// @brief set the id (inherited from Named but forbidden for vehicles)
+    void setID(const std::string& newID); 
 
     /** @brief Returns the vehicle's parameter (including departure definition)
      *
      * @return The vehicle's parameter
      */
     const SUMOVehicleParameter& getParameter() const;
+
+    /** @brief Returns the vehicle's emission model parameter
+     *
+     * @return The vehicle's emission parameters
+     */
+    const std::map<int, double>* getEmissionParameters() const;
 
     /// @brief replace the vehicle parameter (deleting the old one)
     void replaceParameter(const SUMOVehicleParameter* newParameter);
@@ -299,6 +304,10 @@ public:
     /// @brief reset index of edge within route
     void resetRoutePosition(int index, DepartLaneDefinition departLaneProcedure);
 
+    /** @brief Returns the distance that was already driven by this vehicle
+     * @return the distance driven [m]
+     */
+    double getOdometer() const;
 
     /** @brief Returns the number of new routes this vehicle got
      * @return the number of new routes this vehicle got
@@ -333,22 +342,14 @@ public:
         return myDevices;
     }
 
-    /** @brief Adds a person to this vehicle
-     *
-     * The default implementation does nothing since persons are not supported by default
-     *
-     * @param[in] person The person to add
-     */
-    virtual void addPerson(MSTransportable* person);
+    /// @brief whether the given transportable is allowed to board this vehicle
+    bool allowsBoarding(MSTransportable* t) const;
 
-
-    /** @brief Adds a container to this vehicle
+    /** @brief Adds a person or container to this vehicle
      *
-     * The default implementation does nothing since containers are not supported by default
-     *
-     * @param[in] container The container to add
+     * @param[in] transportable The person/container to add
      */
-    virtual void addContainer(MSTransportable* container);
+    virtual void addTransportable(MSTransportable* transportable);
 
     /// @brief removes a person or container
     void removeTransportable(MSTransportable* t);
@@ -552,6 +553,9 @@ protected:
 
     /// @brief The number of reroutings
     int myNumberReroutes;
+
+    /// @brief A simple odometer to keep track of the length of the route already driven
+    double myOdometer;
 
     /* @brief magic value for undeparted vehicles
      * @note: in previous versions this was -1

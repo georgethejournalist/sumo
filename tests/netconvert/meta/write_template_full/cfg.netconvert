@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Thu Nov 21 22:13:58 2019 by Eclipse SUMO netconvert Version v1_3_1+0985-d8cef81c9e
+<!-- generated on Fri Jan  3 00:45:20 2020 by Eclipse SUMO netconvert Version v1_4_0+0301-c36eaff1a1
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
@@ -59,7 +59,7 @@
         <ptline-clean-up value="false" type="BOOL" help="Clean-up pt stops that are not served by any line"/>
         <parking-output value="" type="FILE" help="Writes parking areas to FILE"/>
         <railway.topology.output value="" type="FILE" help="Analyse topology of the railway network"/>
-        <polygon-output value="" type="FILE" help="Write shapes that are embedded in the network input and that are not supported by polyconvert (OpenDRIVE)"/>
+        <polygon-output value="" synonymes="taz-output" type="FILE" help="Write shapes that are embedded in the network input and that are not supported by polyconvert (OpenDRIVE)"/>
         <opendrive-output.straight-threshold value="1e-08" type="FLOAT" help="Builds parameterized curves whenever the angular change  between straight segments exceeds FLOAT degrees"/>
     </output>
 
@@ -81,6 +81,8 @@
         <flatten value="false" type="BOOL" help="Remove all z-data"/>
         <plain.extend-edge-shape value="false" synonymes="xml.keep-shape" type="BOOL" help="If edge shapes do not end at the node positions, extend them"/>
         <numerical-ids value="false" type="BOOL" help="Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers"/>
+        <numerical-ids.node-start value="2147483647" type="INT" help="Remaps IDs of nodes to integers starting at INT"/>
+        <numerical-ids.edge-start value="2147483647" type="INT" help="Remaps IDs of edges to integers starting at INT"/>
         <reserved-ids value="" type="FILE" help="Ensures that generated ids do not included any of the typed IDs from FILE (SUMO-GUI selection file format)"/>
         <dismiss-vclasses value="false" type="BOOL" help="Removes vehicle class restrictions from imported edges"/>
         <geometry.split value="false" synonymes="split-geometry" type="BOOL" help="Splits edges across geometry nodes"/>
@@ -209,6 +211,7 @@
         <no-turnarounds.tls value="false" synonymes="no-tls-turnarounds" type="BOOL" help="Disables building turnarounds at tls-controlled junctions"/>
         <no-turnarounds.geometry value="true" type="BOOL" help="Disables building turnarounds at geometry-like junctions"/>
         <no-turnarounds.except-deadend value="false" type="BOOL" help="Disables building turnarounds except at dead end junctions"/>
+        <no-turnarounds.except-turnlane value="false" type="BOOL" help="Disables building turnarounds except at at junctions with a dedicated turning lane"/>
         <no-left-connections value="false" type="BOOL" help="Disables building connections to left"/>
         <junctions.join value="false" type="BOOL" help="Joins junctions that are close to each other (recommended for OSM import)"/>
         <junctions.join-dist value="10" type="FLOAT" help="Determines the maximal distance for joining junctions (defaults to 10)"/>
@@ -252,6 +255,7 @@
         <railway.topology.repair value="false" type="BOOL" help="Repair topology of the railway network"/>
         <railway.topology.repair.connect-straight value="false" type="BOOL" help="Allow bidiretional rail use wherever rails with opposite directions meet at a straight angle"/>
         <railway.topology.all-bidi value="false" type="BOOL" help="Make all rails usable in both direction"/>
+        <railway.topology.all-bidi.input-file value="" type="FILE" help="Make all rails edge ids from FILE usable in both direction"/>
         <railway.access-distance value="150" synonymes="osm.stop-output.footway-access-distance" type="FLOAT" help="The search radius for finding suitable road accesses for rail stops"/>
         <railway.max-accesses value="5" synonymes="osm.stop-output.footway-max-accesses" type="INT" help="The maximum roud accesses registered per rail stops"/>
         <railway.access-factor value="1.5" synonymes="osm.stop-output.footway-access-factor" type="FLOAT" help="The walking length of the access is computed as air-line distance multiplied by FLOAT"/>
@@ -292,7 +296,7 @@
         <visum.use-type-speed value="false" type="BOOL" help="Uses speeds from types"/>
         <visum.connector-speeds value="100" type="FLOAT" help="Sets connector speed"/>
         <visum.connectors-lane-number value="3" synonymes="visum.connector-laneno" type="INT" help="Sets connector lane number"/>
-        <visum.no-connectors value="false" type="BOOL" help="Excludes connectors"/>
+        <visum.no-connectors value="true" type="BOOL" help="Excludes connectors"/>
         <visum.recompute-lane-number value="false" synonymes="visum.recompute-laneno" type="BOOL" help="Computes the number of lanes from the edges&apos; capacities"/>
         <visum.verbose-warnings value="false" type="BOOL" help="Prints all warnings, some of which are due to VISUM misbehaviour"/>
         <visum.lanes-from-capacity.norm value="1800" synonymes="capacity-norm lanes-from-capacity.norm" type="FLOAT" help="The factor for flow to no. lanes conversion"/>

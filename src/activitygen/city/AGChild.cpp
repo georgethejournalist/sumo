@@ -16,7 +16,6 @@
 /// @author  Walter Bamberger
 /// @author  Michael Behrisch
 /// @date    July 2010
-/// @version $Id$
 ///
 // Person in age to go to school: linked to a school object
 /****************************************************************************/
@@ -39,7 +38,7 @@
 // ===========================================================================
 void
 AGChild::print() const {
-    std::cout << "- Child: Age=" << age << " School=" << school << std::endl;
+    std::cout << "- Child: Age=" << age << " School=" << mySchool << std::endl;
 }
 
 bool
@@ -49,7 +48,7 @@ AGChild::setSchool(AGSchool* school) {
     }
     bool enoughPlace = school->addNewChild();
     if (enoughPlace) {
-        this->school = school;
+        mySchool = school;
     }
     return enoughPlace;
 }
@@ -74,32 +73,32 @@ AGChild::allocateASchool(std::list<AGSchool>* schools, AGPosition housePos) {
 
 bool
 AGChild::leaveSchool() {
-    if (school != nullptr)
-        if (!school->removeChild()) {
+    if (mySchool != nullptr)
+        if (!mySchool->removeChild()) {
             return false;
         }
-    school = nullptr;
+    mySchool = nullptr;
     return true;
 }
 
 bool
 AGChild::haveASchool() const {
-    return (school != nullptr);
+    return (mySchool != nullptr);
 }
 
 AGPosition
 AGChild::getSchoolLocation() const {
-    return school->getPosition();
+    return mySchool->getPosition();
 }
 
 int
 AGChild::getSchoolClosing() const {
-    return school->getClosingHour();
+    return mySchool->getClosingHour();
 }
 
 int
 AGChild::getSchoolOpening() const {
-    return school->getOpeningHour();
+    return mySchool->getOpeningHour();
 }
 
 /****************************************************************************/

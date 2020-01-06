@@ -13,7 +13,6 @@
 # @author  Michael Behrisch
 # @author  Laura Bieker
 # @date    2013-12-08
-# @version $Id$
 
 
 from __future__ import print_function
@@ -59,7 +58,7 @@ def get_options():
 
 def row2xml(row, tag, close="/>\n", depth=1):
     attrString = ' '.join(['%s="%s"' % (a[len(tag) + 1:], v)
-                           for a, v in row.items() if v != "" and a.startswith(tag)])
+                           for a, v in row.items() if v != "" and a.startswith(tag + "_")])
     return (u'%s<%s %s%s' % ((depth * '    '), tag, attrString, close))
 
 

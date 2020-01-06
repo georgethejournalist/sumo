@@ -19,7 +19,6 @@
 /// @author  Axel Wegener
 /// @author  Leonhard Luecken
 /// @date    Mon, 12 Mar 2001
-/// @version $Id$
 ///
 // Representation of a vehicle in the micro simulation
 /****************************************************************************/
@@ -58,13 +57,13 @@ class MSVehicleTransfer;
 class MSAbstractLaneChangeModel;
 class MSStoppingPlace;
 class MSChargingStation;
+class MSOverheadWire;
 class MSParkingArea;
 class MSPerson;
 class MSDevice;
 class MSEdgeWeightsStorage;
 class OutputDevice;
 class Position;
-class MSContainer;
 class MSJunction;
 class MSLeaderInfo;
 class MSDevice_DriverState;
@@ -867,6 +866,21 @@ public:
      */
     const std::vector<MSLane*>& getBestLanesContinuation(const MSLane* const l) const;
 
+    /** @brief Returns the upcoming (best followed by default 0) sequence of lanes to continue the route starting at the current lane
+     * @param[in] distance The downstream distance to cover
+     * @return The bestContinuations of the LaneQ for myLane (see LaneQ) concatenated with default following lanes up until
+     *  the given distance has been covered
+     * @note includes initial internal lanes if applicable
+     */
+    const std::vector<const MSLane*> getUpcomingLanesUntil(double distance) const;
+
+    /** @brief Returns the sequence of past lanes (right-most on edge) based on the route starting at the current lane
+     * @param[in] distance The upstream distance to cover
+     * @return The myRoute-based past lanes (right-most on edge) up until the given distance has been covered
+     * @note includes initial internal lanes if applicable
+     */
+    const std::vector<const MSLane*> getPastLanesUntil(double distance) const;
+
     /* @brief returns the current signed offset from the lane that is most
      * suited for continuing the current route (in the strategic sense of reducing lane-changes)
      * - 0 if the vehicle is one it's best lane
@@ -933,6 +947,9 @@ public:
         MSParkingArea* parkingarea = nullptr;
         /// @brief (Optional) charging station if one is assigned to the stop
         MSStoppingPlace* chargingStation = nullptr;
+        /// @brief (Optional) overhead wire segment if one is assigned to the stop
+        /// @todo Check that this should really be a stopping place instance
+        MSStoppingPlace* overheadWireSegment = nullptr;
         /// @brief The stop parameter
         const SUMOVehicleParameter::Stop pars;
         /// @brief The stopping duration
@@ -941,6 +958,8 @@ public:
         bool triggered = false;
         /// @brief whether an arriving container lets the vehicle continue
         bool containerTriggered = false;
+        /// @brief whether coupling another vehicle (train) the vehicle continue
+        bool joinTriggered = false;
         /// @brief Information whether the stop has been reached
         bool reached = false;
         /// @brief The number of still expected persons
@@ -953,7 +972,7 @@ public:
         SUMOTime timeToLoadNextContainer = 0;
         /// @brief Whether this stop was triggered by a collision
         bool collision = false;
-        /// @brief the maximum time at which persons may board this vehicle 
+        /// @brief the maximum time at which persons may board this vehicle
         SUMOTime endBoarding = SUMOTime_MAX;
 
         /// @brief Write the current stop configuration (used for state saving)
@@ -1015,7 +1034,7 @@ public:
 
     /** @brief Returns whether the vehicle stops at the given stopping place */
     bool stopsAt(MSStoppingPlace* stop) const;
-    
+
     /** @brief Returns whether the vehicle stops at the given edge */
     bool stopsAtEdge(const MSEdge* edge) const;
 
@@ -1087,6 +1106,10 @@ public:
      */
     double processNextStop(double currentVelocity);
 
+
+    /// @brief handle joining of another vehicle to this one (to resolve joinTriggered)
+    bool joinTrainPart(MSVehicle* veh);
+
     /** @brief Returns the leader of the vehicle looking for a fixed distance.
      *
      * If the distance is not given it is calculated from the brake gap.
@@ -1148,6 +1171,17 @@ public:
     */
     double getElectricityConsumption() const;
 
+    /** @brief Returns actual state of charge of battery (Wh)
+    * RICE_CHECK: This may be a misnomer, SOC is typically percentage of the maximum battery capacity.
+    * @return The actual battery state of charge
+    */
+    double getStateOfCharge() const;
+
+    /** @brief Returns actual current (A) of ElecHybrid device
+    * RICE_CHECK: Is this the current consumed from the overhead wire or the current driving the poweertrain of the vehicle?
+    * @return The current of ElecHybrid device
+    */
+    double getElecHybridCurrent() const;
 
     /** @brief Returns noise emissions of the current state
      * @return The noise produced
@@ -1155,23 +1189,11 @@ public:
     double getHarmonoise_NoiseEmissions() const;
     //@}
 
-
-
-    /// @name Interaction with persons
-    //@{
-
-    /** @brief Adds a passenger
-     * @param[in] person The person to add
+    /** @brief Adds a person or container to this vehicle
+     *
+     * @param[in] transportable The person/container to add
      */
-    void addPerson(MSTransportable* person);
-
-    /// @name Interaction with containers
-    //@{
-
-    /** @brief Adds a container
-     * @param[in] container The container to add
-     */
-    void addContainer(MSTransportable* container);
+    void addTransportable(MSTransportable* transportable);
 
     /// @name Access to bool signals
     /// @{
@@ -1337,6 +1359,8 @@ public:
     */
     bool resumeFromStopping();
 
+    /// @brief deletes the next stop if it exists
+    void abortNextStop();
 
     /// @brief update a vector of further lanes and return the new backPos
     double updateFurtherLanes(std::vector<MSLane*>& furtherLanes,
@@ -1360,7 +1384,7 @@ public:
         /// @brief not manouevring
         MANOEUVRE_NONE
     };
-    
+
     /// @brief accessor function to myManoeuvre equivalent
     /// @note Setup of exit manoeuvre is invoked from MSVehicleTransfer
     bool setExitManoeuvre();
@@ -1372,7 +1396,7 @@ public:
     /// @brief accessor function to myManoeuvre equivalent
     MSVehicle::ManoeuvreType getManoeuvreType() const;
 
-   
+
     /** @class Manoeuvre
       * @brief  Container for manouevering time associated with stopping.
       *
@@ -1400,12 +1424,12 @@ public:
         /// @brief Setup the myManoeuvre for exiting (Sets completion time and manoeuvre type)
         bool configureExitManoeuvre(MSVehicle* veh);
 
-         /// @brief Configure an entry manoeuvre if nothing is configured - otherwise check if complete
+        /// @brief Configure an entry manoeuvre if nothing is configured - otherwise check if complete
         bool entryManoeuvreIsComplete(MSVehicle* veh);
 
         /// @brief Check if specific manoeuver is ongoing and whether the completion time is beyond currentTime
         bool
-        manoeuvreIsComplete(const ManoeuvreType checkType ) const;
+        manoeuvreIsComplete(const ManoeuvreType checkType) const;
 
         /// @brief Check if any manoeuver is ongoing and whether the completion time is beyond currentTime
         bool
@@ -1443,18 +1467,18 @@ public:
     // Current or previous (completed) manoeuvre
     Manoeuvre myManoeuvre;
 
-   /** @class Influencer
-     * @brief Changes the wished vehicle speed / lanes
-     *
-     * The class is used for passing velocities or velocity profiles obtained via TraCI to the vehicle.
-     * The speed adaptation is controlled by the stored speedTimeLine
-     * Additionally, the variables myConsiderSafeVelocity, myConsiderMaxAcceleration, and myConsiderMaxDeceleration
-     * control whether the safe velocity, the maximum acceleration, and the maximum deceleration
-     * have to be regarded.
-     *
-     * Furthermore this class is used to affect lane changing decisions according to
-     * LaneChangeMode and any given laneTimeLine
-     */
+    /** @class Influencer
+      * @brief Changes the wished vehicle speed / lanes
+      *
+      * The class is used for passing velocities or velocity profiles obtained via TraCI to the vehicle.
+      * The speed adaptation is controlled by the stored speedTimeLine
+      * Additionally, the variables myConsiderSafeVelocity, myConsiderMaxAcceleration, and myConsiderMaxDeceleration
+      * control whether the safe velocity, the maximum acceleration, and the maximum deceleration
+      * have to be regarded.
+      *
+      * Furthermore this class is used to affect lane changing decisions according to
+      * LaneChangeMode and any given laneTimeLine
+      */
     class Influencer {
     private:
 
@@ -1802,6 +1826,9 @@ public:
 
     // @brief get the position of the back bumper;
     const Position getBackPosition() const;
+
+    /// @brief whether this vehicle is except from collision checks
+    bool ignoreCollision();
 
     /// @name state io
     //@{
@@ -2177,6 +2204,8 @@ private:
 
     /// @brief An instance of a velocity/lane influencing instance; built in "getInfluencer"
     Influencer* myInfluencer;
+
+
 
 private:
     /// @brief invalidated default constructor

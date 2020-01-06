@@ -10,7 +10,6 @@
 # @file    averageRuns.py
 # @author  Jakob Erdmann
 # @date    2018-08-24
-# @version $Id$
 
 """
 This runs the given configuration multiple times with different random seeds and
@@ -44,7 +43,7 @@ def getOptions(args=None):
 
 
 def build_retriever(key):
-    reString = " %s: ([\d.]*)" % key
+    reString = r" %s: ([\d.]*)" % key
     regex = re.compile(reString)
     # values should all be positive so -1 is a suitable flag
     invalidResult = -1

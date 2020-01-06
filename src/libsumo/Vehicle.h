@@ -11,7 +11,6 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    15.03.2017
-/// @version $Id$
 ///
 // C++ Vehicle API
 /****************************************************************************/
@@ -157,6 +156,7 @@ public:
     static void setRoutingMode(const std::string& vehicleID, int routingMode);
     static void setType(const std::string& vehicleID, const std::string& typeID);
     static void setRouteID(const std::string& vehicleID, const std::string& routeID);
+    static void setRoute(const std::string& vehicleID, const std::string& edgeID);
     static void setRoute(const std::string& vehicleID, const std::vector<std::string>& edgeIDs);
     static void updateBestLanes(const std::string& vehicleID);
     static void setAdaptedTraveltime(const std::string& vehicleID, const std::string& edgeID,
@@ -172,14 +172,38 @@ public:
     static void setLine(const std::string& vehicleID, const std::string& line);
     static void setVia(const std::string& vehicleID, const std::vector<std::string>& via);
     static void setParameter(const std::string& vehicleID, const std::string& key, const std::string& value);
-    static void highlight(const std::string& vehicleID, const TraCIColor& col, double size, const int alphaMax, const double duration, const int type);
+    static void highlight(const std::string& vehicleID, const TraCIColor& col=TraCIColor(255,0,0,255), double size=-1, const int alphaMax=-1, const double duration=-1, const int type=0);
     /// @}
 
     LIBSUMO_VEHICLE_TYPE_SETTER
 
     LIBSUMO_SUBSCRIPTION_API
 
-    static void subscribeLeader(const std::string& vehicleID, double dist = 0., double beginTime = libsumo::INVALID_DOUBLE_VALUE, double endTime = libsumo::INVALID_DOUBLE_VALUE);
+    static void subscribeLeader(const std::string& vehicleID, double dist = 0., double beginTime = INVALID_DOUBLE_VALUE, double endTime = INVALID_DOUBLE_VALUE);
+
+    static void addSubscriptionFilterLanes(const std::vector<int>& lanes, bool noOpposite=false, double downstreamDist=INVALID_DOUBLE_VALUE, double upstreamDist=INVALID_DOUBLE_VALUE);
+
+    static void addSubscriptionFilterNoOpposite();
+
+    static void addSubscriptionFilterDownstreamDistance(double dist);
+
+    static void addSubscriptionFilterUpstreamDistance(double dist);
+
+    static void addSubscriptionFilterCFManeuver(double downstreamDist=INVALID_DOUBLE_VALUE, double upstreamDist=INVALID_DOUBLE_VALUE);
+
+    static void addSubscriptionFilterLCManeuver(int direction=INVALID_INT_VALUE, bool noOpposite=false, double downstreamDist=INVALID_DOUBLE_VALUE, double upstreamDist=INVALID_DOUBLE_VALUE);
+
+    static void addSubscriptionFilterLeadFollow(const std::vector<int>& lanes);
+
+    static void addSubscriptionFilterTurn(double downstreamDist=INVALID_DOUBLE_VALUE, double upstreamDist=INVALID_DOUBLE_VALUE);
+
+    static void addSubscriptionFilterVClass(const std::vector<std::string>& vClasses);
+
+    static void addSubscriptionFilterVType(const std::vector<std::string>& vTypes);
+
+    static void addSubscriptionFilterFieldOfVision(double openingAngle);
+
+    static void addSubscriptionFilterLateralDistance(double lateralDist, double downstreamDist=INVALID_DOUBLE_VALUE, double upstreamDist=INVALID_DOUBLE_VALUE);
 
     /** @brief Saves the shape of the requested object in the given container
     *  @param id The id of the poi to retrieve

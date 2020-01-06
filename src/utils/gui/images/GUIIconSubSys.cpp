@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Andreas Gaubatz
 /// @date    Mon, 08.03.2004
-/// @version $Id$
 ///
 // Helper for icons loading and usage
 /****************************************************************************/
@@ -137,6 +136,10 @@
 
 #include "cut.xpm"
 #include "ext.xpm"
+
+#include "savenetelements.xpm"
+#include "saveaditionalelements.xpm"
+#include "savedemandelements.xpm"
 
 #include "supermodenetwork.xpm"
 #include "supermodedemand.xpm"
@@ -417,6 +420,10 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
 
     myIcons[ICON_EXT] = new FXXPMIcon(a, ext_xpm);
     myIcons[ICON_CUT_SWELL] = new FXXPMIcon(a, cut_xpm);
+
+    myIcons[ICON_SAVENETELEMENTS] = new FXXPMIcon(a, savenetelements_xpm);
+    myIcons[ICON_SAVEADDITIONALS] = new FXXPMIcon(a, saveadditionalelements_xpm);
+    myIcons[ICON_SAVEDEMANDELEMENTS] = new FXXPMIcon(a, savedemandelements_xpm);
 
     myIcons[ICON_SUPERMODENETWORK] = new FXXPMIcon(a, supermodenetwork_xpm);
     myIcons[ICON_SUPERMODEDEMAND] = new FXXPMIcon(a, supermodedemand_xpm);

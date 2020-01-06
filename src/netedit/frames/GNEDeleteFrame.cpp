@@ -10,7 +10,6 @@
 /// @file    GNEDeleteFrame.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Dec 2016
-/// @version $Id$
 ///
 // The Widget for remove network-elements
 /****************************************************************************/
@@ -198,14 +197,14 @@ GNEDeleteFrame::removeAttributeCarrier(const GNEViewNetHelper::ObjectsUnderCurso
                 if (myDeleteOptions->forceDeleteAdditionals() || ignoreOptions) {
                     myViewNet->getNet()->deleteJunction(objectsUnderCursor.getJunctionFront(), myViewNet->getUndoList());
                 } else {
-                    if (subordinatedElements.additionalChildren > 0) {
+                    if (subordinatedElements.childAdditionals > 0) {
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Opening FXMessageBox 'Force deletion needed'");
-                        std::string plural = subordinatedElements.additionalChildren > 1 ? "s" : "";
+                        std::string plural = subordinatedElements.childAdditionals > 1 ? "s" : "";
                         // Open warning DialogBox
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + objectsUnderCursor.getJunctionFront()->getTagStr()).c_str(), "%s",
                                               (objectsUnderCursor.getJunctionFront()->getTagStr() + " '" + objectsUnderCursor.getJunctionFront()->getID() + "' cannot be deleted because owns " +
-                                               toString(subordinatedElements.additionalChildren) + " additional child" + plural + ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
+                                               toString(subordinatedElements.childAdditionals) + " child additional" + plural + ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Closed FXMessageBox 'Force deletion needed' with 'OK'");
                     } else {
@@ -227,44 +226,44 @@ GNEDeleteFrame::removeAttributeCarrier(const GNEViewNetHelper::ObjectsUnderCurso
                         // declare strings to save certain messages used in FXMessageBox to improve code legilibly
                         std::string tagstr = objectsUnderCursor.getEdgeFront()->getTagStr();
                         std::string id = objectsUnderCursor.getEdgeFront()->getID();
-                        // check number of additional children
-                        if ((subordinatedElements.additionalChildren > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
+                        // check number of child additional
+                        if ((subordinatedElements.childAdditionals > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Opening FXMessageBox 'Force deletion needed'");
-                            std::string plural = subordinatedElements.additionalChildren > 1 ? "s" : "";
+                            std::string plural = subordinatedElements.childAdditionals > 1 ? "s" : "";
                             // Open warning DialogBox
                             FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                                  (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.additionalChildren) + " additional" + plural +
+                                                  (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.childAdditionals) + " additional" + plural +
                                                    ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Closed FXMessageBox 'Force deletion needed' with 'OK'");
-                        } else if ((subordinatedElements.additionalChildren > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
+                        } else if ((subordinatedElements.childAdditionals > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Opening FXMessageBox 'Force deletion needed'");
-                            std::string plural = subordinatedElements.additionalParents > 1 ? "s" : "";
+                            std::string plural = subordinatedElements.parentAdditionals > 1 ? "s" : "";
                             // Open warning DialogBox
                             FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                                  (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.additionalParents) + " additional" + plural +
+                                                  (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.parentAdditionals) + " additional" + plural +
                                                    ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Closed FXMessageBox 'Force deletion needed' with 'OK'");
-                        } else if ((subordinatedElements.demandElementChildren > 0) && myDeleteOptions->protectDemandElements()) {
+                        } else if ((subordinatedElements.childDemandElements > 0) && myDeleteOptions->protectDemandElements()) {
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Opening FXMessageBox 'Unprotect demand elements'");
-                            std::string plural = subordinatedElements.demandElementChildren > 1 ? "s" : "";
+                            std::string plural = subordinatedElements.childDemandElements > 1 ? "s" : "";
                             // Open warning DialogBox
                             FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                                  (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.demandElementChildren) + " demand element" + plural +
+                                                  (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.childDemandElements) + " demand element" + plural +
                                                    ".\n Uncheck 'Protect demand elements' to force deletion.").c_str());
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Closed FXMessageBox 'Unprotect demand elements' with 'OK'");
-                        } else if ((subordinatedElements.demandElementParents > 0) && myDeleteOptions->protectDemandElements()) {
+                        } else if ((subordinatedElements.parentDemandElements > 0) && myDeleteOptions->protectDemandElements()) {
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Opening FXMessageBox 'Unprotect demand elements'");
-                            std::string plural = subordinatedElements.demandElementParents > 1 ? "s" : "";
+                            std::string plural = subordinatedElements.parentDemandElements > 1 ? "s" : "";
                             // Open warning DialogBox
                             FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                                  (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.demandElementParents) + " demand element" + plural +
+                                                  (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.parentDemandElements) + " demand element" + plural +
                                                    ".\n Uncheck 'Protect demand elements' to force deletion.").c_str());
                             // write warning if netedit is running in testing mode
                             WRITE_DEBUG("Closed FXMessageBox 'Unprotect demand elements' with 'OK'");
@@ -285,44 +284,44 @@ GNEDeleteFrame::removeAttributeCarrier(const GNEViewNetHelper::ObjectsUnderCurso
                     // declare strings to save certain messages used in FXMessageBox to improve code legilibly
                     std::string tagstr = objectsUnderCursor.getLaneFront()->getTagStr();
                     std::string id = objectsUnderCursor.getLaneFront()->getID();
-                    // check number of additional children
-                    if ((subordinatedElements.additionalChildren > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
+                    // check number of child additional
+                    if ((subordinatedElements.childAdditionals > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Opening FXMessageBox 'Force deletion needed'");
-                        std::string plural = subordinatedElements.additionalChildren > 1 ? "s" : "";
+                        std::string plural = subordinatedElements.childAdditionals > 1 ? "s" : "";
                         // Open warning DialogBox
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                              (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.additionalChildren) + " additional" + plural +
+                                              (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.childAdditionals) + " additional" + plural +
                                                ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Closed FXMessageBox 'Force deletion needed' with 'OK'");
-                    } else if ((subordinatedElements.additionalChildren > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
+                    } else if ((subordinatedElements.childAdditionals > 0) && !myDeleteOptions->forceDeleteAdditionals()) {
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Opening FXMessageBox 'Force deletion needed'");
-                        std::string plural = subordinatedElements.additionalParents > 1 ? "s" : "";
+                        std::string plural = subordinatedElements.parentAdditionals > 1 ? "s" : "";
                         // Open warning DialogBox
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                              (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.additionalParents) + " additional" + plural +
+                                              (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.parentAdditionals) + " additional" + plural +
                                                ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Closed FXMessageBox 'Force deletion needed' with 'OK'");
-                    } else if ((subordinatedElements.demandElementChildren > 0) && myDeleteOptions->protectDemandElements()) {
+                    } else if ((subordinatedElements.childDemandElements > 0) && myDeleteOptions->protectDemandElements()) {
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Opening FXMessageBox 'Unprotect demand elements'");
-                        std::string plural = subordinatedElements.demandElementChildren > 1 ? "s" : "";
+                        std::string plural = subordinatedElements.childDemandElements > 1 ? "s" : "";
                         // Open warning DialogBox
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                              (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.demandElementChildren) + " demand element" + plural +
+                                              (tagstr + " '" + id + "' cannot be deleted because owns " + toString(subordinatedElements.childDemandElements) + " demand element" + plural +
                                                ".\n Uncheck 'Protect demand elements' to force deletion.").c_str());
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Closed FXMessageBox 'Unprotect demand elements' with 'OK'");
-                    } else if ((subordinatedElements.demandElementParents > 0) && myDeleteOptions->protectDemandElements()) {
+                    } else if ((subordinatedElements.parentDemandElements > 0) && myDeleteOptions->protectDemandElements()) {
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Opening FXMessageBox 'Unprotect demand elements'");
-                        std::string plural = subordinatedElements.demandElementParents > 1 ? "s" : "";
+                        std::string plural = subordinatedElements.parentDemandElements > 1 ? "s" : "";
                         // Open warning DialogBox
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + tagstr).c_str(), "%s",
-                                              (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.demandElementParents) + " demand element" + plural +
+                                              (tagstr + " '" + id + "' cannot be deleted because is part of " + toString(subordinatedElements.parentDemandElements) + " demand element" + plural +
                                                ".\n Uncheck 'Protect demand elements' to force deletion.").c_str());
                         // write warning if netedit is running in testing mode
                         WRITE_DEBUG("Closed FXMessageBox 'Unprotect demand elements' with 'OK'");
@@ -342,13 +341,7 @@ GNEDeleteFrame::removeAttributeCarrier(const GNEViewNetHelper::ObjectsUnderCurso
             } else if (objectsUnderCursor.getShapeFront() && (objectsUnderCursor.getShapeFront() == objectsUnderCursor.getAttributeCarrierFront())) {
                 myViewNet->getNet()->deleteShape(objectsUnderCursor.getShapeFront(), myViewNet->getUndoList());
             } else if (objectsUnderCursor.getDemandElementFront() && (objectsUnderCursor.getDemandElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                // we need to check if we're removing the last person plan of a person
-                if (objectsUnderCursor.getDemandElementFront()->getTagProperty().isPersonPlan() && 
-                    (objectsUnderCursor.getDemandElementFront()->getDemandElementParents().front()->getDemandElementChildren().size() == 1)) {
-                    myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront()->getDemandElementParents().front(), myViewNet->getUndoList());
-                } else {
-                    myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
-                }
+                myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
             }
         }
         // enable update geometry
@@ -369,16 +362,16 @@ GNEDeleteFrame::getDeleteOptions() const {
 // ---------------------------------------------------------------------------
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEJunction* junction) :
-    additionalParents(0),
-    additionalChildren(0),
-    demandElementParents(0),
-    demandElementChildren(0) {
+    parentAdditionals(0),
+    childAdditionals(0),
+    parentDemandElements(0),
+    childDemandElements(0) {
     // obtain number of additional and demand elements parents and children of junction
-    additionalParents = (int)junction->getAdditionalParents().size();
-    additionalChildren = (int)junction->getAdditionalChildren().size();
-    demandElementParents = (int)junction->getDemandElementParents().size();
-    demandElementChildren = (int)junction->getDemandElementChildren().size();
-    // add the number of subodinated elements of edge children
+    parentAdditionals = (int)junction->getParentAdditionals().size();
+    childAdditionals = (int)junction->getChildAdditionals().size();
+    parentDemandElements = (int)junction->getParentDemandElements().size();
+    childDemandElements = (int)junction->getChildDemandElements().size();
+    // add the number of subodinated elements of child edges
     for (const auto& i : junction->getGNEEdges()) {
         (*this) += SubordinatedElements(i);
     }
@@ -386,16 +379,16 @@ GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEJunction* ju
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEEdge* edge) :
-    additionalParents(0),
-    additionalChildren(0),
-    demandElementParents(0),
-    demandElementChildren(0) {
+    parentAdditionals(0),
+    childAdditionals(0),
+    parentDemandElements(0),
+    childDemandElements(0) {
     // obtain number of additional and demand elements parents and children of junction
-    additionalParents = (int)edge->getAdditionalParents().size();
-    additionalChildren = (int)edge->getAdditionalChildren().size();
-    demandElementParents = (int)edge->getDemandElementParents().size();
-    demandElementChildren = (int)edge->getDemandElementChildren().size();
-    // add the number of subodinated elements of lane children
+    parentAdditionals = (int)edge->getParentAdditionals().size();
+    childAdditionals = (int)edge->getChildAdditionals().size();
+    parentDemandElements = (int)edge->getParentDemandElements().size();
+    childDemandElements = (int)edge->getChildDemandElements().size();
+    // add the number of subodinated elements of child lanes
     for (const auto& i : edge->getLanes()) {
         (*this) += SubordinatedElements(i);
     }
@@ -403,40 +396,40 @@ GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEEdge* edge) 
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNELane* lane) :
-    additionalParents(0),
-    additionalChildren(0),
-    demandElementParents(0),
-    demandElementChildren(0) {
+    parentAdditionals(0),
+    childAdditionals(0),
+    parentDemandElements(0),
+    childDemandElements(0) {
     // obtain number of additional and demand elements parents and children of junction
-    additionalParents = (int)lane->getAdditionalParents().size();
-    additionalChildren = (int)lane->getAdditionalChildren().size();
-    demandElementParents = (int)lane->getDemandElementParents().size();
-    demandElementChildren = (int)lane->getDemandElementChildren().size();
+    parentAdditionals = (int)lane->getParentAdditionals().size();
+    childAdditionals = (int)lane->getChildAdditionals().size();
+    parentDemandElements = (int)lane->getParentDemandElements().size();
+    childDemandElements = (int)lane->getChildDemandElements().size();
 }
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEAdditional* /* additional */) :
-    additionalParents(0),
-    additionalChildren(0),
-    demandElementParents(0),
-    demandElementChildren(0) {
+    parentAdditionals(0),
+    childAdditionals(0),
+    parentDemandElements(0),
+    childDemandElements(0) {
 }
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEDemandElement* /* demandElement */) :
-    additionalParents(0),
-    additionalChildren(0),
-    demandElementParents(0),
-    demandElementChildren(0) {
+    parentAdditionals(0),
+    childAdditionals(0),
+    parentDemandElements(0),
+    childDemandElements(0) {
 }
 
 
 GNEDeleteFrame::SubordinatedElements&
 GNEDeleteFrame::SubordinatedElements::operator+=(const SubordinatedElements& other) {
-    additionalParents += other.additionalParents;
-    additionalChildren += other.additionalChildren;
-    demandElementParents += other.demandElementParents;
-    demandElementChildren += other.demandElementChildren;
+    parentAdditionals += other.parentAdditionals;
+    childAdditionals += other.childAdditionals;
+    parentDemandElements += other.parentDemandElements;
+    childDemandElements += other.childDemandElements;
     return *this;
 }
 

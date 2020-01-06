@@ -12,7 +12,6 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    Tue, 11.05.2011
-/// @version $Id$
 ///
 // Exporter writing networks using XML (native input) format
 /****************************************************************************/
@@ -112,6 +111,9 @@ private:
 
     /// @brief writes imported parking areas to file
     static void writeParkingAreas(const OptionsCont& cont, NBParkingCont& pc, NBEdgeCont& ec);
+
+    /// @brief writes imported districts (TAZ) to file
+    static void writeDistricts(const OptionsCont& oc, NBDistrictCont& dc);
 
     static void writeShape(OutputDevice& out, const GeoConvHelper& gch, PositionVector shape, SumoXMLAttr attr, bool useGeo, bool geoAccuracy);
 };
