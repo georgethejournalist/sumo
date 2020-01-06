@@ -483,9 +483,11 @@ GNEViewNetHelper::MoveSingleElementValues::moveSingleElement() {
     // @note  #3521: Add checkBox to allow moving elements... has to be implemented and used here
     Position offsetMovement = myViewNet->getPositionInformation() - myViewNet->myMoveSingleElementValues.myRelativeClickedPosition;
     // calculate Z depending of moveElevation
-    if (myViewNet->myNetworkViewOptions.menuCheckMoveElevation->shown() && myViewNet->myNetworkViewOptions.menuCheckMoveElevation->getCheck() == TRUE) {
-        // reset offset X and Y and use Y for Z
-        offsetMovement = Position(0, 0, offsetMovement.y());
+	if (myViewNet->myNetworkViewOptions.menuCheckMoveElevation->shown() && myViewNet->myNetworkViewOptions.menuCheckMoveElevation->getCheck() == TRUE) 
+	{
+		// reset offset X and Y and use Y for Z
+		offsetMovement = Position(0, 0, offsetMovement.y());
+	}
     // check what element will be moved
     if (myPolyToMove) {
         // move shape's geometry without commiting changes depending if polygon is blocked
